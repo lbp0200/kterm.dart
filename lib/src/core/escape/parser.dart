@@ -193,12 +193,46 @@ class EscapeParser {
     final consumed = _consumeCsi();
     if (!consumed) return false;
 
+    // Check for Kitty keyboard protocol: CSI > n u
+    if (_csi.prefix == Ascii.greaterThan && _csi.finalByte == Ascii.u) {
+      return _handleKittyMode();
+    }
+
     final csiHandler = _csiHandlers[_csi.finalByte];
 
     if (csiHandler == null) {
       handler.unknownCSI(_csi.finalByte);
     } else {
       csiHandler();
+    }
+
+    return true;
+  }
+
+  /// Handle Kitty keyboard protocol sequences:
+  /// - CSI > n u - Set mode (0 = disable, 1 = enable)
+  /// - CSI > + n u - Push flags
+  /// - CSI > - n u - Pop flags
+  bool _handleKittyMode() {
+    if (_csi.params.isEmpty) return true;
+
+    final firstParam = _csi.params[0];
+
+    // CSI > n u - Set mode (0 = disable, 1 = enable)
+    if (firstParam == 0) {
+      handler.setKittyMode(false);
+    } else if (firstParam == 1) {
+      handler.setKittyMode(true);
+    }
+    // CSI > + n u - Push flags
+    else if (firstParam == '+'.codeUnitAt(0)) {
+      if (_csi.params.length > 1) {
+        handler.pushKittyFlags(_csi.params[1]);
+      }
+    }
+    // CSI > - n u - Pop flags
+    else if (firstParam == '-'.codeUnitAt(0)) {
+      handler.popKittyFlags();
     }
 
     return true;
