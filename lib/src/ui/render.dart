@@ -3,19 +3,19 @@ import 'dart:ui';
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/buffer/range.dart';
-import 'package:xterm/src/core/buffer/segment.dart';
-import 'package:xterm/src/core/mouse/button.dart';
-import 'package:xterm/src/core/mouse/button_state.dart';
-import 'package:xterm/src/terminal.dart';
-import 'package:xterm/src/ui/controller.dart';
-import 'package:xterm/src/ui/cursor_type.dart';
-import 'package:xterm/src/ui/painter.dart';
-import 'package:xterm/src/ui/selection_mode.dart';
-import 'package:xterm/src/ui/terminal_size.dart';
-import 'package:xterm/src/ui/terminal_text_style.dart';
-import 'package:xterm/src/ui/terminal_theme.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/buffer/range.dart';
+import 'package:kterm/src/core/buffer/segment.dart';
+import 'package:kterm/src/core/mouse/button.dart';
+import 'package:kterm/src/core/mouse/button_state.dart';
+import 'package:kterm/src/terminal.dart';
+import 'package:kterm/src/ui/controller.dart';
+import 'package:kterm/src/ui/cursor_type.dart';
+import 'package:kterm/src/ui/painter.dart';
+import 'package:kterm/src/ui/selection_mode.dart';
+import 'package:kterm/src/ui/terminal_size.dart';
+import 'package:kterm/src/ui/terminal_text_style.dart';
+import 'package:kterm/src/ui/terminal_theme.dart';
 
 typedef EditableRectCallback = void Function(Rect rect, Rect caretRect);
 

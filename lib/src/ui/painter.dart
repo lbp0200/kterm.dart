@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/painting.dart';
 
-import 'package:xterm/src/ui/palette_builder.dart';
-import 'package:xterm/src/ui/paragraph_cache.dart';
-import 'package:xterm/xterm.dart';
+import 'package:kterm/src/ui/palette_builder.dart';
+import 'package:kterm/src/ui/paragraph_cache.dart';
+import 'package:kterm/xterm.dart';
 
 /// Encapsulates the logic for painting various terminal elements.
 class TerminalPainter {

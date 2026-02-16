@@ -1,4 +1,4 @@
-import 'package:xterm/src/base/event.dart';
+import 'package:kterm/src/base/event.dart';
 
 mixin Disposable {
   final _disposables = <Disposable>[];

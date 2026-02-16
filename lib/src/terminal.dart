@@ -1,25 +1,25 @@
 import 'dart:math' show max;
 
 import 'package:kitty_key_encoder/kitty_key_encoder.dart';
-import 'package:xterm/src/base/observable.dart';
-import 'package:xterm/src/core/buffer/buffer.dart';
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/buffer/line.dart';
-import 'package:xterm/src/core/cursor.dart';
-import 'package:xterm/src/core/escape/emitter.dart';
-import 'package:xterm/src/core/escape/handler.dart';
-import 'package:xterm/src/core/escape/parser.dart';
-import 'package:xterm/src/core/input/handler.dart';
-import 'package:xterm/src/core/input/keys.dart';
-import 'package:xterm/src/core/mouse/button.dart';
-import 'package:xterm/src/core/mouse/button_state.dart';
-import 'package:xterm/src/core/mouse/handler.dart';
-import 'package:xterm/src/core/mouse/mode.dart';
-import 'package:xterm/src/core/platform.dart';
-import 'package:xterm/src/core/state.dart';
-import 'package:xterm/src/core/tabs.dart';
-import 'package:xterm/src/utils/ascii.dart';
-import 'package:xterm/src/utils/circular_buffer.dart';
+import 'package:kterm/src/base/observable.dart';
+import 'package:kterm/src/core/buffer/buffer.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/buffer/line.dart';
+import 'package:kterm/src/core/cursor.dart';
+import 'package:kterm/src/core/escape/emitter.dart';
+import 'package:kterm/src/core/escape/handler.dart';
+import 'package:kterm/src/core/escape/parser.dart';
+import 'package:kterm/src/core/input/handler.dart';
+import 'package:kterm/src/core/input/keys.dart';
+import 'package:kterm/src/core/mouse/button.dart';
+import 'package:kterm/src/core/mouse/button_state.dart';
+import 'package:kterm/src/core/mouse/handler.dart';
+import 'package:kterm/src/core/mouse/mode.dart';
+import 'package:kterm/src/core/platform.dart';
+import 'package:kterm/src/core/state.dart';
+import 'package:kterm/src/core/tabs.dart';
+import 'package:kterm/src/utils/ascii.dart';
+import 'package:kterm/src/utils/circular_buffer.dart';
 
 /// [Terminal] is an interface to interact with command line applications. It
 /// translates escape sequences from the application into updates to the

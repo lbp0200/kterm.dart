@@ -1,6 +1,6 @@
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/buffer/range.dart';
-import 'package:xterm/src/core/buffer/segment.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/buffer/range.dart';
+import 'package:kterm/src/core/buffer/segment.dart';
 
 class BufferRangeLine extends BufferRange {
   BufferRangeLine(super.begin, super.end);

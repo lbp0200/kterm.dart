@@ -6,7 +6,7 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as path;
-import 'package:xterm/xterm.dart';
+import 'package:kterm/xterm.dart';
 
 const host = 'localhost';
 const port = 22;

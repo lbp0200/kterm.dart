@@ -1,7 +1,7 @@
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/mouse/mode.dart';
-import 'package:xterm/src/core/mouse/button.dart';
-import 'package:xterm/src/core/mouse/button_state.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/mouse/mode.dart';
+import 'package:kterm/src/core/mouse/button.dart';
+import 'package:kterm/src/core/mouse/button_state.dart';
 
 abstract class MouseReporter {
   static String report(

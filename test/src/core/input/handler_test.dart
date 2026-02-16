@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import 'package:xterm/src/core/input/keytab/keytab.dart';
-import 'package:xterm/xterm.dart';
+import 'package:kterm/src/core/input/keytab/keytab.dart';
+import 'package:kterm/xterm.dart';
 
 void main() {
   group('defaultInputHandler', () {

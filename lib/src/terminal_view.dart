@@ -3,23 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:kitty_key_encoder/kitty_key_encoder.dart';
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/input/keys.dart';
-import 'package:xterm/src/terminal.dart';
-import 'package:xterm/src/ui/controller.dart';
-import 'package:xterm/src/ui/cursor_type.dart';
-import 'package:xterm/src/ui/custom_text_edit.dart';
-import 'package:xterm/src/ui/gesture/gesture_handler.dart';
-import 'package:xterm/src/ui/input_map.dart';
-import 'package:xterm/src/ui/keyboard_listener.dart';
-import 'package:xterm/src/ui/keyboard_visibility.dart';
-import 'package:xterm/src/ui/render.dart';
-import 'package:xterm/src/ui/scroll_handler.dart';
-import 'package:xterm/src/ui/shortcut/actions.dart';
-import 'package:xterm/src/ui/shortcut/shortcuts.dart';
-import 'package:xterm/src/ui/terminal_text_style.dart';
-import 'package:xterm/src/ui/terminal_theme.dart';
-import 'package:xterm/src/ui/themes.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/input/keys.dart';
+import 'package:kterm/src/terminal.dart';
+import 'package:kterm/src/ui/controller.dart';
+import 'package:kterm/src/ui/cursor_type.dart';
+import 'package:kterm/src/ui/custom_text_edit.dart';
+import 'package:kterm/src/ui/gesture/gesture_handler.dart';
+import 'package:kterm/src/ui/input_map.dart';
+import 'package:kterm/src/ui/keyboard_listener.dart';
+import 'package:kterm/src/ui/keyboard_visibility.dart';
+import 'package:kterm/src/ui/render.dart';
+import 'package:kterm/src/ui/scroll_handler.dart';
+import 'package:kterm/src/ui/shortcut/actions.dart';
+import 'package:kterm/src/ui/shortcut/shortcuts.dart';
+import 'package:kterm/src/ui/terminal_text_style.dart';
+import 'package:kterm/src/ui/terminal_theme.dart';
+import 'package:kterm/src/ui/themes.dart';
 
 class TerminalView extends StatefulWidget {
   const TerminalView(
@@ -163,7 +163,8 @@ class TerminalViewState extends State<TerminalView> {
 
   late ScrollController _scrollController;
 
-  RenderTerminal get renderTerminal => _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
+  RenderTerminal get renderTerminal =>
+      _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
 
   @override
   void initState() {
@@ -265,7 +266,8 @@ class TerminalViewState extends State<TerminalView> {
         onAction: (action) {
           _scrollToBottom();
           // Android sends TextInputAction.newline when the user presses the virtual keyboard's enter key.
-          if (action == TextInputAction.done || action == TextInputAction.newline) {
+          if (action == TextInputAction.done ||
+              action == TextInputAction.newline) {
             widget.terminal.keyInput(TerminalKey.enter);
           }
         },
@@ -301,8 +303,10 @@ class TerminalViewState extends State<TerminalView> {
       terminalController: _controller,
       onTapUp: _onTapUp,
       onTapDown: _onTapDown,
-      onSecondaryTapDown: widget.onSecondaryTapDown != null ? _onSecondaryTapDown : null,
-      onSecondaryTapUp: widget.onSecondaryTapUp != null ? _onSecondaryTapUp : null,
+      onSecondaryTapDown:
+          widget.onSecondaryTapDown != null ? _onSecondaryTapDown : null,
+      onSecondaryTapUp:
+          widget.onSecondaryTapUp != null ? _onSecondaryTapUp : null,
       readOnly: widget.readOnly,
       child: child,
     );
@@ -334,7 +338,8 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   Rect get globalCursorRect {
-    return renderTerminal.localToGlobal(renderTerminal.cursorOffset) & renderTerminal.cellSize;
+    return renderTerminal.localToGlobal(renderTerminal.cursorOffset) &
+        renderTerminal.cellSize;
   }
 
   void _onTapUp(TapUpDetails details) {

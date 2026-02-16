@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:example/src/virtual_keyboard.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:xterm/xterm.dart';
+import 'package:kterm/xterm.dart';
 
 const host = 'localhost';
 const port = 22;

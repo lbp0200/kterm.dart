@@ -7,8 +7,8 @@ import 'package:example/src/suggestion_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
-import 'package:xterm/xterm.dart';
-import 'package:xterm/suggestion.dart';
+import 'package:kterm/xterm.dart';
+import 'package:kterm/suggestion.dart';
 
 final engine = SuggestionEngine();
 

@@ -1,5 +1,5 @@
-import 'package:xterm/src/core/buffer/cell_offset.dart';
-import 'package:xterm/src/core/buffer/segment.dart';
+import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/buffer/segment.dart';
 
 abstract class BufferRange {
   final CellOffset begin;

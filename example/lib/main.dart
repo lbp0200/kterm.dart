@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
-import 'package:xterm/xterm.dart';
+import 'package:kterm/xterm.dart';
 
 void main() {
   runApp(MyApp());
