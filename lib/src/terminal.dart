@@ -1,5 +1,6 @@
 import 'dart:math' show max;
 
+import 'package:kitty_key_encoder/kitty_key_encoder.dart';
 import 'package:xterm/src/base/observable.dart';
 import 'package:xterm/src/core/buffer/buffer.dart';
 import 'package:xterm/src/core/buffer/cell_offset.dart';
@@ -146,6 +147,20 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   bool _altBufferMouseScrollMode = false;
 
   bool _bracketedPasteMode = false;
+
+  // Kitty Keyboard Protocol state
+  KittyEncoder? _kittyEncoder;
+
+  bool _kittyMode = false;
+
+  final List<int> _kittyFlagsStack = [];
+
+  KittyEncoder get kittyEncoder {
+    _kittyEncoder ??= KittyEncoder();
+    return _kittyEncoder!;
+  }
+
+  bool get kittyMode => _kittyMode;
 
   /* State getters */
 
@@ -748,6 +763,35 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void setBracketedPasteMode(bool enabled) {
     _bracketedPasteMode = enabled;
+  }
+
+  /// Handle CSI > n u - Set Kitty keyboard mode
+  @override
+  void setKittyMode(bool enabled) {
+    _kittyMode = enabled;
+  }
+
+  /// Handle CSI > + n u - Push (enable) Kitty flags
+  @override
+  void pushKittyFlags(int flags) {
+    _kittyFlagsStack.add(flags);
+    _updateKittyEncoder();
+  }
+
+  /// Handle CSI > - n u - Pop (disable) Kitty flags
+  @override
+  void popKittyFlags() {
+    if (_kittyFlagsStack.isNotEmpty) {
+      _kittyFlagsStack.removeLast();
+      _updateKittyEncoder();
+    }
+  }
+
+  void _updateKittyEncoder() {
+    if (_kittyEncoder == null) return;
+    // Apply flags from stack - use the last flags pushed
+    final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
+    // Update encoder flags based on Kitty protocol flags
   }
 
   @override
