@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:kitty_key_encoder/kitty_key_encoder.dart';
 import 'package:xterm/src/core/buffer/cell_offset.dart';
 import 'package:xterm/src/core/input/keys.dart';
 import 'package:xterm/src/terminal.dart';
@@ -392,6 +393,15 @@ class TerminalViewState extends State<TerminalView> {
       return resultOverride;
     }
 
+    // Intercept with Kitty keyboard protocol if enabled
+    if (widget.terminal.kittyMode) {
+      final seq = _encodeWithKitty(event);
+      if (seq != null) {
+        widget.terminal.onOutput?.call(seq);
+        return KeyEventResult.handled;
+      }
+    }
+
     // ignore: invalid_use_of_protected_member
     final shortcutResult = _shortcutManager.handleKeypress(
       focusNode.context!,
@@ -443,6 +453,28 @@ class TerminalViewState extends State<TerminalView> {
     if (position != null) {
       position.jumpTo(position.maxScrollExtent);
     }
+  }
+
+  String? _encodeWithKitty(KeyEvent event) {
+    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+      final modifiers = <SimpleModifier>{};
+      final keyboard = HardwareKeyboard.instance;
+
+      if (keyboard.isShiftPressed) modifiers.add(SimpleModifier.shift);
+      if (keyboard.isControlPressed) modifiers.add(SimpleModifier.control);
+      if (keyboard.isAltPressed) modifiers.add(SimpleModifier.alt);
+      if (keyboard.isMetaPressed) modifiers.add(SimpleModifier.meta);
+
+      final keyEvent = SimpleKeyEvent(
+        logicalKey: event.logicalKey,
+        modifiers: modifiers,
+        isKeyUp: event is KeyUpEvent,
+        isKeyRepeat: event is KeyRepeatEvent,
+      );
+
+      return widget.terminal.kittyEncoder.encode(keyEvent);
+    }
+    return null;
   }
 }
 
