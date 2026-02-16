@@ -1,7 +1,7 @@
-import 'package:xterm/src/core/escape/handler.dart';
-import 'package:xterm/src/core/escape/parser.dart';
-import 'package:xterm/src/core/mouse/mode.dart';
-import 'package:xterm/src/base/observable.dart';
+import 'package:kterm/src/core/escape/handler.dart';
+import 'package:kterm/src/core/escape/parser.dart';
+import 'package:kterm/src/core/mouse/mode.dart';
+import 'package:kterm/src/base/observable.dart';
 
 class TerminalCommand {
   TerminalCommand(
@@ -591,5 +591,22 @@ class _TerminalDebuggerHandler implements EscapeHandler {
   @override
   void unknownOSC(String code, List<String> args) {
     onCommand('unknownOSC($code, $args)', error: true);
+  }
+
+  /* Kitty Keyboard Protocol */
+
+  @override
+  void setKittyMode(bool enabled) {
+    onCommand('setKittyMode($enabled)');
+  }
+
+  @override
+  void pushKittyFlags(int flags) {
+    onCommand('pushKittyFlags($flags)');
+  }
+
+  @override
+  void popKittyFlags() {
+    onCommand('popKittyFlags');
   }
 }
