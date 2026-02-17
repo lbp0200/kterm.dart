@@ -68,6 +68,7 @@ build/
 **/ios/Runner/GeneratedPluginRegistrant.*
 
 # macOS related
+example/macos/
 **/macos/**/*.mode1v3
 **/macos/**/*.mode2v3
 **/macos/**/*.moved-aside
