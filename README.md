@@ -1,5 +1,5 @@
 
-## xterm.dart
+## kterm (formerly xterm.dart)
 
 <p>
     <a href="https://github.com/TerminalStudio/xterm.dart/actions/workflows/ci.yml">
@@ -14,7 +14,7 @@
 </p>
 
 
-**xterm.dart** is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms.
+**kterm** is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms. It is a fork of xterm.dart with enhanced modern terminal features.
 
 > This package requires Flutter version >=3.0.0
 
@@ -47,6 +47,14 @@
 - ✂️ **Customizable** 
 - ✔ **Frontend independent**: The terminal core can work without flutter frontend.
 
+## kterm vs xterm.dart
+
+kterm includes all xterm.dart features plus modern terminal enhancements:
+
+- 🖥️ **Modern Key Support**: Full Kitty Keyboard Protocol implementation.
+- 📚 **Progressive Enhancement**: Supports CSI > n u stack (push/pop) for nested terminal modes.
+- 🔍 **Zero Ambiguity**: No more Tab vs Ctrl+I confusion in Neovim/Helix — modifier keys are always distinguishable.
+
 **What's new in 3.0.0:**
 
 - 📱 Enhanced support for **mobile** platforms.
@@ -62,13 +70,13 @@
 ```yml
 dependencies:
   ...
-  xterm: ^3.2.6
+  kterm: ^3.2.6
 ```
 
 **2.** Create the terminal:
 
 ```dart
-import 'package:xterm/xterm.dart';
+import 'package:kterm/xterm.dart';
 ...
 terminal = Terminal();
 ```
@@ -86,7 +94,7 @@ terminal.onOutput = (output) {
 **3.** Create the view, attach the terminal to the view:
 
 ```dart
-import 'package:xterm/flutter.dart';
+import 'package:kterm/flutter.dart';
 ...
 child: TerminalView(terminal),
 ```
