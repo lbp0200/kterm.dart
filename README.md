@@ -46,6 +46,8 @@
 - 😀 **Wide character support** Supports CJK and emojis.
 - ✂️ **Customizable** 
 - ✔ **Frontend independent**: The terminal core can work without flutter frontend.
+- 🖼️ **Kitty Graphics Protocol**: Support for inline images (PNG, JPEG, RGBA)
+- ⌨️ **Kitty Keyboard Protocol**: Full support for modern key combinations
 
 ## kterm vs xterm.dart
 
@@ -70,7 +72,7 @@ kterm includes all xterm.dart features plus modern terminal enhancements:
 ```yml
 dependencies:
   ...
-  kterm: ^3.2.6
+  kterm: ^1.0.0
 ```
 
 **2.** Create the terminal:
@@ -106,6 +108,46 @@ terminal.write('Hello, world!');
 ```
 
 **Done!**
+
+## Usage
+
+### Basic Usage
+
+```dart
+import 'package:kterm/xterm.dart';
+import 'package:kterm/flutter.dart';
+
+final terminal = Terminal();
+final controller = TerminalController();
+
+TerminalView(
+  terminal,
+  controller: controller,
+);
+```
+
+### With GraphicsManager (Kitty Graphics Protocol)
+
+```dart
+import 'package:kterm/xterm.dart';
+import 'package:kterm/flutter.dart';
+
+final terminal = Terminal(
+  graphicsManager: GraphicsManager(),
+);
+final controller = TerminalController();
+
+TerminalView(
+  terminal,
+  controller: controller,
+);
+```
+
+### Enable Kitty Keyboard Protocol
+
+```dart
+terminal.setKittyMode(true);
+```
 
 ## More examples
 
