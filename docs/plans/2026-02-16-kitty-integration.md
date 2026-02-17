@@ -27,7 +27,7 @@ Add `kitty_key_encoder` dependency and rename package to `kterm`:
 name: kterm
 description: kterm is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms.
 version: 4.0.0
-homepage: https://github.com/TerminalStudio/kterm
+homepage: https://github.com/lbp0200/kterm.dart
 
 dependencies:
   kitty_key_encoder: ^1.0.0
