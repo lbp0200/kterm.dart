@@ -7,7 +7,19 @@ class CursorStyle {
 
   int attrs;
 
-  CursorStyle({this.foreground = 0, this.background = 0, this.attrs = 0});
+  /// Underline style: 0=none, 1=single, 2=double, 3=curly, 4=dotted, 5=dashed
+  int underlineStyle;
+
+  /// Underline color encoded like foreground/background (type + value)
+  int underlineColor;
+
+  CursorStyle({
+    this.foreground = 0,
+    this.background = 0,
+    this.attrs = 0,
+    this.underlineStyle = 0,
+    this.underlineColor = 0,
+  });
 
   static final empty = CursorStyle();
 
@@ -43,6 +55,27 @@ class CursorStyle {
     attrs |= CellAttr.strikethrough;
   }
 
+  void setUnderlineStyle(int style) {
+    underlineStyle = style;
+    // Also set the basic underline flag for compatibility
+    if (style == CellAttr.underlineStyleSingle ||
+        style == CellAttr.underlineStyleDouble) {
+      attrs |= CellAttr.underline;
+    }
+  }
+
+  void setUnderlineColor256(int color) {
+    underlineColor = color | CellColor.palette;
+  }
+
+  void setUnderlineColorRgb(int r, int g, int b) {
+    underlineColor = (r << 16) | (g << 8) | b | CellColor.rgb;
+  }
+
+  void resetUnderlineColor() {
+    underlineColor = 0;
+  }
+
   void unsetBold() {
     attrs &= ~CellAttr.bold;
   }
@@ -57,6 +90,7 @@ class CursorStyle {
 
   void unsetUnderline() {
     attrs &= ~CellAttr.underline;
+    underlineStyle = CellAttr.underlineStyleNone;
   }
 
   void unsetBlink() {
@@ -125,6 +159,8 @@ class CursorStyle {
     foreground = 0;
     background = 0;
     attrs = 0;
+    underlineStyle = 0;
+    underlineColor = 0;
   }
 }
 
