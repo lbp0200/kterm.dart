@@ -532,6 +532,26 @@ class _TerminalDebuggerHandler implements EscapeHandler {
   }
 
   @override
+  void setCursorUnderlineStyle(int style) {
+    onCommand('setCursorUnderlineStyle($style)');
+  }
+
+  @override
+  void setUnderlineColor256(int color) {
+    onCommand('setUnderlineColor256($color)');
+  }
+
+  @override
+  void setUnderlineColorRgb(int r, int g, int b) {
+    onCommand('setUnderlineColorRgb($r, $g, $b)');
+  }
+
+  @override
+  void resetUnderlineColor() {
+    onCommand('resetUnderlineColor');
+  }
+
+  @override
   void setForegroundColor16(int color) {
     onCommand('setForegroundColor16($color)');
   }
@@ -586,6 +606,21 @@ class _TerminalDebuggerHandler implements EscapeHandler {
   @override
   void setIconName(String name) {
     onCommand('setIconName($name)');
+  }
+
+  @override
+  void graphicsCommandStart(Map<String, String> args) {
+    onCommand('graphicsCommandStart($args)');
+  }
+
+  @override
+  void graphicsDataChunk(List<int> data) {
+    onCommand('graphicsDataChunk(${data.length} bytes)');
+  }
+
+  @override
+  Future<void> graphicsCommandEnd() async {
+    onCommand('graphicsCommandEnd');
   }
 
   @override

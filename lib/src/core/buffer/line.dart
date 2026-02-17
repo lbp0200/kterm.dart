@@ -7,7 +7,7 @@ import 'package:kterm/src/core/cursor.dart';
 import 'package:kterm/src/utils/circular_buffer.dart';
 import 'package:kterm/src/utils/unicode_v11.dart';
 
-const _cellSize = 4;
+const _cellSize = 7;
 
 const _cellForeground = 0;
 
@@ -16,6 +16,14 @@ const _cellBackground = 1;
 const _cellAttributes = 2;
 
 const _cellContent = 3;
+
+// Added for extended underline support
+const _cellUnderlineStyle = 4;
+
+const _cellUnderlineColor = 5;
+
+// Added for image support
+const _cellImageData = 6;
 
 class BufferLine with IndexedItem {
   BufferLine(
@@ -67,6 +75,9 @@ class BufferLine with IndexedItem {
     cellData.background = _data[offset + _cellBackground];
     cellData.flags = _data[offset + _cellAttributes];
     cellData.content = _data[offset + _cellContent];
+    cellData.underlineStyle = _data[offset + _cellUnderlineStyle];
+    cellData.underlineColor = _data[offset + _cellUnderlineColor];
+    cellData.imageData = _data[offset + _cellImageData];
   }
 
   CellData createCellData(int index) {
@@ -76,6 +87,9 @@ class BufferLine with IndexedItem {
     _data[offset + _cellBackground] = cellData.background;
     _data[offset + _cellAttributes] = cellData.flags;
     _data[offset + _cellContent] = cellData.content;
+    _data[offset + _cellUnderlineStyle] = cellData.underlineStyle;
+    _data[offset + _cellUnderlineColor] = cellData.underlineColor;
+    _data[offset + _cellImageData] = cellData.imageData;
     return cellData;
   }
 
@@ -95,6 +109,30 @@ class BufferLine with IndexedItem {
     _data[index * _cellSize + _cellContent] = value;
   }
 
+  int getUnderlineStyle(int index) {
+    return _data[index * _cellSize + _cellUnderlineStyle];
+  }
+
+  void setUnderlineStyle(int index, int value) {
+    _data[index * _cellSize + _cellUnderlineStyle] = value;
+  }
+
+  int getUnderlineColor(int index) {
+    return _data[index * _cellSize + _cellUnderlineColor];
+  }
+
+  void setUnderlineColor(int index, int value) {
+    _data[index * _cellSize + _cellUnderlineColor] = value;
+  }
+
+  int getImageData(int index) {
+    return _data[index * _cellSize + _cellImageData];
+  }
+
+  void setImageData(int index, int value) {
+    _data[index * _cellSize + _cellImageData] = value;
+  }
+
   void setCodePoint(int index, int char) {
     final width = unicodeV11.wcwidth(char);
     setContent(index, char | (width << CellContent.widthShift));
@@ -106,6 +144,9 @@ class BufferLine with IndexedItem {
     _data[offset + _cellBackground] = style.background;
     _data[offset + _cellAttributes] = style.attrs;
     _data[offset + _cellContent] = char | (witdh << CellContent.widthShift);
+    _data[offset + _cellUnderlineStyle] = style.underlineStyle;
+    _data[offset + _cellUnderlineColor] = style.underlineColor;
+    _data[offset + _cellImageData] = 0; // No image by default
   }
 
   void setCellData(int index, CellData cellData) {
@@ -114,6 +155,9 @@ class BufferLine with IndexedItem {
     _data[offset + _cellBackground] = cellData.background;
     _data[offset + _cellAttributes] = cellData.flags;
     _data[offset + _cellContent] = cellData.content;
+    _data[offset + _cellUnderlineStyle] = cellData.underlineStyle;
+    _data[offset + _cellUnderlineColor] = cellData.underlineColor;
+    _data[offset + _cellImageData] = cellData.imageData;
   }
 
   void eraseCell(int index, CursorStyle style) {
@@ -122,6 +166,9 @@ class BufferLine with IndexedItem {
     _data[offset + _cellBackground] = style.background;
     _data[offset + _cellAttributes] = style.attrs;
     _data[offset + _cellContent] = 0;
+    _data[offset + _cellUnderlineStyle] = style.underlineStyle;
+    _data[offset + _cellUnderlineColor] = style.underlineColor;
+    _data[offset + _cellImageData] = 0; // Clear image data
   }
 
   void resetCell(int index) {
@@ -130,6 +177,9 @@ class BufferLine with IndexedItem {
     _data[offset + _cellBackground] = 0;
     _data[offset + _cellAttributes] = 0;
     _data[offset + _cellContent] = 0;
+    _data[offset + _cellUnderlineStyle] = 0;
+    _data[offset + _cellUnderlineColor] = 0;
+    _data[offset + _cellImageData] = 0;
   }
 
   /// Erase cells whose index satisfies [start] <= index < [end]. Erased cells

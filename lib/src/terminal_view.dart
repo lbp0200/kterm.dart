@@ -543,6 +543,7 @@ class _TerminalView extends LeafRenderObjectWidget {
       alwaysShowCursor: alwaysShowCursor,
       onEditableRect: onEditableRect,
       composingText: composingText,
+      graphicsManager: terminal.graphicsManager,
     );
   }
 

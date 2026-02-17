@@ -171,6 +171,8 @@ abstract class EscapeHandler {
 
   void setCursorUnderline();
 
+  void setCursorUnderlineStyle(int style);
+
   void setCursorBlink();
 
   void setCursorInverse();
@@ -195,6 +197,12 @@ abstract class EscapeHandler {
 
   void unsetCursorStrikethrough();
 
+  void setUnderlineColor256(int color);
+
+  void setUnderlineColorRgb(int r, int g, int b);
+
+  void resetUnderlineColor();
+
   void setForegroundColor16(int color);
 
   void setForegroundColor256(int index);
@@ -212,6 +220,14 @@ abstract class EscapeHandler {
   void resetBackground();
 
   void unsupportedStyle(int param);
+
+  /* Kitty Graphics Protocol */
+
+  void graphicsCommandStart(Map<String, String> args);
+
+  void graphicsDataChunk(List<int> data);
+
+  void graphicsCommandEnd();
 
   /* OSC */
 

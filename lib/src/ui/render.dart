@@ -10,6 +10,7 @@ import 'package:kterm/src/core/mouse/button.dart';
 import 'package:kterm/src/core/mouse/button_state.dart';
 import 'package:kterm/src/terminal.dart';
 import 'package:kterm/src/ui/controller.dart';
+import 'package:kterm/src/core/graphics_manager.dart';
 import 'package:kterm/src/ui/cursor_type.dart';
 import 'package:kterm/src/ui/painter.dart';
 import 'package:kterm/src/ui/selection_mode.dart';
@@ -34,6 +35,7 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     required bool alwaysShowCursor,
     EditableRectCallback? onEditableRect,
     String? composingText,
+    GraphicsManager? graphicsManager,
   })  : _terminal = terminal,
         _controller = controller,
         _offset = offset,
@@ -48,6 +50,7 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
           theme: theme,
           textStyle: textStyle,
           textScaler: textScaler,
+          graphicsManager: graphicsManager,
         );
 
   Terminal _terminal;
@@ -403,6 +406,7 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
 
     final lines = _terminal.buffer.lines;
     final charHeight = _painter.cellSize.height;
+    final charWidth = _painter.cellSize.width;
 
     final firstLineOffset = _scrollOffset - _padding.top;
     final lastLineOffset = _scrollOffset + size.height + _padding.bottom;
@@ -413,6 +417,15 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     final effectFirstLine = firstLine.clamp(0, lines.length - 1);
     final effectLastLine = lastLine.clamp(0, lines.length - 1);
 
+    // Render below-text images first
+    _painter.renderBelowImages(
+      canvas,
+      effectFirstLine,
+      effectLastLine,
+      charWidth,
+      charHeight,
+    );
+
     for (var i = effectFirstLine; i <= effectLastLine; i++) {
       _painter.paintLine(
         canvas,
@@ -420,6 +433,15 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
         lines[i],
       );
     }
+
+    // Render above-text images after text
+    _painter.renderAboveImages(
+      canvas,
+      effectFirstLine,
+      effectLastLine,
+      charWidth,
+      charHeight,
+    );
 
     if (_terminal.buffer.absoluteCursorY >= effectFirstLine &&
         _terminal.buffer.absoluteCursorY <= effectLastLine) {

@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/painting.dart';
 
+import 'package:kterm/src/core/graphics_manager.dart';
 import 'package:kterm/src/ui/palette_builder.dart';
 import 'package:kterm/src/ui/paragraph_cache.dart';
 import 'package:kterm/xterm.dart';
@@ -11,9 +13,11 @@ class TerminalPainter {
     required TerminalTheme theme,
     required TerminalStyle textStyle,
     required TextScaler textScaler,
+    GraphicsManager? graphicsManager,
   })  : _textStyle = textStyle,
         _theme = theme,
-        _textScaler = textScaler;
+        _textScaler = textScaler,
+        _graphicsManager = graphicsManager;
 
   /// A lookup table from terminal colors to Flutter colors.
   late var _colorPalette = PaletteBuilder(_theme).build();
@@ -25,6 +29,9 @@ class TerminalPainter {
   /// cell no longer produces the same visual output. For example, when
   /// [_textStyle] is changed, or when the system font changes.
   final _paragraphCache = ParagraphCache(10240);
+
+  /// Graphics manager for rendering images
+  final GraphicsManager? _graphicsManager;
 
   TerminalStyle get textStyle => _textStyle;
   TerminalStyle _textStyle;
@@ -165,6 +172,240 @@ class TerminalPainter {
   void paintCell(Canvas canvas, Offset offset, CellData cellData) {
     paintCellBackground(canvas, offset, cellData);
     paintCellForeground(canvas, offset, cellData);
+    paintCellUnderline(canvas, offset, cellData);
+  }
+
+  /// Paints underlines for the cell based on the underline style.
+  void paintCellUnderline(Canvas canvas, Offset offset, CellData cellData) {
+    final underlineStyle = cellData.underlineStyle;
+    if (underlineStyle == CellAttr.underlineStyleNone) return;
+
+    // Determine underline color
+    final underlineColor = cellData.underlineColor;
+    Color color;
+    if (underlineColor == 0) {
+      // Default to foreground color
+      color = resolveForegroundColor(cellData.foreground);
+    } else {
+      color = resolveUnderlineColor(underlineColor);
+    }
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final cellWidth = _cellSize.width;
+    final cellHeight = _cellSize.height;
+    final y = cellHeight - 1; // Bottom of the cell
+
+    switch (underlineStyle) {
+      case CellAttr.underlineStyleSingle:
+        canvas.drawLine(
+          Offset(offset.dx, y),
+          Offset(offset.dx + cellWidth, y),
+          paint,
+        );
+        break;
+      case CellAttr.underlineStyleDouble:
+        // Double underline - two lines
+        canvas.drawLine(
+          Offset(offset.dx, y - 2),
+          Offset(offset.dx + cellWidth, y - 2),
+          paint,
+        );
+        canvas.drawLine(
+          Offset(offset.dx, y),
+          Offset(offset.dx + cellWidth, y),
+          paint,
+        );
+        break;
+      case CellAttr.underlineStyleCurly:
+        _drawCurlyUnderline(canvas, offset, cellWidth, cellHeight, paint);
+        break;
+      case CellAttr.underlineStyleDotted:
+        _drawDottedUnderline(canvas, offset, cellWidth, cellHeight, paint);
+        break;
+      case CellAttr.underlineStyleDashed:
+        _drawDashedUnderline(canvas, offset, cellWidth, cellHeight, paint);
+        break;
+    }
+  }
+
+  /// Draws a curly (wave) underline.
+  void _drawCurlyUnderline(Canvas canvas, Offset offset, double cellWidth,
+      double cellHeight, Paint paint) {
+    final path = Path();
+    final y = cellHeight - 2;
+    final amplitude = 1.5;
+    final frequency = 0.15;
+
+    path.moveTo(offset.dx, y);
+
+    for (double x = 0; x <= cellWidth; x++) {
+      final yOffset = amplitude * math.sin(x * frequency * 2 * math.pi);
+      path.lineTo(offset.dx + x, y + yOffset);
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  /// Draws a dotted underline.
+  void _drawDottedUnderline(Canvas canvas, Offset offset, double cellWidth,
+      double cellHeight, Paint paint) {
+    final y = cellHeight - 2;
+    final dotSpacing = 3.0;
+    final dotRadius = 1.0;
+
+    paint.style = PaintingStyle.fill;
+
+    for (double x = dotRadius; x < cellWidth; x += dotSpacing) {
+      canvas.drawCircle(
+        Offset(offset.dx + x, y),
+        dotRadius,
+        paint,
+      );
+    }
+  }
+
+  /// Draws a dashed underline.
+  void _drawDashedUnderline(Canvas canvas, Offset offset, double cellWidth,
+      double cellHeight, Paint paint) {
+    final y = cellHeight - 1;
+    final dashLength = 4.0;
+    final gapLength = 3.0;
+
+    paint.style = PaintingStyle.stroke;
+
+    double x = 0;
+    while (x < cellWidth) {
+      final endX = math.min(x + dashLength, cellWidth);
+      canvas.drawLine(
+        Offset(offset.dx + x, y),
+        Offset(offset.dx + endX, y),
+        paint,
+      );
+      x += dashLength + gapLength;
+    }
+  }
+
+  /// Resolve underline color from cell color value.
+  @pragma('vm:prefer-inline')
+  Color resolveUnderlineColor(int cellColor) {
+    final colorType = cellColor & CellColor.typeMask;
+    final colorValue = cellColor & CellColor.valueMask;
+
+    switch (colorType) {
+      case CellColor.normal:
+        return _theme.foreground;
+      case CellColor.named:
+      case CellColor.palette:
+        return _colorPalette[colorValue];
+      case CellColor.rgb:
+      default:
+        return Color(colorValue | 0xFF000000);
+    }
+  }
+
+  /// Render all "below text" images that overlap with the given line range.
+  /// Returns the number of images rendered.
+  int renderBelowImages(
+    Canvas canvas,
+    int startLine,
+    int endLine,
+    double cellWidth,
+    double cellHeight,
+  ) {
+    if (_graphicsManager == null) return 0;
+    if (_graphicsManager!.placements.isEmpty) return 0;
+
+    int rendered = 0;
+    for (final entry in _graphicsManager!.placements.entries) {
+      final placement = entry.value;
+      // Skip above-text images
+      if (placement.overlay) continue;
+
+      // Check if placement overlaps with visible lines
+      if (placement.y + placement.height <= startLine ||
+          placement.y >= endLine) {
+        continue;
+      }
+
+      final image = _graphicsManager!.getImage(placement.imageId);
+      if (image == null) continue;
+
+      // Calculate destination rectangle in pixels
+      final destX = placement.x * cellWidth;
+      final destY = placement.y * cellHeight;
+      final destWidth = placement.width * cellWidth;
+      final destHeight = placement.height * cellHeight;
+
+      // Calculate source rectangle (full image)
+      final srcRect = Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+      final dstRect = Rect.fromLTWH(destX, destY, destWidth, destHeight);
+
+      canvas.drawImageRect(image, srcRect, dstRect, Paint());
+      rendered++;
+    }
+
+    return rendered;
+  }
+
+  /// Render all "above text" images that overlap with the given line range.
+  /// Returns the number of images rendered.
+  int renderAboveImages(
+    Canvas canvas,
+    int startLine,
+    int endLine,
+    double cellWidth,
+    double cellHeight,
+  ) {
+    if (_graphicsManager == null) return 0;
+    if (_graphicsManager!.placements.isEmpty) return 0;
+
+    int rendered = 0;
+    for (final entry in _graphicsManager!.placements.entries) {
+      final placement = entry.value;
+      // Skip below-text images
+      if (!placement.overlay) continue;
+
+      // Check if placement overlaps with visible lines
+      if (placement.y + placement.height <= startLine ||
+          placement.y >= endLine) {
+        continue;
+      }
+
+      final image = _graphicsManager!.getImage(placement.imageId);
+      if (image == null) continue;
+
+      // Calculate destination rectangle in pixels
+      final destX = placement.x * cellWidth;
+      final destY = placement.y * cellHeight;
+      final destWidth = placement.width * cellWidth;
+      final destHeight = placement.height * cellHeight;
+
+      // Calculate source rectangle (full image)
+      final srcRect = Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+      final dstRect = Rect.fromLTWH(destX, destY, destWidth, destHeight);
+
+      // Use Paint with filter quality for better scaling
+      final paint = Paint()
+        ..filterQuality = FilterQuality.medium;
+      canvas.drawImageRect(image, srcRect, dstRect, paint);
+      rendered++;
+    }
+
+    return rendered;
   }
 
   /// Paints the character in the cell represented by [cellData] to [canvas] at

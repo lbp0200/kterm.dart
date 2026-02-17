@@ -1,12 +1,17 @@
+import 'dart:async';
 import 'dart:math' show max;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:kitty_key_encoder/kitty_key_encoder.dart';
 import 'package:kterm/src/base/observable.dart';
 import 'package:kterm/src/core/buffer/buffer.dart';
 import 'package:kterm/src/core/buffer/cell_offset.dart';
+import 'package:kterm/src/core/cell.dart';
 import 'package:kterm/src/core/buffer/line.dart';
 import 'package:kterm/src/core/cursor.dart';
 import 'package:kterm/src/core/escape/emitter.dart';
+import 'package:kterm/src/core/graphics_manager.dart';
 import 'package:kterm/src/core/escape/handler.dart';
 import 'package:kterm/src/core/escape/parser.dart';
 import 'package:kterm/src/core/input/handler.dart';
@@ -84,7 +89,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     this.onPrivateOSC,
     this.reflowEnabled = true,
     this.wordSeparators,
-  });
+  }) : graphicsManager = GraphicsManager();
 
   late final _parser = EscapeParser(this);
 
@@ -154,6 +159,19 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   bool _kittyMode = false;
 
   final List<int> _kittyFlagsStack = [];
+
+  // Kitty Graphics Protocol state
+  late final GraphicsManager graphicsManager;
+
+  Map<String, String> _currentGraphicsArgs = {};
+  final List<List<int>> _graphicsChunks = [];
+  bool _graphicsTransmissionActive = false;
+
+  /// Maximum number of chunks to prevent memory exhaustion attacks
+  static const int _maxGraphicsChunks = 1000;
+
+  /// Maximum total chunk size (50MB) to prevent memory exhaustion
+  static const int _maxTotalChunkSize = 50 * 1024 * 1024;
 
   KittyEncoder get kittyEncoder {
     _kittyEncoder ??= KittyEncoder();
@@ -790,8 +808,187 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   void _updateKittyEncoder() {
     if (_kittyEncoder == null) return;
     // Apply flags from stack - use the last flags pushed
+    // ignore: unused_local_variable
     final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
     // Update encoder flags based on Kitty protocol flags
+  }
+
+  /* Kitty Graphics Protocol */
+
+  @override
+  void graphicsCommandStart(Map<String, String> args) {
+    _currentGraphicsArgs = args;
+    _graphicsChunks.clear();
+    _graphicsTransmissionActive = true;
+  }
+
+  @override
+  void graphicsDataChunk(List<int> data) {
+    if (!_graphicsTransmissionActive) return;
+
+    // Prevent memory exhaustion: limit chunk count
+    if (_graphicsChunks.length >= _maxGraphicsChunks) {
+      _graphicsTransmissionActive = false;
+      _graphicsChunks.clear();
+      _currentGraphicsArgs.clear();
+      return;
+    }
+
+    // Prevent memory exhaustion: limit total size
+    final totalSize =
+        _graphicsChunks.fold<int>(0, (sum, c) => sum + c.length) + data.length;
+    if (totalSize > _maxTotalChunkSize) {
+      _graphicsTransmissionActive = false;
+      _graphicsChunks.clear();
+      _currentGraphicsArgs.clear();
+      return;
+    }
+
+    _graphicsChunks.add(data);
+  }
+
+  @override
+  Future<void> graphicsCommandEnd() async {
+    if (!_graphicsTransmissionActive) return;
+
+    _graphicsTransmissionActive = false;
+
+    // Concatenate all chunks
+    final totalLength =
+        _graphicsChunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
+    final combinedData = List<int>.filled(totalLength, 0);
+    var offset = 0;
+    for (final chunk in _graphicsChunks) {
+      combinedData.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
+    }
+    _graphicsChunks.clear();
+
+    // Process based on format
+    final format = int.tryParse(_currentGraphicsArgs['f'] ?? '') ?? 0;
+
+    ui.Image? image;
+
+    switch (format) {
+      case 32: // RGBA raw
+        image = await _createRgbaImage(combinedData);
+        break;
+      case 100: // PNG
+      case 98: // JPEG
+        image = await _createPngImage(combinedData);
+        break;
+      default:
+        // Unsupported format
+        _currentGraphicsArgs.clear();
+        return;
+    }
+
+    if (image == null) {
+      _currentGraphicsArgs.clear();
+      return;
+    }
+
+    // Store image and get ID
+    final imageId = graphicsManager.storeImage(image);
+
+    // Get placement coordinates
+    // Kitty protocol: x,y = position in cells, s,v = cell dimensions, w,h = pixel dimensions
+    final x = int.tryParse(_currentGraphicsArgs['x'] ?? '') ?? 0;
+    final y = int.tryParse(_currentGraphicsArgs['y'] ?? '') ?? 0;
+    // Use s (columns) and v (rows) for cell dimensions, fallback to w/h for pixels
+    final width = int.tryParse(_currentGraphicsArgs['s'] ?? _currentGraphicsArgs['w'] ?? '') ?? 1;
+    final height = int.tryParse(_currentGraphicsArgs['v'] ?? _currentGraphicsArgs['h'] ?? '') ?? 1;
+
+    // Create placement and get placement ID
+    final overlay = _currentGraphicsArgs['S'] ==
+        'C'; // C = cursor (above), S = screen (default = below)
+    final placementId = graphicsManager.createPlacement(
+      imageId: imageId,
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      overlay: overlay,
+    );
+
+    // Mark cells with image reference (using packed image data)
+    _placeImage(imageId, placementId, x, y, width, height);
+
+    _currentGraphicsArgs.clear();
+  }
+
+  /// Create image from RGBA pixel data
+  Future<ui.Image?> _createRgbaImage(List<int> data) async {
+    // Try to get pixel dimensions from w/h, otherwise use s/v (cell dims) or infer
+    var width = int.tryParse(_currentGraphicsArgs['w'] ?? '');
+    var height = int.tryParse(_currentGraphicsArgs['h'] ?? '');
+
+    // If w/h not provided, use s/v as the pixel dimensions (each cell = 1 pixel for f=32)
+    if (width == null || height == null) {
+      width = int.tryParse(_currentGraphicsArgs['s'] ?? '');
+      height = int.tryParse(_currentGraphicsArgs['v'] ?? '');
+    }
+
+    // Last resort: infer from data length (assume square-ish)
+    if (width == null || height == null) {
+      final pixels = data.length ~/ 4;
+      width = pixels > 0 ? pixels : 1;
+      height = 1;
+    }
+
+    // Don't fail - just use what we have
+    if (data.isEmpty) {
+      return null;
+    }
+
+    // Use decodeImageFromPixels with callback
+    final completer = Completer<ui.Image?>();
+    ui.decodeImageFromPixels(
+      Uint8List.fromList(data),
+      width,
+      height,
+      ui.PixelFormat.rgba8888,
+      (image) => completer.complete(image),
+      rowBytes: width * 4,
+    );
+
+    try {
+      return await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => null,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Create image from PNG/JPEG data
+  Future<ui.Image?> _createPngImage(List<int> data) async {
+    try {
+      final bytes = Uint8List.fromList(data);
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Place image at cell position
+  void _placeImage(
+      int imageId, int placementId, int x, int y, int width, int height) {
+    // Pack image data: image ID in upper 16 bits, placement ID in lower 16 bits
+    final imageData = CellImage.packImageData(imageId, placementId);
+
+    // Mark cells in the image area
+    for (var dy = 0; dy < height && y + dy < buffer.height; dy++) {
+      if (y + dy >= lines.length) continue;
+      final bufferLine = lines[y + dy];
+
+      for (var dx = 0; dx < width && x + dx < buffer.viewWidth; dx++) {
+        bufferLine.setImageData(dx, imageData);
+      }
+    }
   }
 
   @override
@@ -824,6 +1021,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void setCursorUnderline() {
     _cursorStyle.setUnderline();
+  }
+
+  @override
+  void setCursorUnderlineStyle(int style) {
+    _cursorStyle.setUnderlineStyle(style);
   }
 
   @override
@@ -884,6 +1086,21 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void unsetCursorStrikethrough() {
     _cursorStyle.unsetStrikethrough();
+  }
+
+  @override
+  void setUnderlineColor256(int color) {
+    _cursorStyle.setUnderlineColor256(color);
+  }
+
+  @override
+  void setUnderlineColorRgb(int r, int g, int b) {
+    _cursorStyle.setUnderlineColorRgb(r, g, b);
+  }
+
+  @override
+  void resetUnderlineColor() {
+    _cursorStyle.resetUnderlineColor();
   }
 
   @override

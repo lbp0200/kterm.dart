@@ -70,6 +70,15 @@ class _HomeState extends State<Home> {
     });
   }
 
+  /// Send a small red PNG image using Kitty Graphics Protocol
+  void _sendTestImage() {
+    // Valid 16x16 red PNG (base64 encoded)
+    final pngData = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR4nGP4z8DwnxLMMGrAqAGjBgwXAwAwxP4QHCfkAAAAAABJRU5ErkJggg==';
+    // s=4,v=4 means 4x4 cells, image will be stretched to fill
+    final imageData = '\x1b_Ga=t,f=100,s=4,v=4,i=1,S=C,q=1;$pngData\x1b\\';
+    terminal.write(imageData);
+  }
+
   void _startPty() {
     pty = Pty.start(
       shell,
@@ -158,10 +167,23 @@ class _HomeState extends State<Home> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: _toggleKittyMode,
-        backgroundColor: _kittyModeEnabled ? Colors.green : Colors.grey,
-        child: const Icon(Icons.toggle_on),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'kitty',
+            onPressed: _toggleKittyMode,
+            backgroundColor: _kittyModeEnabled ? Colors.green : Colors.grey,
+            child: const Icon(Icons.toggle_on),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton.small(
+            heroTag: 'image',
+            onPressed: _sendTestImage,
+            backgroundColor: Colors.red,
+            child: const Icon(Icons.image),
+          ),
+        ],
       ),
     );
   }

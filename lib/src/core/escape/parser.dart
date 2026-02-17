@@ -1,3 +1,5 @@
+import 'dart:convert' show Base64Decoder;
+
 import 'package:kterm/src/core/color.dart';
 import 'package:kterm/src/core/mouse/mode.dart';
 import 'package:kterm/src/core/escape/handler.dart';
@@ -103,6 +105,8 @@ class EscapeParser {
     // 'P'.charCode: _unsupportedHandler, // Sixel
     // 'c'.charCode: _unsupportedHandler,
     // '#'.charCode: _unsupportedHandler,
+    '_'.charCode:
+        _escHandleAPC, // APC (Application Program Command) - Kitty Graphics
     '('.charCode: _escHandleDesignateCharset0, //  SCS - G0
     ')'.charCode: _escHandleDesignateCharset1, //  SCS - G1
     // '*'.charCode: _voidHandler(1), // TODO: G2 (vt220)
@@ -466,7 +470,15 @@ class EscapeParser {
           handler.setCursorItalic();
           continue;
         case 4:
-          handler.setCursorUnderline();
+          // CSI 4:nm - Extended underline styles
+          // Check for subparameter
+          if (i + 1 < params.length) {
+            final subParam = params[i + 1];
+            handler.setCursorUnderlineStyle(subParam);
+            i++; // Skip the subparameter
+          } else {
+            handler.setCursorUnderline();
+          }
           continue;
         case 5:
           handler.setCursorBlink();
@@ -594,6 +606,28 @@ class EscapeParser {
           continue;
         case 49:
           handler.resetBackground();
+          continue;
+
+        // CSI 58 - Underline color
+        case 58:
+          final mode = params[i + 1];
+          switch (mode) {
+            case 2:
+              final r = params[i + 2];
+              final g = params[i + 3];
+              final b = params[i + 4];
+              handler.setUnderlineColorRgb(r, g, b);
+              i += 4;
+              break;
+            case 5:
+              final index = params[i + 2];
+              handler.setUnderlineColor256(index);
+              i += 2;
+              break;
+          }
+          continue;
+        case 59:
+          handler.resetUnderlineColor();
           continue;
 
         case 90:
@@ -1113,6 +1147,164 @@ class EscapeParser {
     handler.unknownOSC(_osc[0], _osc.sublist(1));
 
     return true;
+  }
+
+  /// Handle APC (Application Program Command) sequences
+  /// Used by Kitty Graphics Protocol: ESC _ G <args> ; <payload> ST
+  bool _escHandleAPC() {
+    if (_queue.isEmpty) return false;
+
+    final command = _queue.consume();
+    // Kitty Graphics Protocol uses 'G'
+    if (command != 'G'.codeUnitAt(0)) {
+      // Unknown APC command, skip until ST
+      _skipToStringTerminator();
+      return true;
+    }
+
+    return _handleKittyGraphics();
+  }
+
+  /// Handle Kitty Graphics Protocol sequence
+  bool _handleKittyGraphics() {
+    // Parse key-value pairs until we hit ';' (payload start) or ST
+    final args = _parseGraphicsArgs();
+
+    // Check if this is a chunked transmission (m=1 means more chunks coming)
+    final moreFlag = args['m'];
+
+    // Notify handler that graphics command is starting
+    handler.graphicsCommandStart(args);
+
+    // If m=1, this is not the final chunk - just acknowledge and return
+    // The handler will wait for more chunks
+    if (moreFlag == '1') {
+      return true;
+    }
+
+    // Parse payload (Base64 encoded data)
+    final payloadBytes = _parseGraphicsPayload();
+    if (payloadBytes.isNotEmpty) {
+      handler.graphicsDataChunk(payloadBytes);
+    }
+
+    handler.graphicsCommandEnd();
+    return true;
+  }
+
+  /// Parse graphics key-value arguments
+  Map<String, String> _parseGraphicsArgs() {
+    final args = <String, String>{};
+    final keyBuffer = StringBuffer();
+    final valueBuffer = StringBuffer();
+    var inKey = true;
+
+    while (_queue.isNotEmpty) {
+      final char = _queue.consume();
+
+      // End of arguments, start of payload
+      if (char == Ascii.semicolon) {
+        break;
+      }
+
+      // String terminator - end of sequence (ESC \)
+      if (char == Ascii.ESC) {
+        if (_queue.isNotEmpty && _queue.peek() == Ascii.backslash) {
+          _queue.consume(); // Consume backslash
+          break;
+        }
+      }
+
+      if (char == 61) {
+        // =
+        inKey = false;
+        continue;
+      }
+
+      if (char == Ascii.comma) {
+        // Save current key-value pair
+        if (keyBuffer.isNotEmpty) {
+          args[keyBuffer.toString()] = valueBuffer.toString();
+        }
+        keyBuffer.clear();
+        valueBuffer.clear();
+        inKey = true;
+        continue;
+      }
+
+      if (inKey) {
+        keyBuffer.writeCharCode(char);
+      } else {
+        valueBuffer.writeCharCode(char);
+      }
+    }
+
+    // Save last key-value pair
+    if (keyBuffer.isNotEmpty) {
+      args[keyBuffer.toString()] = valueBuffer.toString();
+    }
+
+    return args;
+  }
+
+  /// Parse graphics payload (Base64 encoded)
+  List<int> _parseGraphicsPayload() {
+    final payloadBuffer = StringBuffer();
+
+    while (_queue.isNotEmpty) {
+      final char = _queue.consume();
+
+      // ST (String Terminator) - ESC \
+      if (char == Ascii.ESC) {
+        if (_queue.isNotEmpty && _queue.peek() == Ascii.backslash) {
+          _queue.consume(); // Consume backslash
+          break;
+        }
+        // ESC alone terminates
+        break;
+      }
+
+      // BEL also terminates
+      if (char == Ascii.BEL) {
+        break;
+      }
+
+      payloadBuffer.writeCharCode(char);
+    }
+
+    if (payloadBuffer.isEmpty) {
+      return [];
+    }
+
+    // Decode Base64
+    return _base64Decode(payloadBuffer.toString());
+  }
+
+  /// Skip to string terminator (ST = ESC \)
+  void _skipToStringTerminator() {
+    while (_queue.isNotEmpty) {
+      final char = _queue.consume();
+      if (char == Ascii.ESC &&
+          _queue.isNotEmpty &&
+          _queue.peek() == Ascii.backslash) {
+        _queue.consume();
+        break;
+      }
+      if (char == Ascii.BEL) {
+        break;
+      }
+    }
+  }
+
+  /// Decode Base64 string to bytes
+  List<int> _base64Decode(String input) {
+    // Remove any whitespace
+    final cleaned = input.replaceAll(RegExp(r'\s'), '');
+    if (cleaned.isEmpty) {
+      return [];
+    }
+    final decoder = Base64Decoder();
+    return decoder.convert(cleaned);
   }
 
   final _osc = <String>[];
