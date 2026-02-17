@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'xterm.dart demo',
+      title: 'kterm demo',
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     );
@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class MockRepl {
   MockRepl(this.onOutput) {
-    onOutput('Welcome to xterm.dart!\r\n');
+    onOutput('Welcome to kterm!\r\n');
     onOutput('Type "help" for more information.\r\n');
     onOutput('\n');
     onOutput('\$ ');

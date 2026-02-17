@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'xterm.dart demo',
+      title: 'kterm demo',
       debugShowCheckedModeBanner: false,
       home: AppPlatformMenu(child: Home()),
     );

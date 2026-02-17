@@ -1,3 +1,3 @@
-# xterm.dart demo
+# kterm demo
 
-This package contains minimalistic xterm.dart examples.
+This package contains minimalistic kterm examples.

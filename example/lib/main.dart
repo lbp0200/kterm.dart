@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'xterm.dart demo',
+      title: 'kterm demo',
       debugShowCheckedModeBanner: false,
       home: AppPlatformMenu(child: Home()),
       // shortcuts: ,
@@ -48,6 +48,8 @@ class _HomeState extends State<Home> {
 
   final terminalController = TerminalController();
 
+  bool _kittyModeEnabled = false;
+
   late final Pty pty;
 
   @override
@@ -59,6 +61,13 @@ class _HomeState extends State<Home> {
         if (mounted) _startPty();
       },
     );
+  }
+
+  void _toggleKittyMode() {
+    setState(() {
+      _kittyModeEnabled = !_kittyModeEnabled;
+      terminal.setKittyMode(_kittyModeEnabled);
+    });
   }
 
   void _startPty() {
@@ -91,26 +100,68 @@ class _HomeState extends State<Home> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: TerminalView(
-          terminal,
-          controller: terminalController,
-          autofocus: true,
-          backgroundOpacity: 0.7,
-          onSecondaryTapDown: (details, offset) async {
-            final selection = terminalController.selection;
-            if (selection != null) {
-              final text = terminal.buffer.getText(selection);
-              terminalController.clearSelection();
-              await Clipboard.setData(ClipboardData(text: text));
-            } else {
-              final data = await Clipboard.getData('text/plain');
-              final text = data?.text;
-              if (text != null) {
-                terminal.paste(text);
-              }
-            }
-          },
+        child: Stack(
+          children: [
+            TerminalView(
+              terminal,
+              controller: terminalController,
+              autofocus: true,
+              backgroundOpacity: 0.7,
+              onSecondaryTapDown: (details, offset) async {
+                final selection = terminalController.selection;
+                if (selection != null) {
+                  final text = terminal.buffer.getText(selection);
+                  terminalController.clearSelection();
+                  await Clipboard.setData(ClipboardData(text: text));
+                } else {
+                  final data = await Clipboard.getData('text/plain');
+                  final text = data?.text;
+                  if (text != null) {
+                    terminal.paste(text);
+                  }
+                }
+              },
+            ),
+            // Kitty Mode indicator
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _kittyModeEnabled
+                      ? Colors.green.withOpacity(0.8)
+                      : Colors.grey.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.keyboard,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Kitty: ${_kittyModeEnabled ? "ON" : "OFF"}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: _toggleKittyMode,
+        backgroundColor: _kittyModeEnabled ? Colors.green : Colors.grey,
+        child: const Icon(Icons.toggle_on),
       ),
     );
   }

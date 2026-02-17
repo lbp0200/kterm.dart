@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
-      title: 'xterm.dart demo',
+      title: 'kterm demo',
       home: MyHomePage(),
     );
   }
