@@ -18,12 +18,18 @@ dart format --set-exit-if-changed .
 # Analyze with fatal infos
 flutter analyze --fatal-infos
 
-# Run tests with coverage
+# Run tests (requires proxy to be unset if behind firewall)
+unset http_proxy https_proxy
 flutter test --coverage
 
 # Run a single test file
 flutter test test/path/to/file_test.dart
 ```
+
+> **Note**: If you see `WebSocketException: Invalid WebSocket upgrade request` when running tests, unset proxy variables first:
+> ```bash
+> unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+> ```
 
 ## Architecture
 

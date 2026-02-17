@@ -76,7 +76,9 @@ class _MyHomePageState extends State<MyHomePage> {
     };
 
     terminal.onOutput = (data) {
-      session.write(utf8.encode(data));
+      // Use latin1 encoding to preserve control characters like ESC (0x1B)
+      // UTF-8 can cause issues with raw control characters in SSH传输
+      session.write(latin1.encode(data));
     };
 
     session.stdout

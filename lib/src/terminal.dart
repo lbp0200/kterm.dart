@@ -808,9 +808,16 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   void _updateKittyEncoder() {
     if (_kittyEncoder == null) return;
     // Apply flags from stack - use the last flags pushed
-    // ignore: unused_local_variable
     final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
     // Update encoder flags based on Kitty protocol flags
+    // bit 0 (1): reportEvent
+    // bit 1 (2): reportAlternateKeys
+    // bit 2 (4): reportAllKeysAsEscape
+    _kittyEncoder = _kittyEncoder!.withFlags(KittyEncoderFlags(
+      reportEvent: (flags & 1) != 0,
+      reportAlternateKeys: (flags & 2) != 0,
+      reportAllKeysAsEscape: (flags & 4) != 0,
+    ));
   }
 
   /* Kitty Graphics Protocol */

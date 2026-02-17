@@ -400,11 +400,53 @@ class TerminalViewState extends State<TerminalView> {
 
     // Intercept with Kitty keyboard protocol if enabled
     if (widget.terminal.kittyMode) {
-      final seq = _encodeWithKitty(event);
-      if (seq != null) {
-        widget.terminal.onOutput?.call(seq);
-        return KeyEventResult.handled;
+      // Check if any modifiers are pressed
+      final keyboard = HardwareKeyboard.instance;
+      final hasModifiers = keyboard.isShiftPressed ||
+          keyboard.isControlPressed ||
+          keyboard.isAltPressed ||
+          keyboard.isMetaPressed;
+
+      // Determine if this is a special key (Enter, Tab, Backspace, Space, Arrows)
+      final isSpecialKey = _isSpecialKey(event.logicalKey);
+
+      // Only use Kitty encoding for:
+      // 1. Special keys with modifiers (Shift+Enter, Ctrl+Tab, etc.)
+      // 2. When reportAllKeysAsEscape is enabled
+      // For alphanumeric keys (like 'A'), always let IME handle them
+      final shouldUseKittyEncoding = hasModifiers
+          ? isSpecialKey // Modifier + special key → Kitty
+          : widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape; // No modifier
+
+      if (shouldUseKittyEncoding) {
+        final seq = _encodeWithKitty(event);
+        if (seq != null && seq.isNotEmpty) {
+          widget.terminal.onOutput?.call(seq);
+          return KeyEventResult.handled;
+        }
       }
+
+      // Default Mode:
+      // - Bare Tab/Enter/Backspace: send standard ASCII directly
+      // - Alphanumeric keys: let Flutter IME handle them
+      if (event is KeyDownEvent || event is KeyRepeatEvent) {
+        // Handle standard control keys that don't produce onTextInput events
+        if (event.logicalKey == LogicalKeyboardKey.tab) {
+          widget.terminal.textInput('\t');
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.enter) {
+          widget.terminal.textInput('\r');
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.backspace) {
+          widget.terminal.textInput('\x7f');
+          return KeyEventResult.handled;
+        }
+      }
+
+      // For alphanumeric keys, let Flutter's TextInputClient handle them
+      return KeyEventResult.ignored;
     }
 
     // ignore: invalid_use_of_protected_member
@@ -458,6 +500,37 @@ class TerminalViewState extends State<TerminalView> {
     if (position != null) {
       position.jumpTo(position.maxScrollExtent);
     }
+  }
+
+  /// Check if the key is a special key (Enter, Tab, Backspace, Space, Arrows, etc.)
+  bool _isSpecialKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.tab ||
+        key == LogicalKeyboardKey.backspace ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.arrowUp ||
+        key == LogicalKeyboardKey.arrowDown ||
+        key == LogicalKeyboardKey.arrowLeft ||
+        key == LogicalKeyboardKey.arrowRight ||
+        key == LogicalKeyboardKey.escape ||
+        key == LogicalKeyboardKey.f1 ||
+        key == LogicalKeyboardKey.f2 ||
+        key == LogicalKeyboardKey.f3 ||
+        key == LogicalKeyboardKey.f4 ||
+        key == LogicalKeyboardKey.f5 ||
+        key == LogicalKeyboardKey.f6 ||
+        key == LogicalKeyboardKey.f7 ||
+        key == LogicalKeyboardKey.f8 ||
+        key == LogicalKeyboardKey.f9 ||
+        key == LogicalKeyboardKey.f10 ||
+        key == LogicalKeyboardKey.f11 ||
+        key == LogicalKeyboardKey.f12 ||
+        key == LogicalKeyboardKey.delete ||
+        key == LogicalKeyboardKey.insert ||
+        key == LogicalKeyboardKey.home ||
+        key == LogicalKeyboardKey.end ||
+        key == LogicalKeyboardKey.pageUp ||
+        key == LogicalKeyboardKey.pageDown;
   }
 
   String? _encodeWithKitty(KeyEvent event) {
