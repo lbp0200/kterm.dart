@@ -75,6 +75,9 @@ example/linux/
 
 # Windows related
 example/windows/
+
+# Build output
+example/build/
 **/macos/**/*.mode1v3
 **/macos/**/*.mode2v3
 **/macos/**/*.moved-aside
