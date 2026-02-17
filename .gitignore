@@ -69,6 +69,12 @@ build/
 
 # macOS related
 example/macos/
+
+# Linux related
+example/linux/
+
+# Windows related
+example/windows/
 **/macos/**/*.mode1v3
 **/macos/**/*.mode2v3
 **/macos/**/*.moved-aside
