@@ -275,14 +275,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.10.0"
-  kitty_key_encoder:
+  kitty_protocol:
     dependency: "direct main"
     description:
-      name: kitty_key_encoder
-      sha256: "3921e3a3ffcbc0b22973e68d4406113d4ddfc5b150d5c3b49de32c0c4710ce94"
+      name: kitty_protocol
+      sha256: "96b00ffdfde005494172c3a3c425c264d83e86a31745f2c196eb2cba7bca559c"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.1.0"
   leak_tracker:
     dependency: transitive
     description:
