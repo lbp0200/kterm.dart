@@ -243,6 +243,8 @@ abstract class EscapeHandler {
 
   void handleTextSizeQuery(int command);
 
+  void handleShellIntegration(String cmd, List<String> args);
+
   void handleColorStack({required bool push});
 
   void unknownOSC(String code, List<String> args);

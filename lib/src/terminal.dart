@@ -1486,6 +1486,12 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     }
   }
 
+  @override
+  void handleShellIntegration(String cmd, List<String> args) {
+    // Shell integration via onPrivateOSC for extensibility
+    onPrivateOSC?.call('133', [cmd, ...args]);
+  }
+
   // Color stack for OSC 30001/30101
   final List<CursorStyle> _colorStack = [];
 

@@ -1175,9 +1175,10 @@ class EscapeParser {
           }
           return true;
         case '133':
-          // Font family query: OSC 133 ; ?
-          if (_osc.length >= 2 && _osc[1] == '?') {
-            handler.handleTextSizeQuery(133);
+          // Shell integration: OSC 133 ; A|D|P|...
+          if (_osc.length >= 2) {
+            final cmd = _osc[1];
+            handler.handleShellIntegration(cmd, _osc.sublist(2));
           }
           return true;
         case '30001':
