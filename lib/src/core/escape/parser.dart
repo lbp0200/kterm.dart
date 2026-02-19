@@ -1188,6 +1188,14 @@ class EscapeParser {
           // Color stack pop
           handler.handleColorStack(push: false);
           return true;
+        case '99':
+          // Desktop notifications: OSC 99 ; title ; body
+          if (_osc.length >= 2) {
+            final title = _osc[1];
+            final body = _osc.length > 2 ? _osc[2] : '';
+            handler.handleNotification(['notify', title, body]);
+          }
+          return true;
         case '777':
           // Desktop notifications: OSC 777 ; cmd ; args...
           if (_osc.length >= 2) {
