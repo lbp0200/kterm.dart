@@ -410,12 +410,21 @@ class TerminalViewState extends State<TerminalView> {
       // Determine if this is a special key (Enter, Tab, Backspace, Space, Arrows)
       final isSpecialKey = _isSpecialKey(event.logicalKey);
 
-      // Handle KeyUp events in Kitty mode - always encode them
+      // Handle KeyUp events in Kitty mode - only encode if reportAllKeysAsEscape or modifiers
       if (event is KeyUpEvent) {
-        final seq = _encodeWithKitty(event);
-        if (seq != null) {
-          widget.terminal.onOutput?.call(seq);
-          return KeyEventResult.handled;
+        // Only send KeyUp encoding when:
+        // 1. reportAllKeysAsEscape is true, OR
+        // 2. Modifiers are pressed
+        // Otherwise, ignore KeyUp to avoid duplicate output
+        final shouldEncodeKeyUp = widget
+            .terminal.kittyEncoder.flags.reportAllKeysAsEscape || hasModifiers;
+
+        if (shouldEncodeKeyUp) {
+          final seq = _encodeWithKitty(event);
+          if (seq != null) {
+            widget.terminal.onOutput?.call(seq);
+            return KeyEventResult.handled;
+          }
         }
         return KeyEventResult.ignored;
       }
@@ -440,13 +449,18 @@ class TerminalViewState extends State<TerminalView> {
       // Default Mode:
       // - Bare Tab/Enter/Backspace: send standard ASCII directly
       // - Alphanumeric keys: let Flutter IME handle them
+      // - Only send Kitty encoding if reportAllKeysAsEscape is true OR modifiers pressed
       if (event is KeyDownEvent || event is KeyRepeatEvent) {
-        // Get the Kitty encoding (may be empty if not supported)
-        final seq = _encodeWithKitty(event);
+        // Check if we should use Kitty encoding or standard handling
+        // Kitty encoding should only be used when:
+        // 1. reportAllKeysAsEscape is true, OR
+        // 2. Modifiers are pressed
+        // Otherwise, use standard character input
+        final useKittyEncoding = widget
+            .terminal.kittyEncoder.flags.reportAllKeysAsEscape || hasModifiers;
 
-        // If Kitty encoding is empty, fall back to standard handling
-        if (seq == null || seq.isEmpty) {
-          // Handle standard control keys that don't produce onTextInput events
+        if (!useKittyEncoding) {
+          // Use standard character input for bare keys
           if (event.logicalKey == LogicalKeyboardKey.tab) {
             widget.terminal.textInput('\t');
             return KeyEventResult.handled;
@@ -459,14 +473,20 @@ class TerminalViewState extends State<TerminalView> {
             widget.terminal.textInput('\x7f');
             return KeyEventResult.handled;
           }
-
           // For alphanumeric keys, let Flutter's TextInputClient handle them
           return KeyEventResult.ignored;
         }
 
-        // Send the Kitty encoding
-        widget.terminal.onOutput?.call(seq);
-        return KeyEventResult.handled;
+        // Get the Kitty encoding
+        final seq = _encodeWithKitty(event);
+        if (seq != null && seq.isNotEmpty) {
+          // Send the Kitty encoding
+          widget.terminal.onOutput?.call(seq);
+          return KeyEventResult.handled;
+        }
+
+        // Fallback if Kitty encoding is empty
+        return KeyEventResult.ignored;
       }
 
       // For alphanumeric keys, let Flutter's TextInputClient handle them

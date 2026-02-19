@@ -644,4 +644,39 @@ class _TerminalDebuggerHandler implements EscapeHandler {
   void popKittyFlags() {
     onCommand('popKittyFlags');
   }
+
+  @override
+  void handleClipboard(String target, String data) {
+    onCommand('handleClipboard($target, $data)');
+  }
+
+  @override
+  void handleNotification(List<String> args) {
+    onCommand('handleNotification($args)');
+  }
+
+  @override
+  void handleTextSizeQuery(int command) {
+    onCommand('handleTextSizeQuery($command)');
+  }
+
+  @override
+  void handleShellIntegration(String cmd, List<String> args) {
+    onCommand('handleShellIntegration($cmd, $args)');
+  }
+
+  @override
+  void handleColorStack({required bool push}) {
+    onCommand('handleColorStack(push: $push)');
+  }
+
+  @override
+  void handleDcs(String command, List<String> args, List<int>? data) {
+    onCommand('handleDcs($command, $args, ${data?.length} bytes)');
+  }
+
+  @override
+  void setHyperlink(String? id, String uri) {
+    onCommand('setHyperlink(id: $id, uri: $uri)');
+  }
 }
