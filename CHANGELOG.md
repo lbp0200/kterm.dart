@@ -1,3 +1,17 @@
+## [1.0.3] - 2026-02-19
+* Fix GitHub Actions workflow for auto-publish to pub.dev
+
+## [1.0.2] - 2026-02-19
+* Kitty Protocol full implementation (19 features)
+* Performance improvements
+
+## [1.0.1] - 2026-02-19
+* Improved Kitty keyboard protocol handling
+
+## [1.0.0] - 2026-02-18
+* Initial release as kterm.dart (renamed from xterm.dart)
+* Full Kitty Protocol support
+
 ## [4.0.0] - 2024-02-27
 * Update for Flutter 3.19 [#190]. Thanks [@domesticmouse].
 * Fix designate charset logic [#186]. Thanks [@djnalluri].
