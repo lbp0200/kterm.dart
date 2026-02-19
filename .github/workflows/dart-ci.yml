@@ -45,10 +45,14 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.9'
       - name: Install dependencies
         run: flutter pub get
       - name: Publish
-        run: flutter pub publish -f
+        run: |
+          echo "Publishing to pub.dev..."
+          flutter pub publish -f
