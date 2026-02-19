@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 
 import '../_fixture/_fixture.dart';
 

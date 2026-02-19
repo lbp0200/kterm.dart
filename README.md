@@ -1,5 +1,5 @@
 
-## kterm (formerly xterm.dart)
+## kterm
 
 <p>
     <a href="https://github.com/lbp0200/kterm.dart/actions/workflows/ci.yml">
@@ -14,7 +14,7 @@
 </p>
 
 
-**kterm** is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms. It is a fork of xterm.dart with enhanced modern terminal features.
+**kterm** is a high-performance terminal emulator engine for Flutter applications, with support for mobile and desktop platforms.
 
 > This package requires Flutter version >=3.0.0
 
@@ -49,9 +49,7 @@
 - 🖼️ **Kitty Graphics Protocol**: Support for inline images (PNG, JPEG, RGBA)
 - ⌨️ **Kitty Keyboard Protocol**: Full support for modern key combinations
 
-## kterm vs xterm.dart
-
-kterm includes all xterm.dart features plus modern terminal enhancements:
+## Key Features
 
 - 🖥️ **Modern Key Support**: Full Kitty Keyboard Protocol implementation.
 - 📚 **Progressive Enhancement**: Supports CSI > n u stack (push/pop) for nested terminal modes.
@@ -78,7 +76,7 @@ dependencies:
 **2.** Create the terminal:
 
 ```dart
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 ...
 terminal = Terminal();
 ```
@@ -114,7 +112,7 @@ terminal.write('Hello, world!');
 ### Basic Usage
 
 ```dart
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 import 'package:kterm/flutter.dart';
 
 final terminal = Terminal();
@@ -129,7 +127,7 @@ TerminalView(
 ### With GraphicsManager (Kitty Graphics Protocol)
 
 ```dart
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 import 'package:kterm/flutter.dart';
 
 final terminal = Terminal(

@@ -2,10 +2,12 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/painting.dart';
 
+import 'package:kterm/core.dart';
 import 'package:kterm/src/core/graphics_manager.dart';
 import 'package:kterm/src/ui/palette_builder.dart';
 import 'package:kterm/src/ui/paragraph_cache.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/src/ui/terminal_theme.dart';
+import 'package:kterm/src/ui/terminal_text_style.dart';
 
 /// Encapsulates the logic for painting various terminal elements.
 class TerminalPainter {

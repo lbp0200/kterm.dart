@@ -1,7 +1,7 @@
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 
 @GenerateNiceMocks([MockSpec<EscapeHandler>()])
 import 'parser_test.mocks.dart';

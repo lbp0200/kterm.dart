@@ -1,36 +1,32 @@
-# .pubignore
-# This file is used to exclude files from being published to pub.dev
+# .pubignore - kterm 极致瘦身版
 
-# Build outputs
+# 1. 开发与调试 (解决之前 dry-run 的警告)
+bin/
+scripts/
+script/
+
+# 2. 测试与示例 (减少包体积)
+test/
+example/
+coverage/
+
+# 3. 平台与构建
 build/
 .dart_tool/
+.github/
 
-# IDE
+# 4. 文档与 AI 痕迹
+docs/
+doc/
+media/
+CLAUDE.md
+.cursor/
+.cursorrules
+
+# 5. IDE 与系统垃圾
 .idea/
 .vscode/
 *.iml
-
-# OS
+*.log
 .DS_Store
 Thumbs.db
-
-# Test coverage
-coverage/
-
-# Example
-example/
-
-# Docs
-docs/
-doc/
-CLAUDE.md
-
-# Development tools
-bin/
-script/
-
-# Tests (not needed by end users)
-test/
-
-# Large assets (demo images not needed by end users)
-media/

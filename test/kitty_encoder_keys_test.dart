@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kitty_protocol/kitty_protocol.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 
 void main() {
   group('Kitty Encoder for regular keys', () {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-kterm (formerly xterm.dart) is a fast, fully-featured terminal emulator for Flutter applications supporting mobile and desktop platforms. The terminal core is frontend-independent, with a separate Flutter UI layer.
+kterm is a high-performance terminal emulator engine for Flutter applications supporting mobile and desktop platforms. The terminal core is frontend-independent, with a separate Flutter UI layer.
 
 ## Common Commands
 
@@ -26,14 +26,9 @@ flutter test --coverage
 flutter test test/path/to/file_test.dart
 ```
 
-> **Note**: If you see `WebSocketException: Invalid WebSocket upgrade request` when running tests, unset proxy variables first:
-> ```bash
-> unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-> ```
-
 ## Architecture
 
-**Core/UI Separation:** The terminal core (`lib/src/core/`) is frontend-independent. The Flutter UI layer is in `lib/src/ui/`. Exports are organized via `core.dart`, `ui.dart`, and `xterm.dart`.
+**Core/UI Separation:** The terminal core (`lib/src/core/`) is frontend-independent. The Flutter UI layer is in `lib/src/ui/`. Exports are organized via `core.dart`, `ui.dart`, and `kterm.dart`.
 
 **Main Classes:**
 - `Terminal` (`lib/src/terminal.dart`) - Implements `TerminalState` and `EscapeHandler`, manages buffers, parses escape sequences, handles input
@@ -68,3 +63,44 @@ flutter test test/path/to/file_test.dart
 - Callbacks: `onBell`, `onTitleChange`, `onOutput`, `onResize`
 - Buffer uses `IndexAwareCircularBuffer<BufferLine>` for scrollback
 - Cell image data packed as: imageId (upper 16 bits) + placementId (lower 16 bits)
+
+## Kitty Protocol
+
+**Reference Implementation:**
+- Source code: `../KittyProtocol/`
+- Documentation: `../KittyProtocol/doc/kitty/docs`
+
+**Protocol Requirements:**
+- Ensure all APC sequences are terminated with ST (`\x1b\\`).
+- Payload encoding uses standard Base64 as specified in the protocol.
+
+**Note:** If bugs are found in the Kitty Protocol implementation (keyboard/graphics), please report them so they can be fixed in the upstream `kitty_protocol` package.
+
+## Key Implementation Patterns
+
+**Terminal Core:**
+- `Terminal` (lib/src/terminal.dart): The central state machine. Implements EscapeHandler.
+
+**Parser:**
+- `Parser` (lib/src/core/escape/parser.dart): Hardened ANSI/XTerm/Kitty parser.
+
+**Buffer:**
+- `Buffer` (lib/src/core/buffer/): Efficient scrollback via IndexAwareCircularBuffer.
+
+**Graphics:**
+- Managed by GraphicsManager, supporting Kitty Graphics Protocol (APC _G).
+
+**Keyboard:**
+- Use KittyEncoder from package:kitty_protocol.
+
+**Reactivity:**
+- Uses Observable mixin for state changes.
+
+**Rendering:**
+- Custom Painter and RenderBox for high-performance text grid rendering.
+
+## Maintenance Notes
+
+- **Pub Hygiene:** Keep the package lean. Refer to `.pubignore` before adding large assets.
+- **Backward Compatibility:** Maintain stable API for all exported libraries.
+- **Bugs:** Report protocol-level issues to kitty_protocol upstream.
