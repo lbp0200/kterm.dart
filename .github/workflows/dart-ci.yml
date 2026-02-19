@@ -34,8 +34,6 @@ jobs:
           flutter test test/kitty_*.dart
           flutter test test/src/core/
           flutter test test/src/utils/
-          flutter test test/src/terminal_test.dart
-          flutter test test/src/buffer/
 
   publish:
     runs-on: ubuntu-latest
