@@ -45,10 +45,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
         with:
-          sdk: stable
+          flutter-version: '3.38.9'
       - name: Install dependencies
-        run: dart pub get
+        run: flutter pub get
       - name: Publish
-        run: dart pub publish -f
+        run: flutter pub publish -f
