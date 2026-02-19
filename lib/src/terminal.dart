@@ -1513,6 +1513,43 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     }
   }
 
+  @override
+  void handleDcs(String command, List<String> args, List<int>? data) {
+    // Handle Remote Control queries: DCS +q<query> ST
+    // Query format: +q<hex-encoded-query> where 'q' is the subparameter indicator
+    if (command.startsWith('+q')) {
+      final query = command.substring(2); // Remove '+q' prefix
+      String response = '';
+
+      // Handle hex-encoded queries (e.g., q544e = q + TN)
+      // or plain text queries (e.g., qTN)
+      switch (query) {
+        case 'qTN':
+        case 'q544e': // q + TN (hex)
+          response = 'kterm';
+          break;
+        case 'qcl':
+        case 'q636c': // q + cl (hex)
+          // Would need to query clipboard
+          response = '';
+          break;
+        case 'qVC':
+        case 'q5643': // q + VC (hex)
+          response = '1.0';
+          break;
+        case 'q?':
+        case 'q3f': // q + ? (hex)
+          response = 'qTN;qcl;qVC';
+          break;
+        default:
+          response = '';
+      }
+
+      // Always respond, even if empty (for clipboard queries)
+      _emit('\x1bP1+r$response\x1b\\');
+    }
+  }
+
   void _emit(String data) {
     onOutput?.call(data);
   }

@@ -105,6 +105,8 @@ class EscapeParser {
     // 'P'.charCode: _unsupportedHandler, // Sixel
     // 'c'.charCode: _unsupportedHandler,
     // '#'.charCode: _unsupportedHandler,
+    'P'.charCode:
+        _escHandleDCS, // DCS (Device Control String) - Remote Control
     '_'.charCode:
         _escHandleAPC, // APC (Application Program Command) - Kitty Graphics
     '('.charCode: _escHandleDesignateCharset0, //  SCS - G0
@@ -1209,6 +1211,38 @@ class EscapeParser {
     // Private extensions
     handler.unknownOSC(_osc[0], _osc.sublist(1));
 
+    return true;
+  }
+
+  /// Handle DCS (Device Control String) sequences
+  /// Used by Kitty Remote Control Protocol: ESC P +q <query> ST
+  bool _escHandleDCS() {
+    if (_queue.isEmpty) return false;
+
+    final command = _queue.consume();
+    // Kitty Remote Control uses '+q'
+    if (command != '+'.codeUnitAt(0)) {
+      // Not a remote control query, skip
+      _skipToStringTerminator();
+      return true;
+    }
+
+    // Get the query code (one or more chars)
+    // Consume bytes until we hit ST (string terminator) or escape
+    final queryChars = <int>[];
+    while (_queue.isNotEmpty) {
+      final c = _queue.consume();
+      if (c == 0 || c == 27 || c == 0x1b) {
+        // Rollback the escape sequence start
+        _queue.rollback(1);
+        break;
+      }
+      queryChars.add(c);
+    }
+    final query = String.fromCharCodes(queryChars);
+
+    // Handle the query
+    handler.handleDcs('+q$query', [], null);
     return true;
   }
 

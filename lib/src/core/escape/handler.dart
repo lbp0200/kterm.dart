@@ -247,5 +247,9 @@ abstract class EscapeHandler {
 
   void handleColorStack({required bool push});
 
+  /// Handle DCS (Device Control String) sequences
+  /// Used for Remote Control protocol: DCS +q query ST
+  void handleDcs(String command, List<String> args, List<int>? data);
+
   void unknownOSC(String code, List<String> args);
 }
