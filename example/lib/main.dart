@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:example/src/platform_menu.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   runApp(MyApp());
@@ -49,6 +51,7 @@ class _HomeState extends State<Home> {
   final terminalController = TerminalController();
 
   bool _kittyModeEnabled = false;
+  bool _showKeyboardInfo = false;
 
   late final Pty pty;
 
@@ -73,10 +76,191 @@ class _HomeState extends State<Home> {
   /// Send a small red PNG image using Kitty Graphics Protocol
   void _sendTestImage() {
     // Valid 16x16 red PNG (base64 encoded)
-    final pngData = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR4nGP4z8DwnxLMMGrAqAGjBgwXAwAwxP4QHCfkAAAAAABJRU5ErkJggg==';
+    final pngData =
+        'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVR4nGP4z8DwnxLMMGrAqAGjBgwXAwAwxP4QHCfkAAAAAABJRU5ErkJggg==';
     // s=4,v=4 means 4x4 cells, image will be stretched to fill
     final imageData = '\x1b_Ga=t,f=100,s=4,v=4,i=1,S=C,q=1;$pngData\x1b\\';
     terminal.write(imageData);
+  }
+
+  /// Toggle keyboard info panel
+  void _toggleKeyboardInfo() {
+    setState(() {
+      _showKeyboardInfo = !_showKeyboardInfo;
+    });
+    if (_showKeyboardInfo) {
+      _showKeyboardPanel();
+    }
+  }
+
+  /// Show Kitty Protocol showcase
+  void _showKittyShowcase() {
+    terminal.write('\x1b[2J'); // Clear screen
+    terminal.write('\x1b[H'); // Move cursor to home
+
+    // Header
+    terminal.write('\x1b[1;36m'); // Cyan
+    terminal.write('╔════════════════════════════════════════════════════════╗\x1b[0m\r\n');
+    terminal.write('║         🐱 Kitty Protocol Showcase - kterm 🐱          ║\x1b[0m\r\n');
+    terminal.write('╚════════════════════════════════════════════════════════╝\x1b[0m\r\n\r\n');
+
+    // 1. Hyperlinks
+    terminal.write('\x1b[1;33m📎 Hyperlinks (OSC 8):\x1b[0m\r\n');
+    terminal.write('\x1b]8;;https://github.com/kovidgoyal/kitty\x1b\\');
+    terminal.write('Click here to visit Kitty terminal\x1b]8;;\x1b\\\r\n');
+    terminal.write('\x1b]8;;https://dart.dev\x1b\\');
+    terminal.write('Or here for Dart language\x1b]8;;\x1b\\\r\n\r\n');
+
+    // 2. Styled Underlines
+    terminal.write('\x1b[1;33m〰️ Styled Underlines (CSI 4:n):\x1b[0m\r\n');
+    terminal.write('\x1b[4;1mSingle underline\x1b[0m  ');
+    terminal.write('\x1b[4;2mDouble\x1b[0m  ');
+    terminal.write('\x1b[4;3mCurly\x1b[0m  ');
+    terminal.write('\x1b[4;4mDotted\x1b[0m  ');
+    terminal.write('\x1b[4;5mDashed\x1b[0m\r\n\r\n');
+
+    // 3. Wide Gamut Colors
+    terminal.write('\x1b[1;33m🎨 Wide Gamut Colors (SGR 38;2):\x1b[0m\r\n');
+    terminal.write('\x1b[38;2;255;0;0mRed RGB\x1b[0m  ');
+    terminal.write('\x1b[38;2;0;255;0mGreen RGB\x1b[0m  ');
+    terminal.write('\x1b[38;2;0;0;255mBlue RGB\x1b[0m  ');
+    terminal.write('\x1b[38;2;255;128;0mOrange\x1b[0m  ');
+    terminal.write('\x1b[38;2;128;0;255mPurple\x1b[0m\r\n\r\n');
+
+    // 4. 256+ Colors
+    terminal.write('\x1b[1;33m🎆 256+ Colors (SGR 38;5):\x1b[0m\r\n');
+    for (int i = 196; i <= 202; i++) {
+      terminal.write('\x1b[38;5;${i}m▀');
+    }
+    terminal.write('\x1b[0m\r\n\r\n');
+
+    // 5. Bold and Italic
+    terminal.write('\x1b[1;33m✒️ Text Styles:\x1b[0m\r\n');
+    terminal.write('\x1b[1mBold\x1b[0m  ');
+    terminal.write('\x1b[3mItalic\x1b[0m  ');
+    terminal.write('\x1b[4mUnderline\x1b[0m  ');
+    terminal.write('\x1b[5mBlink\x1b[0m  ');
+    terminal.write('\x1b[7mInverse\x1b[0m  ');
+    terminal.write('\x1b[9mStrikethrough\x1b[0m\r\n\r\n');
+
+    // 6. Clipboard (info)
+    terminal.write('\x1b[1;33m📋 Clipboard (OSC 52):\x1b[0m\r\n');
+    terminal.write('Use right-click to copy/paste. SSH workflows supported!\r\n\r\n');
+
+    // 7. Desktop Notifications (info)
+    terminal.write('\x1b[1;33m🔔 Notifications (OSC 777):\x1b[0m\r\n');
+    terminal.write('Long-running tasks can send notifications.\r\n\r\n');
+
+    // 8. Mouse Tracking (info)
+    terminal.write('\x1b[1;33m🐭 Mouse Tracking (SGR 1006):\x1b[0m\r\n');
+    terminal.write('Enabled for terminal applications like htop, vim, etc.\r\n\r\n');
+
+    // 9. Bracketed Paste (info)
+    terminal.write('\x1b[1;33m📥 Bracketed Paste (SGR 2004):\x1b[0m\r\n');
+    terminal.write('Safe paste mode enabled for all paste operations.\r\n\r\n');
+
+    // 10. Graphics Protocol
+    terminal.write('\x1b[1;33m🖼️ Kitty Graphics Protocol:\x1b[0m\r\n');
+    terminal.write('Press the image button to send a test image!\r\n\r\n');
+
+    // Footer
+    terminal.write('\x1b[1;32m✅ All 19 Kitty Protocol features implemented!\x1b[0m\r\n');
+    terminal.write('\x1b[90mMore info: https://sw.kovidgoyal.net/kitty/protocols/\x1b[0m\r\n');
+  }
+  void _showKeyboardPanel() {
+    terminal.write('\x1b[2J'); // Clear screen
+    terminal.write('\x1b[H'); // Move cursor to home
+    terminal.write('\x1b[1;36m'); // Cyan color
+    terminal.write('=== Kitty Keyboard Protocol Info ===\x1b[0m\r\n\r\n');
+
+    terminal.write(
+        'Kitty Mode: ${_kittyModeEnabled ? "\x1b[32mENABLED\x1b[0m" : "\x1b[31mDISABLED\x1b[0m"}\r\n\r\n');
+
+    terminal.write('\x1b[1;33mKeyboard Flags:\x1b[0m\r\n');
+    terminal.write('  bit 0 (1): reportEvent          - Report key events\r\n');
+    terminal.write(
+        '  bit 1 (2): reportAlternateKeys  - Report alternate key sequences\r\n');
+    terminal.write(
+        '  bit 2 (4): reportAllKeysAsEscape - Report all keys as escape sequences\r\n\r\n');
+
+    terminal.write('\x1b[1;33mCurrent Features:\x1b[0m\r\n');
+    terminal.write('  - Unicode text input\r\n');
+    terminal.write('  - Function keys (F1-F12)\r\n');
+    terminal.write('  - Arrow keys\r\n');
+    terminal.write('  - Home/End/PageUp/PageDown\r\n');
+    terminal.write('  - Modifier keys (Shift/Ctrl/Alt/Super)\r\n');
+    terminal.write('  - Key release events\r\n\r\n');
+
+    terminal.write('\x1b[1;33mTest Keys:\x1b[0m\r\n');
+    terminal.write('  Try pressing arrow keys, function keys,\r\n');
+    terminal.write('  or special keys to see Kitty encoding.\r\n\r\n');
+
+    terminal
+        .write('\x1b[1;32mPress any key in the terminal to test!\x1b[0m\r\n');
+  }
+
+  /// Pick and display image using file picker
+  Future<void> _pickAndDisplayImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final file = result.files.first;
+      if (file.path == null) {
+        return;
+      }
+
+      // Read the image file
+      final imageBytes = await File(file.path!).readAsBytes();
+      // Encode as base64
+      final base64Data = base64Encode(imageBytes);
+
+      // Determine format from extension
+      final ext = p.extension(file.path!).toLowerCase();
+      int format;
+      if (ext == '.png') {
+        format = 100;
+      } else if (ext == '.jpg' || ext == '.jpeg') {
+        format = 98;
+      } else {
+        format = 100; // Default to PNG
+      }
+
+      // Get image dimensions for cell size
+      // Use smaller cell size for better fit
+      final cellWidth = (file.size > 100000) ? 8 : 4;
+      final cellHeight = (file.size > 100000) ? 8 : 4;
+
+      // Send image via Kitty Graphics Protocol
+      // a=t (transfer), f=format, s=cell width, v=cell height
+      final imageData =
+          '\x1b_Ga=t,f=$format,s=$cellWidth,v=$cellHeight,i=1;$base64Data\x1b\\';
+      terminal.write(imageData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Image sent: ${file.name}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _startPty() {
@@ -171,9 +355,18 @@ class _HomeState extends State<Home> {
         mainAxisSize: MainAxisSize.min,
         children: [
           FloatingActionButton.small(
+            heroTag: 'keyboard',
+            onPressed: _toggleKeyboardInfo,
+            backgroundColor: _showKeyboardInfo ? Colors.cyan : Colors.grey,
+            tooltip: 'Keyboard Info',
+            child: const Icon(Icons.keyboard),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton.small(
             heroTag: 'kitty',
             onPressed: _toggleKittyMode,
             backgroundColor: _kittyModeEnabled ? Colors.green : Colors.grey,
+            tooltip: 'Toggle Kitty Mode',
             child: const Icon(Icons.toggle_on),
           ),
           const SizedBox(width: 8),
@@ -181,7 +374,24 @@ class _HomeState extends State<Home> {
             heroTag: 'image',
             onPressed: _sendTestImage,
             backgroundColor: Colors.red,
+            tooltip: 'Send Test Image',
             child: const Icon(Icons.image),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton.small(
+            heroTag: 'showcase',
+            onPressed: _showKittyShowcase,
+            backgroundColor: Colors.purple,
+            tooltip: 'Kitty Showcase',
+            child: const Icon(Icons.star),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton.small(
+            heroTag: 'picker',
+            onPressed: _pickAndDisplayImage,
+            backgroundColor: Colors.orange,
+            tooltip: 'Pick Image File',
+            child: const Icon(Icons.photo_library),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:flutter/painting.dart';
 
 import 'package:kterm/core.dart';
 import 'package:kterm/src/core/graphics_manager.dart';
+import 'package:kterm/src/ui/cursor_type.dart';
 import 'package:kterm/src/ui/palette_builder.dart';
 import 'package:kterm/src/ui/paragraph_cache.dart';
 import 'package:kterm/src/ui/terminal_theme.dart';
@@ -401,8 +402,7 @@ class TerminalPainter {
       final dstRect = Rect.fromLTWH(destX, destY, destWidth, destHeight);
 
       // Use Paint with filter quality for better scaling
-      final paint = Paint()
-        ..filterQuality = FilterQuality.medium;
+      final paint = Paint()..filterQuality = FilterQuality.medium;
       canvas.drawImageRect(image, srcRect, dstRect, paint);
       rendered++;
     }

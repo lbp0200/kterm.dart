@@ -5,7 +5,9 @@ import 'package:kterm/kterm.dart';
 
 void main() {
   group('Kitty Encoder - Default behavior (reportAllKeysAsEscape=false)', () {
-    test('basic mode (CSI > 1u) sets kittyMode=true but reportAllKeysAsEscape=false', () {
+    test(
+        'basic mode (CSI > 1u) sets kittyMode=true but reportAllKeysAsEscape=false',
+        () {
       final terminal = Terminal();
       terminal.write('\x1b[>1u');
 
@@ -14,7 +16,9 @@ void main() {
       expect(terminal.kittyEncoder.flags.reportAllKeysAsEscape, isFalse);
     });
 
-    test('Tab encoder returns sequence but should be ignored due to reportAllKeysAsEscape=false', () {
+    test(
+        'Tab encoder returns sequence but should be ignored due to reportAllKeysAsEscape=false',
+        () {
       final terminal = Terminal();
       terminal.write('\x1b[>1u');
 
@@ -30,7 +34,7 @@ void main() {
       );
 
       // Encoder still returns sequence (this is a library quirk)
-      expect(result, equals('\x1B[29;1u'));
+      expect(result, equals('\x1B[9;1u'));
       // But we should check the flag in kterm to decide whether to use it
       expect(terminal.kittyEncoder.flags.reportAllKeysAsEscape, isFalse);
     });

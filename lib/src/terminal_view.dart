@@ -410,13 +410,24 @@ class TerminalViewState extends State<TerminalView> {
       // Determine if this is a special key (Enter, Tab, Backspace, Space, Arrows)
       final isSpecialKey = _isSpecialKey(event.logicalKey);
 
+      // Handle KeyUp events in Kitty mode - always encode them
+      if (event is KeyUpEvent) {
+        final seq = _encodeWithKitty(event);
+        if (seq != null) {
+          widget.terminal.onOutput?.call(seq);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      }
+
       // Only use Kitty encoding for:
       // 1. Special keys with modifiers (Shift+Enter, Ctrl+Tab, etc.)
-      // 2. When reportAllKeysAsEscape is enabled
-      // For alphanumeric keys (like 'A'), always let IME handle them
+      // 2. When reportAll enabled
+      // For alphanumeric keys (like 'A'), always let IME handleKeysAsEscape is them
       final shouldUseKittyEncoding = hasModifiers
           ? isSpecialKey // Modifier + special key → Kitty
-          : widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape; // No modifier
+          : widget
+              .terminal.kittyEncoder.flags.reportAllKeysAsEscape; // No modifier
 
       if (shouldUseKittyEncoding) {
         final seq = _encodeWithKitty(event);
@@ -430,19 +441,32 @@ class TerminalViewState extends State<TerminalView> {
       // - Bare Tab/Enter/Backspace: send standard ASCII directly
       // - Alphanumeric keys: let Flutter IME handle them
       if (event is KeyDownEvent || event is KeyRepeatEvent) {
-        // Handle standard control keys that don't produce onTextInput events
-        if (event.logicalKey == LogicalKeyboardKey.tab) {
-          widget.terminal.textInput('\t');
-          return KeyEventResult.handled;
+        // Get the Kitty encoding (may be empty if not supported)
+        final seq = _encodeWithKitty(event);
+
+        // If Kitty encoding is empty, fall back to standard handling
+        if (seq == null || seq.isEmpty) {
+          // Handle standard control keys that don't produce onTextInput events
+          if (event.logicalKey == LogicalKeyboardKey.tab) {
+            widget.terminal.textInput('\t');
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            widget.terminal.textInput('\r');
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.backspace) {
+            widget.terminal.textInput('\x7f');
+            return KeyEventResult.handled;
+          }
+
+          // For alphanumeric keys, let Flutter's TextInputClient handle them
+          return KeyEventResult.ignored;
         }
-        if (event.logicalKey == LogicalKeyboardKey.enter) {
-          widget.terminal.textInput('\r');
-          return KeyEventResult.handled;
-        }
-        if (event.logicalKey == LogicalKeyboardKey.backspace) {
-          widget.terminal.textInput('\x7f');
-          return KeyEventResult.handled;
-        }
+
+        // Send the Kitty encoding
+        widget.terminal.onOutput?.call(seq);
+        return KeyEventResult.handled;
       }
 
       // For alphanumeric keys, let Flutter's TextInputClient handle them
@@ -534,7 +558,10 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   String? _encodeWithKitty(KeyEvent event) {
-    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+    // Handle KeyUp events - encode them to signal key release
+    final isKeyUp = event is KeyUpEvent;
+
+    if (isKeyUp || event is KeyDownEvent || event is KeyRepeatEvent) {
       final modifiers = <SimpleModifier>{};
       final keyboard = HardwareKeyboard.instance;
 
@@ -546,7 +573,7 @@ class TerminalViewState extends State<TerminalView> {
       final keyEvent = SimpleKeyEvent(
         logicalKey: event.logicalKey,
         modifiers: modifiers,
-        isKeyUp: event is KeyUpEvent,
+        isKeyUp: isKeyUp,
         isKeyRepeat: event is KeyRepeatEvent,
       );
 

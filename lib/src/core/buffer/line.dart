@@ -7,7 +7,7 @@ import 'package:kterm/src/core/cursor.dart';
 import 'package:kterm/src/utils/circular_buffer.dart';
 import 'package:kterm/src/utils/unicode_v11.dart';
 
-const _cellSize = 7;
+const _cellSize = 8;
 
 const _cellForeground = 0;
 
@@ -24,6 +24,9 @@ const _cellUnderlineColor = 5;
 
 // Added for image support
 const _cellImageData = 6;
+
+// Added for hyperlink support
+const _cellHyperlinkId = 7;
 
 class BufferLine with IndexedItem {
   BufferLine(
@@ -78,18 +81,12 @@ class BufferLine with IndexedItem {
     cellData.underlineStyle = _data[offset + _cellUnderlineStyle];
     cellData.underlineColor = _data[offset + _cellUnderlineColor];
     cellData.imageData = _data[offset + _cellImageData];
+    cellData.hyperlinkId = _data[offset + _cellHyperlinkId];
   }
 
   CellData createCellData(int index) {
     final cellData = CellData.empty();
-    final offset = index * _cellSize;
-    _data[offset + _cellForeground] = cellData.foreground;
-    _data[offset + _cellBackground] = cellData.background;
-    _data[offset + _cellAttributes] = cellData.flags;
-    _data[offset + _cellContent] = cellData.content;
-    _data[offset + _cellUnderlineStyle] = cellData.underlineStyle;
-    _data[offset + _cellUnderlineColor] = cellData.underlineColor;
-    _data[offset + _cellImageData] = cellData.imageData;
+    getCellData(index, cellData);
     return cellData;
   }
 
@@ -133,6 +130,14 @@ class BufferLine with IndexedItem {
     _data[index * _cellSize + _cellImageData] = value;
   }
 
+  int getHyperlinkId(int index) {
+    return _data[index * _cellSize + _cellHyperlinkId];
+  }
+
+  void setHyperlinkId(int index, int value) {
+    _data[index * _cellSize + _cellHyperlinkId] = value;
+  }
+
   void setCodePoint(int index, int char) {
     final width = unicodeV11.wcwidth(char);
     setContent(index, char | (width << CellContent.widthShift));
@@ -147,6 +152,7 @@ class BufferLine with IndexedItem {
     _data[offset + _cellUnderlineStyle] = style.underlineStyle;
     _data[offset + _cellUnderlineColor] = style.underlineColor;
     _data[offset + _cellImageData] = 0; // No image by default
+    _data[offset + _cellHyperlinkId] = style.hyperlinkId;
   }
 
   void setCellData(int index, CellData cellData) {
@@ -158,6 +164,7 @@ class BufferLine with IndexedItem {
     _data[offset + _cellUnderlineStyle] = cellData.underlineStyle;
     _data[offset + _cellUnderlineColor] = cellData.underlineColor;
     _data[offset + _cellImageData] = cellData.imageData;
+    _data[offset + _cellHyperlinkId] = cellData.hyperlinkId;
   }
 
   void eraseCell(int index, CursorStyle style) {
@@ -169,6 +176,7 @@ class BufferLine with IndexedItem {
     _data[offset + _cellUnderlineStyle] = style.underlineStyle;
     _data[offset + _cellUnderlineColor] = style.underlineColor;
     _data[offset + _cellImageData] = 0; // Clear image data
+    _data[offset + _cellHyperlinkId] = 0; // Clear hyperlink
   }
 
   void resetCell(int index) {
@@ -180,6 +188,7 @@ class BufferLine with IndexedItem {
     _data[offset + _cellUnderlineStyle] = 0;
     _data[offset + _cellUnderlineColor] = 0;
     _data[offset + _cellImageData] = 0;
+    _data[offset + _cellHyperlinkId] = 0;
   }
 
   /// Erase cells whose index satisfies [start] <= index < [end]. Erased cells

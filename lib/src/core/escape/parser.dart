@@ -1140,6 +1140,60 @@ class EscapeParser {
         case '2':
           handler.setTitle(pt);
           return true;
+        case '8':
+          // Hyperlink: OSC 8 ; params ; URI ST
+          // Format: 8;id=xxx;uri or 8;;uri
+          // _osc[0] = '8', _osc[1..] = params and uri
+          final args = _osc.sublist(1);
+          String? id;
+          String uri = '';
+          for (final arg in args) {
+            if (arg.startsWith('id=')) {
+              id = arg.substring(3);
+            } else if (arg.isNotEmpty) {
+              uri = arg;
+            }
+          }
+          handler.setHyperlink(id, uri);
+          return true;
+        case '52':
+          // Clipboard: OSC 52 ; target ; base64data
+          // target: c=clipboard, p=primary, s=selection
+          if (_osc.length >= 3) {
+            final target = _osc[1];
+            final data = _osc[2];
+            handler.handleClipboard(target, data);
+          } else if (_osc.length >= 2) {
+            final target = _osc[1];
+            handler.handleClipboard(target, '?');
+          }
+          return true;
+        case '10':
+          // Font size query: OSC 10 ; ?
+          if (_osc.length >= 2 && _osc[1] == '?') {
+            handler.handleTextSizeQuery(10);
+          }
+          return true;
+        case '133':
+          // Font family query: OSC 133 ; ?
+          if (_osc.length >= 2 && _osc[1] == '?') {
+            handler.handleTextSizeQuery(133);
+          }
+          return true;
+        case '30001':
+          // Color stack push
+          handler.handleColorStack(push: true);
+          return true;
+        case '30101':
+          // Color stack pop
+          handler.handleColorStack(push: false);
+          return true;
+        case '777':
+          // Desktop notifications: OSC 777 ; cmd ; args...
+          if (_osc.length >= 2) {
+            handler.handleNotification(_osc.sublist(1));
+          }
+          return true;
       }
     }
 

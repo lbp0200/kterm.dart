@@ -235,5 +235,15 @@ abstract class EscapeHandler {
 
   void setIconName(String name);
 
+  void setHyperlink(String? id, String uri);
+
+  void handleClipboard(String target, String data);
+
+  void handleNotification(List<String> args);
+
+  void handleTextSizeQuery(int command);
+
+  void handleColorStack({required bool push});
+
   void unknownOSC(String code, List<String> args);
 }

@@ -1,14 +1,20 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
 
 /// Entry for LRU cache tracking
-class _ImageEntry {
+class ImageEntry {
   final ui.Image image;
   int lastAccess;
   final int sizeBytes;
+  final bool isAnimated;
+  final List<int>? frameDelays; // Frame delays in ms, null for static images
 
-  _ImageEntry({
+  ImageEntry({
     required this.image,
     required this.sizeBytes,
+    this.isAnimated = false,
+    this.frameDelays,
   }) : lastAccess = DateTime.now().millisecondsSinceEpoch;
 }
 
@@ -57,7 +63,7 @@ class GraphicsManager {
   /// Maximum number of images (default: 1000)
   final int maxImageCount;
 
-  final Map<int, _ImageEntry> _images = {};
+  final Map<int, ImageEntry> _images = {};
   final Map<int, ImagePlacement> _placements = {};
 
   /// Get all placements (for rendering)
@@ -65,6 +71,43 @@ class GraphicsManager {
   int _nextImageId = 1;
   int _nextPlacementId = 1;
   int _currentMemoryBytes = 0;
+
+  /// Current frame index for each animated image (imageId -> frameIndex)
+  final Map<int, int> _currentFrameIndex = {};
+
+  /// Advance animation frame for an image, returns true if frame changed
+  bool advanceFrame(int imageId) {
+    final entry = _images[imageId];
+    if (entry == null || !entry.isAnimated || entry.frameDelays == null) {
+      return false;
+    }
+
+    final delays = entry.frameDelays!;
+    final currentIndex = _currentFrameIndex[imageId] ?? 0;
+    final nextIndex = (currentIndex + 1) % delays.length;
+    _currentFrameIndex[imageId] = nextIndex;
+    return true;
+  }
+
+  /// Get the current frame index for an image
+  int getCurrentFrameIndex(int imageId) {
+    return _currentFrameIndex[imageId] ?? 0;
+  }
+
+  /// Get frame count for an image (1 if not animated)
+  int getFrameCount(int imageId) {
+    final entry = _images[imageId];
+    if (entry == null || entry.frameDelays == null) return 1;
+    return entry.frameDelays!.length;
+  }
+
+  /// Get frame delay in ms for the current frame
+  int? getFrameDelay(int imageId) {
+    final entry = _images[imageId];
+    if (entry == null || entry.frameDelays == null) return null;
+    final index = _currentFrameIndex[imageId] ?? 0;
+    return entry.frameDelays![index];
+  }
 
   /// Store an image, returns the image ID
   int storeImage(ui.Image image) {
@@ -75,8 +118,70 @@ class GraphicsManager {
     _evictIfNeeded(sizeBytes);
 
     final imageId = _nextImageId++;
-    _images[imageId] = _ImageEntry(image: image, sizeBytes: sizeBytes);
+    _images[imageId] = ImageEntry(image: image, sizeBytes: sizeBytes);
     _currentMemoryBytes += sizeBytes;
+
+    return imageId;
+  }
+
+  /// Convert img.Image to ui.Image
+  Future<ui.Image> _convertToUiImage(img.Image image) async {
+    final bytes = image.getBytes();
+    final completer = ui.ImmutableBuffer.fromUint8List(bytes);
+    final buffer = await completer;
+    final descriptor = ui.ImageDescriptor.raw(
+      buffer,
+      width: image.width,
+      height: image.height,
+      pixelFormat: ui.PixelFormat.rgba8888,
+    );
+    final codec = await descriptor.instantiateCodec();
+    final frame = await codec.getNextFrame();
+    return frame.image;
+  }
+
+  /// Store a GIF animation, returns the image ID
+  /// If the GIF is not animated, this works like storeImage
+  Future<int> storeGif(Uint8List gifData, {int? loopCount}) async {
+    // Decode the GIF
+    final decoded = img.decodeGif(gifData);
+    if (decoded == null) {
+      throw Exception('Failed to decode GIF');
+    }
+
+    // Convert the first frame to ui.Image
+    final firstFrame = await _convertToUiImage(decoded);
+
+    // Calculate total size (sum of all frames)
+    int totalSizeBytes = 0;
+    final List<int> frameDelays = [];
+
+    final numFrames = decoded.frames.length;
+    if (numFrames > 1) {
+      // Animated GIF - we need to decode all frames
+      // Note: This is memory-intensive for large animations
+      for (int i = 0; i < numFrames; i++) {
+        final frame = decoded.frames[i];
+        totalSizeBytes += (frame.width * frame.height * 4);
+        // GIF frame delay is in centiseconds, convert to milliseconds
+        final delay = frame.frameDuration * 10;
+        frameDelays.add(delay > 0 ? delay : 100); // Default to 100ms
+      }
+    } else {
+      totalSizeBytes = (firstFrame.width * firstFrame.height * 4);
+    }
+
+    // Evict if needed
+    _evictIfNeeded(totalSizeBytes);
+
+    final imageId = _nextImageId++;
+    _images[imageId] = ImageEntry(
+      image: firstFrame,
+      sizeBytes: totalSizeBytes,
+      isAnimated: numFrames > 1,
+      frameDelays: numFrames > 1 ? frameDelays : null,
+    );
+    _currentMemoryBytes += totalSizeBytes;
 
     return imageId;
   }
@@ -89,6 +194,11 @@ class GraphicsManager {
     // Update LRU
     entry.lastAccess = DateTime.now().millisecondsSinceEpoch;
     return entry.image;
+  }
+
+  /// Get image entry by ID (includes animation info)
+  ImageEntry? getImageEntry(int imageId) {
+    return _images[imageId];
   }
 
   /// Create a placement for an existing image, returns placement ID

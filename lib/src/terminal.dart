@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert' show base64, utf8;
 import 'dart:math' show max;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -68,6 +70,12 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// The callback that is called when the terminal receives a unrecognized
   /// escape sequence.
   void Function(String code, List<String> args)? onPrivateOSC;
+
+  /// Callback when terminal requests clipboard read (OSC 52)
+  void Function(String target)? onClipboardRead;
+
+  /// Callback when terminal writes to clipboard (OSC 52)
+  void Function(String data, String target)? onClipboardWrite;
 
   /// Flag to toggle os specific behaviors.
   final TerminalTargetPlatform platform;
@@ -871,6 +879,24 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
     _graphicsTransmissionActive = false;
 
+    // Check the action type
+    final action = _currentGraphicsArgs['a'] ?? 't';
+
+    // Handle query action (a=q)
+    if (action == 'q') {
+      await _handleGraphicsQuery();
+      _currentGraphicsArgs.clear();
+      return;
+    }
+
+    // Handle delete action (a=d)
+    if (action == 'd') {
+      await _handleGraphicsDelete();
+      _currentGraphicsArgs.clear();
+      return;
+    }
+
+    // Handle transfer action (a=t) - original image handling code
     // Concatenate all chunks
     final totalLength =
         _graphicsChunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
@@ -895,6 +921,13 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       case 98: // JPEG
         image = await _createPngImage(combinedData);
         break;
+      case 50: // GIF
+        // GIF handling - store as animated image
+        final imageId = await graphicsManager.storeGif(Uint8List.fromList(combinedData));
+        // Continue with placement using first frame
+        await _createPlacementForImage(imageId);
+        _currentGraphicsArgs.clear();
+        return;
       default:
         // Unsupported format
         _currentGraphicsArgs.clear();
@@ -909,13 +942,23 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // Store image and get ID
     final imageId = graphicsManager.storeImage(image);
 
+    // Create placement for the image
+    await _createPlacementForImage(imageId);
+  }
+
+  /// Create a placement for an existing image ID
+  Future<void> _createPlacementForImage(int imageId) async {
     // Get placement coordinates
     // Kitty protocol: x,y = position in cells, s,v = cell dimensions, w,h = pixel dimensions
     final x = int.tryParse(_currentGraphicsArgs['x'] ?? '') ?? 0;
     final y = int.tryParse(_currentGraphicsArgs['y'] ?? '') ?? 0;
     // Use s (columns) and v (rows) for cell dimensions, fallback to w/h for pixels
-    final width = int.tryParse(_currentGraphicsArgs['s'] ?? _currentGraphicsArgs['w'] ?? '') ?? 1;
-    final height = int.tryParse(_currentGraphicsArgs['v'] ?? _currentGraphicsArgs['h'] ?? '') ?? 1;
+    final width = int.tryParse(
+            _currentGraphicsArgs['s'] ?? _currentGraphicsArgs['w'] ?? '') ??
+        1;
+    final height = int.tryParse(
+            _currentGraphicsArgs['v'] ?? _currentGraphicsArgs['h'] ?? '') ??
+        1;
 
     // Create placement and get placement ID
     final overlay = _currentGraphicsArgs['S'] ==
@@ -989,6 +1032,165 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       return frame.image;
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Handle graphics query action (a=q)
+  /// Returns image information via escape sequence response
+  Future<void> _handleGraphicsQuery() async {
+    // Check for specific image ID query
+    final imageIdStr = _currentGraphicsArgs['i'];
+    // Check for position query
+    final xStr = _currentGraphicsArgs['x'];
+    final yStr = _currentGraphicsArgs['y'];
+
+    if (imageIdStr != null && imageIdStr.isNotEmpty) {
+      // Query specific image(s) by ID
+      final ids = imageIdStr
+          .split(',')
+          .map((s) => int.tryParse(s.trim()))
+          .whereType<int>()
+          .toList();
+      for (final id in ids) {
+        final image = graphicsManager.getImage(id);
+        if (image != null) {
+          final placements = graphicsManager.placements.entries
+              .where((e) => e.value.imageId == id)
+              .toList();
+          for (final entry in placements) {
+            final p = entry.value;
+            _sendGraphicsResponse(
+              imageId: id,
+              type: 'png',
+              width: image.width,
+              height: image.height,
+              x: p.x,
+              y: p.y,
+              placementId: p.placementId,
+            );
+          }
+        }
+      }
+    } else if (xStr != null && yStr != null) {
+      // Query by position
+      final x = int.tryParse(xStr) ?? 0;
+      final y = int.tryParse(yStr) ?? 0;
+      final placementId = graphicsManager.getPlacementIdAt(x, y);
+      if (placementId != 0) {
+        final placement = graphicsManager.getPlacement(placementId);
+        if (placement != null) {
+          final image = graphicsManager.getImage(placement.imageId);
+          if (image != null) {
+            _sendGraphicsResponse(
+              imageId: placement.imageId,
+              type: 'png',
+              width: image.width,
+              height: image.height,
+              x: placement.x,
+              y: placement.y,
+              placementId: placementId,
+            );
+          }
+        }
+      }
+    } else {
+      // Query all images - send response for each
+      for (final entry in graphicsManager.placements.entries) {
+        final p = entry.value;
+        final image = graphicsManager.getImage(p.imageId);
+        if (image != null) {
+          _sendGraphicsResponse(
+            imageId: p.imageId,
+            type: 'png',
+            width: image.width,
+            height: image.height,
+            x: p.x,
+            y: p.y,
+            placementId: p.placementId,
+          );
+        }
+      }
+    }
+  }
+
+  /// Handle graphics delete action (a=d)
+  Future<void> _handleGraphicsDelete() async {
+    // Check for specific image ID to delete
+    final imageIdStr = _currentGraphicsArgs['i'];
+    // Check for position-based deletion
+    final xStr = _currentGraphicsArgs['x'];
+    final yStr = _currentGraphicsArgs['y'];
+
+    if (imageIdStr != null && imageIdStr.isNotEmpty) {
+      // Delete specific image(s) by ID
+      final ids = imageIdStr
+          .split(',')
+          .map((s) => int.tryParse(s.trim()))
+          .whereType<int>()
+          .toList();
+      for (final id in ids) {
+        graphicsManager.removeImage(id);
+        // Also clear cells that referenced this image
+        _clearImageFromCells(id);
+      }
+    } else if (xStr != null && yStr != null) {
+      // Delete by position
+      final x = int.tryParse(xStr) ?? 0;
+      final y = int.tryParse(yStr) ?? 0;
+      final placementId = graphicsManager.getPlacementIdAt(x, y);
+      if (placementId != 0) {
+        final placement = graphicsManager.getPlacement(placementId);
+        if (placement != null) {
+          graphicsManager.removeImage(placement.imageId);
+          _clearImageFromCells(placement.imageId);
+        }
+      }
+    } else {
+      // Delete all images
+      graphicsManager.clear();
+      _clearAllImagesFromCells();
+    }
+  }
+
+  /// Send graphics protocol response
+  void _sendGraphicsResponse({
+    required int imageId,
+    required String type,
+    required int width,
+    required int height,
+    required int x,
+    required int y,
+    required int placementId,
+  }) {
+    // Format: \x1b_Gi=<id>,t=<type>,w=<width>,h=<height>,x=<x>,y=<y>,p=<placement_id>\x1b\\
+    final response =
+        '\x1b_Gi=$imageId,t=$type,w=$width,h=$height,x=$x,y=$y,p=$placementId\x1b\\';
+    onOutput?.call(response);
+  }
+
+  /// Clear image references from cells
+  void _clearImageFromCells(int imageId) {
+    for (var y = 0; y < lines.length; y++) {
+      final line = lines[y];
+      for (var x = 0; x < buffer.viewWidth; x++) {
+        final cellImageData = line.getImageData(x);
+        if (CellImage.getImageId(cellImageData) == imageId) {
+          line.setImageData(x, 0);
+        }
+      }
+    }
+  }
+
+  /// Clear all image references from cells
+  void _clearAllImagesFromCells() {
+    for (var y = 0; y < lines.length; y++) {
+      final line = lines[y];
+      for (var x = 0; x < buffer.viewWidth; x++) {
+        final cellImageData = line.getImageData(x);
+        if (CellImage.hasImage(cellImageData)) {
+          line.setImageData(x, 0);
+        }
+      }
     }
   }
 
@@ -1178,10 +1380,114 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     onIconChange?.call(name);
   }
 
+  int? _currentHyperlinkId;
+  final Map<int, _HyperlinkEntry> _hyperlinks = {};
+  int _hyperlinkIdCounter = 1;
+
+  @override
+  void setHyperlink(String? id, String uri) {
+    if (uri.isEmpty) {
+      // End hyperlink
+      _currentHyperlinkId = null;
+      _cursorStyle.hyperlinkId = 0;
+    } else {
+      // Register or find existing hyperlink
+      _currentHyperlinkId = _registerHyperlink(uri, id);
+      _cursorStyle.hyperlinkId = _currentHyperlinkId!;
+    }
+  }
+
+  int _registerHyperlink(String uri, String? id) {
+    final key = id ?? uri;
+    for (var entry in _hyperlinks.entries) {
+      if (entry.value.uri == uri && entry.value.id == key) {
+        return entry.key;
+      }
+    }
+    final newId = _hyperlinkIdCounter++;
+    _hyperlinks[newId] = _HyperlinkEntry(uri, key);
+    return newId;
+  }
+
+  @override
+  void handleClipboard(String target, String data) {
+    if (data == '?') {
+      // Query clipboard - trigger callback for UI to read
+      onClipboardRead?.call(target);
+    } else {
+      // Set clipboard - decode base64 and pass to callback
+      try {
+        final decoded = utf8.decode(base64.decode(data));
+        onClipboardWrite?.call(decoded, target);
+      } catch (e) {
+        // Invalid base64, ignore
+      }
+    }
+  }
+
+  @override
+  void handleNotification(List<String> args) {
+    if (args.isEmpty) return;
+
+    final cmd = args[0];
+    if (cmd == 'notify') {
+      // OSC 777;notify;title;body
+      final title = args.length > 1 ? args[1] : '';
+      final body = args.length > 2 ? args[2] : '';
+      onNotification?.call(title, body);
+    }
+  }
+
+  /// Callback for desktop notifications (OSC 777)
+  void Function(String title, String body)? onNotification;
+
+  @override
+  void handleTextSizeQuery(int command) {
+    // Respond to text size queries
+    if (command == 10) {
+      // Font size query - respond with default
+      _emit('\x1b]10;12\x1b\\');
+    } else if (command == 133) {
+      // Font family query - respond with default
+      _emit('\x1b]133;monospace\x1b\\');
+    }
+  }
+
+  // Color stack for OSC 30001/30101
+  final List<CursorStyle> _colorStack = [];
+
+  @override
+  void handleColorStack({required bool push}) {
+    if (push) {
+      // Push current attributes to stack
+      _colorStack.add(_cursorStyle.copy());
+    } else {
+      // Pop attributes from stack
+      if (_colorStack.isNotEmpty) {
+        final saved = _colorStack.removeLast();
+        _cursorStyle.foreground = saved.foreground;
+        _cursorStyle.background = saved.background;
+        _cursorStyle.attrs = saved.attrs;
+        _cursorStyle.underlineStyle = saved.underlineStyle;
+        _cursorStyle.underlineColor = saved.underlineColor;
+      }
+    }
+  }
+
+  void _emit(String data) {
+    onOutput?.call(data);
+  }
+
   @override
   void unknownOSC(String ps, List<String> pt) {
     onPrivateOSC?.call(ps, pt);
   }
+}
+
+class _HyperlinkEntry {
+  final String uri;
+  final String id;
+  _HyperlinkEntry(this.uri, this.id);
 }
 
 /// Wrapper around KittyKeyboardEncoder that fixes incorrect keycode mappings.

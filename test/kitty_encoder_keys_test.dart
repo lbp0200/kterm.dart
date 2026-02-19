@@ -18,10 +18,10 @@ void main() {
         ),
       );
       print('Tab result: "$result"');
-      // Tab should encode to a valid Kitty sequence
+      // Tab should encode to a valid Kitty sequence (keycode 9)
       expect(result, isNotNull);
       expect(result, isNotEmpty);
-      expect(result, contains('29')); // Tab keycode is 29
+      expect(result, contains('9')); // Tab keycode is 9 in Kitty protocol
     });
 
     test('Digit1 key encodes to empty string (needs fallback)', () {

@@ -13,12 +13,16 @@ class CursorStyle {
   /// Underline color encoded like foreground/background (type + value)
   int underlineColor;
 
+  /// Hyperlink ID (0 = no hyperlink)
+  int hyperlinkId;
+
   CursorStyle({
     this.foreground = 0,
     this.background = 0,
     this.attrs = 0,
     this.underlineStyle = 0,
     this.underlineColor = 0,
+    this.hyperlinkId = 0,
   });
 
   static final empty = CursorStyle();
@@ -161,6 +165,18 @@ class CursorStyle {
     attrs = 0;
     underlineStyle = 0;
     underlineColor = 0;
+    hyperlinkId = 0;
+  }
+
+  CursorStyle copy() {
+    return CursorStyle(
+      foreground: foreground,
+      background: background,
+      attrs: attrs,
+      underlineStyle: underlineStyle,
+      underlineColor: underlineColor,
+      hyperlinkId: hyperlinkId,
+    );
   }
 }
 

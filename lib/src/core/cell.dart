@@ -9,6 +9,7 @@ class CellData {
     this.underlineStyle = 0,
     this.underlineColor = 0,
     this.imageData = 0,
+    this.hyperlinkId = 0,
   });
 
   factory CellData.empty() {
@@ -20,6 +21,7 @@ class CellData {
       underlineStyle: 0,
       underlineColor: 0,
       imageData: 0,
+      hyperlinkId: 0,
     );
   }
 
@@ -40,6 +42,9 @@ class CellData {
   /// Packed image data: upper 16 bits = image ID, lower 16 bits = placement ID
   int imageData;
 
+  /// Hyperlink ID (0 = no hyperlink)
+  int hyperlinkId;
+
   /// Get image ID from imageData
   int get imageId => CellImage.getImageId(imageData);
 
@@ -51,12 +56,12 @@ class CellData {
 
   int getHash() {
     return hashValues(foreground, background, flags, content, underlineStyle,
-        underlineColor, imageData);
+        underlineColor, imageData, hyperlinkId);
   }
 
   @override
   String toString() {
-    return 'CellData{foreground: $foreground, background: $background, flags: $flags, content: $content, underlineStyle: $underlineStyle, underlineColor: $underlineColor, imageData: $imageData}';
+    return 'CellData{foreground: $foreground, background: $background, flags: $flags, content: $content, underlineStyle: $underlineStyle, underlineColor: $underlineColor, imageData: $imageData, hyperlinkId: $hyperlinkId}';
   }
 }
 
