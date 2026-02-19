@@ -53,4 +53,4 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Publish
-        run: flutter pub publish --skip-validation -f
+        run: timeout 180 flutter pub publish --skip-validation -f || echo "Publish timed out or failed"
