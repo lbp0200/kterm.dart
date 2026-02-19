@@ -71,10 +71,24 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// escape sequence.
   void Function(String code, List<String> args)? onPrivateOSC;
 
-  /// Callback when terminal requests clipboard read (OSC 52)
+  /// Callback when terminal requests clipboard read via OSC 52.
+  ///
+  /// The terminal sends this when it receives `ESC ] 52 ; target ; ? ST`.
+  /// The [target] parameter specifies which clipboard:
+  /// - "c" for the default clipboard
+  /// - "p" for primary selection
+  /// - "s" for secondary selection
+  ///
+  /// Your implementation should read the clipboard content and call
+  /// [Terminal.write] with the base64-encoded data wrapped in:
+  /// `ESC ] 52 ; target ; base64data ST`
   void Function(String target)? onClipboardRead;
 
-  /// Callback when terminal writes to clipboard (OSC 52)
+  /// Callback when terminal writes to clipboard via OSC 52.
+  ///
+  /// The terminal sends this when it receives `ESC ] 52 ; target ; base64data ST`.
+  /// The [data] is the decoded clipboard content, and [target] specifies which
+  /// clipboard (see [onClipboardRead]).
   void Function(String data, String target)? onClipboardWrite;
 
   /// Flag to toggle os specific behaviors.
@@ -1384,6 +1398,21 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   final Map<int, _HyperlinkEntry> _hyperlinks = {};
   int _hyperlinkIdCounter = 1;
 
+  /// Get the URI for a hyperlink by its ID.
+  ///
+  /// Use this to look up the URI associated with a [hyperlinkId] from [CellData].
+  /// Returns null if the hyperlink ID is not found.
+  String? getHyperlinkUri(int hyperlinkId) {
+    return _hyperlinks[hyperlinkId]?.uri;
+  }
+
+  /// Get all registered hyperlinks.
+  ///
+  /// Returns a map of hyperlink IDs to their URIs.
+  Map<int, String> get hyperlinks {
+    return _hyperlinks.map((key, value) => MapEntry(key, value.uri));
+  }
+
   @override
   void setHyperlink(String? id, String uri) {
     if (uri.isEmpty) {
@@ -1438,7 +1467,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     }
   }
 
-  /// Callback for desktop notifications (OSC 777)
+  /// Callback for desktop notifications via OSC 777.
+  ///
+  /// The terminal sends this when it receives `ESC ] 777 ; notify ; title ; body ST`.
+  /// This is used for long-running commands to notify the user when complete.
+  /// Your implementation should display a desktop notification with [title] and [body].
   void Function(String title, String body)? onNotification;
 
   @override
