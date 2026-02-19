@@ -51,4 +51,4 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Publish
-        run: flutter pub publish -y
+        run: flutter pub publish -f
