@@ -53,6 +53,4 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Publish
-        run: |
-          echo "Publishing to pub.dev..."
-          flutter pub publish --skip-validation -f
+        run: flutter pub publish --skip-validation -f
