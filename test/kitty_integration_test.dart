@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kitty_key_encoder/kitty_key_encoder.dart';
+import 'package:kitty_protocol/kitty_protocol.dart';
 import 'package:kterm/xterm.dart';
 
 void main() {
@@ -29,7 +29,7 @@ void main() {
       terminal.write('\x1b[>1u');
 
       // Test the encoder directly
-      // Note: Flutter's LogicalKeyboardKey.enter maps to keycode 8 in Kitty protocol
+      // Note: Flutter's LogicalKeyboardKey.enter maps to keycode 13 in Kitty protocol
       expect(
         terminal.kittyEncoder.encode(
           SimpleKeyEvent(
@@ -37,7 +37,7 @@ void main() {
             modifiers: {SimpleModifier.shift},
           ),
         ),
-        equals('\x1b[8;2u'),
+        equals('\x1b[13;2u'),
       );
     });
 
@@ -69,7 +69,7 @@ void main() {
       terminal.write('\x1b[>+1u');
 
       // Verify we can still encode
-      // Note: Flutter's LogicalKeyboardKey.enter maps to keycode 8 in Kitty protocol
+      // Note: Flutter's LogicalKeyboardKey.enter maps to keycode 13 in Kitty protocol
       expect(
         terminal.kittyEncoder.encode(
           SimpleKeyEvent(
@@ -77,7 +77,7 @@ void main() {
             modifiers: {SimpleModifier.shift},
           ),
         ),
-        equals('\x1b[8;2u'),
+        equals('\x1b[13;2u'),
       );
 
       // Pop flags
@@ -91,7 +91,7 @@ void main() {
             modifiers: {SimpleModifier.shift},
           ),
         ),
-        equals('\x1b[8;2u'),
+        equals('\x1b[13;2u'),
       );
     });
 

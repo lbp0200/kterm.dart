@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kitty_key_encoder/kitty_key_encoder.dart';
+import 'package:kitty_protocol/kitty_protocol.dart';
 import 'package:kterm/xterm.dart';
 
 void main() {
   group('Kitty sequence verification', () {
-    test('Shift+Enter keycode is 8 in Kitty protocol', () {
+    test('Shift+Enter keycode is 13 in Kitty protocol', () {
       final terminal = Terminal();
       terminal.write('\x1b[>1u');
 
@@ -21,9 +21,9 @@ void main() {
       print('Bytes: ${seq.codeUnits}');
       print('First char (ESC): ${seq.codeUnitAt(0)} == 27: ${seq.codeUnitAt(0) == 27}');
 
-      // Kitty protocol uses keycode 8 for Enter, not ASCII 13
+      // Kitty protocol uses keycode 13 for Enter
       expect(seq.codeUnitAt(0), equals(27)); // ESC
-      expect(seq, contains('8')); // Enter keycode is 8
+      expect(seq, contains('13')); // Enter keycode is 13
       expect(seq, contains('2')); // Shift modifier
     });
 
@@ -41,7 +41,9 @@ void main() {
       print('Enter sequence: "$seq"');
       print('Bytes: ${seq.codeUnits}');
 
+      // Kitty protocol uses keycode 13 for Enter
       expect(seq.codeUnitAt(0), equals(27)); // ESC
+      expect(seq, contains('13')); // Enter keycode is 13
     });
   });
 }

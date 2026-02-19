@@ -15,7 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   zmodem: ^0.0.6
-  kitty_key_encoder: ^1.0.0
+  kitty_protocol: ^1.1.0
 
 dev_dependencies:
   flutter_test:

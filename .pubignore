@@ -1,0 +1,36 @@
+# .pubignore
+# This file is used to exclude files from being published to pub.dev
+
+# Build outputs
+build/
+.dart_tool/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Example
+example/
+
+# Docs
+docs/
+doc/
+CLAUDE.md
+
+# Development tools
+bin/
+script/
+
+# Tests (not needed by end users)
+test/
+
+# Large assets (demo images not needed by end users)
+media/

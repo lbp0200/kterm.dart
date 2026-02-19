@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math' show max;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:kitty_key_encoder/kitty_key_encoder.dart';
+import 'package:flutter/services.dart';
+import 'package:kitty_protocol/kitty_protocol.dart';
 import 'package:kterm/src/base/observable.dart';
 import 'package:kterm/src/core/buffer/buffer.dart';
 import 'package:kterm/src/core/buffer/cell_offset.dart';
@@ -154,7 +154,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   bool _bracketedPasteMode = false;
 
   // Kitty Keyboard Protocol state
-  KittyEncoder? _kittyEncoder;
+  KittyKeyboardEncoder? _kittyEncoder;
 
   bool _kittyMode = false;
 
@@ -173,9 +173,18 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// Maximum total chunk size (50MB) to prevent memory exhaustion
   static const int _maxTotalChunkSize = 50 * 1024 * 1024;
 
-  KittyEncoder get kittyEncoder {
-    _kittyEncoder ??= KittyEncoder();
-    return _kittyEncoder!;
+  /// Wrapper around KittyKeyboardEncoder that fixes keycode mappings.
+  ///
+  /// The kitty_protocol package incorrectly uses USB HID keycodes instead of
+  /// the correct Kitty protocol keycodes:
+  /// - Enter: 8 (USB HID) → should be 13 (Kitty)
+  /// - Backspace: 127 (Kitty) is correct
+  _KittyKeyboardEncoderWrapper? _kittyEncoderWrapper;
+
+  KittyKeyboardEncoder get kittyEncoder {
+    _kittyEncoder ??= KittyKeyboardEncoder();
+    _kittyEncoderWrapper ??= _KittyKeyboardEncoderWrapper(_kittyEncoder!);
+    return _kittyEncoderWrapper!;
   }
 
   bool get kittyMode => _kittyMode;
@@ -793,7 +802,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void pushKittyFlags(int flags) {
     _kittyFlagsStack.add(flags);
-    _updateKittyEncoder();
+    _updateKittyKeyboardEncoder();
   }
 
   /// Handle CSI > - n u - Pop (disable) Kitty flags
@@ -801,11 +810,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   void popKittyFlags() {
     if (_kittyFlagsStack.isNotEmpty) {
       _kittyFlagsStack.removeLast();
-      _updateKittyEncoder();
+      _updateKittyKeyboardEncoder();
     }
   }
 
-  void _updateKittyEncoder() {
+  void _updateKittyKeyboardEncoder() {
     if (_kittyEncoder == null) return;
     // Apply flags from stack - use the last flags pushed
     final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
@@ -813,11 +822,13 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // bit 0 (1): reportEvent
     // bit 1 (2): reportAlternateKeys
     // bit 2 (4): reportAllKeysAsEscape
-    _kittyEncoder = _kittyEncoder!.withFlags(KittyEncoderFlags(
+    final updatedInner = _kittyEncoder!.withFlags(KittyKeyboardEncoderFlags(
       reportEvent: (flags & 1) != 0,
       reportAlternateKeys: (flags & 2) != 0,
       reportAllKeysAsEscape: (flags & 4) != 0,
     ));
+    // Recreate wrapper with updated inner encoder
+    _kittyEncoderWrapper = _KittyKeyboardEncoderWrapper(updatedInner);
   }
 
   /* Kitty Graphics Protocol */
@@ -1170,5 +1181,42 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void unknownOSC(String ps, List<String> pt) {
     onPrivateOSC?.call(ps, pt);
+  }
+}
+
+/// Wrapper around KittyKeyboardEncoder that fixes incorrect keycode mappings.
+///
+/// The kitty_protocol package uses USB HID keycodes instead of the
+/// correct Kitty protocol keycodes:
+/// - Enter: 8 (USB HID) → should be 13 (Kitty)
+class _KittyKeyboardEncoderWrapper extends KittyKeyboardEncoder {
+  final KittyKeyboardEncoder _inner;
+
+  _KittyKeyboardEncoderWrapper(this._inner);
+
+  @override
+  String encode(SimpleKeyEvent event) {
+    final result = _inner.encode(event);
+
+    // Fix Enter key: USB HID codes → correct Kitty protocol codes
+    // The sequence format is: \x1B[code;modifiersu
+    // - Shift+Enter: 8 (USB HID) → 13 (Kitty)
+    // - Enter without modifiers: 28 (USB HID) → 13 (Kitty)
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      // Replace both possible incorrect keycodes with 13
+      var fixed = result.replaceFirst('\x1B[8;', '\x1B[13;');
+      fixed = fixed.replaceFirst('\x1B[28;', '\x1B[13;');
+      return fixed;
+    }
+
+    // Note: Backspace is 127 in Kitty protocol, which is handled correctly
+    // by the kitty_protocol package, so no fix needed there.
+
+    return result;
+  }
+
+  @override
+  KittyKeyboardEncoder withFlags(KittyKeyboardEncoderFlags flags) {
+    return _inner.withFlags(flags);
   }
 }

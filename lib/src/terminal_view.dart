@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:kitty_key_encoder/kitty_key_encoder.dart';
+import 'package:kitty_protocol/kitty_protocol.dart';
 import 'package:kterm/src/core/buffer/cell_offset.dart';
 import 'package:kterm/src/core/input/keys.dart';
 import 'package:kterm/src/terminal.dart';
