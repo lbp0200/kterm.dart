@@ -19,7 +19,8 @@ void main() {
 
       print('Sequence: "$seq"');
       print('Bytes: ${seq.codeUnits}');
-      print('First char (ESC): ${seq.codeUnitAt(0)} == 27: ${seq.codeUnitAt(0) == 27}');
+      print(
+          'First char (ESC): ${seq.codeUnitAt(0)} == 27: ${seq.codeUnitAt(0) == 27}');
 
       // Kitty protocol uses keycode 13 for Enter
       expect(seq.codeUnitAt(0), equals(27)); // ESC
