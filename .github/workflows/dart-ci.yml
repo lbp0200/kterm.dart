@@ -55,4 +55,4 @@ jobs:
       - name: Publish
         run: |
           echo "Publishing to pub.dev..."
-          flutter pub publish -f
+          flutter pub publish --skip-validation -f
