@@ -7,50 +7,31 @@ on:
       - 'v*'
   pull_request:
     branches: [master]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  analyze:
+  ci:
+    name: "Tests & Analysis"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.9'
+          cache: true
       - name: Install dependencies
         run: flutter pub get
-      - name: Analyze
-        run: flutter analyze lib/ --no-fatal-infos
-
-  test:
-    runs-on: ubuntu-latest
-    needs: analyze
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.9'
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Test
-        run: |
-          flutter test test/kitty_*.dart
-          flutter test test/src/core/
-          flutter test test/src/utils/
+      - name: Analyze code
+        run: flutter analyze
+      - name: Run tests
+        run: flutter test
 
   publish:
-    runs-on: ubuntu-latest
-    needs: test
+    name: "Publish to pub.dev"
+    needs: ci
     if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.9'
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Publish
-        run: timeout 180 flutter pub publish --skip-validation -f || echo "Publish timed out or failed"
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
