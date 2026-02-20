@@ -3,7 +3,7 @@
 
 <p>
     <a href="https://github.com/lbp0200/kterm.dart/actions/workflows/dart-ci.yml">
-      <img alt="Actions" src="https://github.com/lbp0200/kterm.dart/actions/workflows/ci.yml/badge.svg">
+      <img alt="Actions" src="https://github.com/lbp0200/kterm.dart/actions/workflows/dart-ci.yml/badge.svg">
     </a>
     <a href="https://pub.dev/packages/kterm">
       <img alt="Package version" src="https://img.shields.io/pub/v/kterm?color=blue&include_prereleases">
