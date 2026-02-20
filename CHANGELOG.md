@@ -1,3 +1,6 @@
+## [1.0.6] - 2026-02-20
+* Update CI workflow badge link
+
 ## [1.0.5] - 2026-02-20
 * Fix CI: analyze only lib/ directory
 
