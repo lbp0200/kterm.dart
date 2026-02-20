@@ -1,3 +1,7 @@
+## [1.0.4] - 2026-02-20
+* Update kitty_protocol to 1.2.3
+* Simplify CI workflow
+
 ## [1.0.3] - 2026-02-19
 * Fix GitHub Actions workflow for auto-publish to pub.dev
 
