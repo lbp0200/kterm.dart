@@ -2,7 +2,7 @@
 ## kterm
 
 <p>
-    <a href="https://github.com/lbp0200/kterm.dart/actions/workflows/ci.yml">
+    <a href="https://github.com/lbp0200/kterm.dart/actions/workflows/dart-ci.yml">
       <img alt="Actions" src="https://github.com/lbp0200/kterm.dart/actions/workflows/ci.yml/badge.svg">
     </a>
     <a href="https://pub.dev/packages/kterm">
