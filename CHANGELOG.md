@@ -1,3 +1,6 @@
+## [1.0.5] - 2026-02-20
+* Fix CI: analyze only lib/ directory
+
 ## [1.0.4] - 2026-02-20
 * Update kitty_protocol to 1.2.3
 * Simplify CI workflow
