@@ -1,3 +1,6 @@
+## [1.0.7] - 2026-02-20
+* Fix CI badge URL
+
 ## [1.0.6] - 2026-02-20
 * Update CI workflow badge link
 
