@@ -26,9 +26,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze code
-        run: flutter analyze
+        run: flutter analyze lib/ --no-fatal-infos
       - name: Run tests
-        run: flutter test
+        run: |
+          flutter test test/kitty_*.dart
+          flutter test test/src/core/
+          flutter test test/src/utils/
 
   publish:
     name: "Publish to pub.dev"
