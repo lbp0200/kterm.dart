@@ -66,6 +66,10 @@ void main() {
 
   group('TerminalView.readOnly', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -86,6 +90,10 @@ void main() {
     });
 
     testWidgets('does not block input when false', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -107,7 +115,15 @@ void main() {
   });
 
   group('TerminalView.focusNode', () {
+    tearDown(() {
+      // FocusNode cleanup is handled by the test itself via ValueNotifier
+    });
+
     testWidgets('is not listened when terminal is disposed', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminal = Terminal();
 
       final focusNode = FocusNode();
@@ -140,9 +156,15 @@ void main() {
 
       // ignore: invalid_use_of_protected_member
       expect(focusNode.hasListeners, isFalse);
+
+      focusNode.dispose();
     });
 
     testWidgets('does not dispose external focus node', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminal = Terminal();
 
       final focusNode = FocusNode();
@@ -171,11 +193,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(() => focusNode.addListener(() {}), returnsNormally);
+
+      focusNode.dispose();
     });
   });
 
   group('TerminalController.pointerInputs', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final output = <String>[];
 
       final terminal = Terminal(onOutput: output.add);
@@ -208,6 +236,10 @@ void main() {
     });
 
     testWidgets('does not respond when disabled', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final output = <String>[];
 
       final terminal = Terminal(onOutput: output.add);
@@ -242,6 +274,10 @@ void main() {
 
   group('TerminalView.autofocus', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminal = Terminal();
       final focusNode = FocusNode();
 
@@ -258,9 +294,15 @@ void main() {
       );
 
       expect(focusNode.hasFocus, isTrue);
+
+      focusNode.dispose();
     });
 
     testWidgets('works in hardwareKeyboardOnly mode', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminal = Terminal();
       final focusNode = FocusNode();
 
@@ -278,11 +320,17 @@ void main() {
       );
 
       expect(focusNode.hasFocus, isTrue);
+
+      focusNode.dispose();
     });
   });
 
   group('TerminalView.hardwareKeyboardOnly', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final output = <String>[];
       final terminal = Terminal(onOutput: output.add);
 
@@ -307,6 +355,8 @@ void main() {
   });
 
   group('TerminalView.textScaler', () {
+    // Note: These golden tests rely on the default view size and should not
+    // have physicalSize set, as the golden files were created with specific dimensions.
     testWidgets('works', (tester) async {
       final terminal = Terminal();
 
@@ -373,6 +423,10 @@ void main() {
 
   group('TerminalView.inputHandler', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -394,6 +448,10 @@ void main() {
     });
 
     testWidgets('can convert text input to key events', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final inputHandler = MockTerminalInputHandler();
       when(inputHandler.call(any)).thenAnswer((invocation) => 'AAA');
 
@@ -422,6 +480,10 @@ void main() {
 
   group('TerminalView.simulateScroll', () {
     testWidgets('works', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
       terminal.useAltBuffer();
@@ -436,6 +498,10 @@ void main() {
     });
 
     testWidgets('does nothing when disabled', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
       terminal.useAltBuffer();
@@ -447,6 +513,175 @@ void main() {
       await tester.drag(find.byType(TerminalView), const Offset(0, -100));
 
       expect(terminalOutput.join(), isEmpty);
+    });
+  });
+
+  group('TerminalView.showSearchBar', () {
+    testWidgets(
+        'Given showSearchBar=false, When rendering, Then does not add search bar infrastructure',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
+      final terminal = Terminal();
+      terminal.write('test content');
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TerminalView(
+            terminal,
+            showSearchBar: false,
+            autofocus: true,
+          ),
+        ),
+      ));
+
+      await tester.pump();
+
+      // Search bar should not be rendered when showSearchBar is false
+      // The TerminalSearchBar widget won't exist in the widget tree
+      expect(find.byType(TerminalSearchBar), findsNothing);
+    });
+
+    testWidgets(
+        'Given showSearchBar=true, When controller opens search, Then displays search bar',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
+      final terminal = Terminal();
+      final controller = TerminalController();
+
+      // Setup search callbacks
+      controller.onGetText = () => terminal.buffer.getText();
+      controller.onCreateAnchor = (offset) {
+        return terminal.buffer.createAnchorFromOffset(offset);
+      };
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TerminalView(
+            terminal,
+            controller: controller,
+            showSearchBar: true,
+            autofocus: true,
+          ),
+        ),
+      ));
+
+      await tester.pump();
+
+      // Initially search bar is not visible (not searching)
+      expect(find.byType(TerminalSearchBar), findsNothing);
+
+      // Open search programmatically via controller
+      controller.openSearch();
+      await tester.pumpAndSettle();
+
+      // Search bar should now be visible
+      expect(find.byType(TerminalSearchBar), findsOneWidget);
+    });
+
+    testWidgets(
+        'Given showSearchBar=true with search open, When closeSearch called, Then hides search bar',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
+      final terminal = Terminal();
+      final controller = TerminalController();
+
+      // Setup search callbacks
+      controller.onGetText = () => terminal.buffer.getText();
+      controller.onCreateAnchor = (offset) {
+        return terminal.buffer.createAnchorFromOffset(offset);
+      };
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TerminalView(
+            terminal,
+            controller: controller,
+            showSearchBar: true,
+            autofocus: true,
+          ),
+        ),
+      ));
+
+      await tester.pump();
+
+      // Open search
+      controller.openSearch();
+      await tester.pumpAndSettle();
+
+      // Verify search bar is visible (searching active)
+      expect(find.byType(TerminalSearchBar), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+
+      // Close search
+      controller.closeSearch();
+      await tester.pumpAndSettle();
+
+      // When not searching, TerminalSearchBar is replaced with SizedBox.shrink()
+      expect(find.byType(TerminalSearchBar), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+    });
+
+    testWidgets(
+        'Given showSearchBar changes from true to false, When rendering, Then removes search bar',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(() => tester.view.resetPhysicalSize());
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
+      final terminal = Terminal();
+      final controller = TerminalController();
+
+      // Setup search callbacks
+      controller.onGetText = () => terminal.buffer.getText();
+      controller.onCreateAnchor = (offset) {
+        return terminal.buffer.createAnchorFromOffset(offset);
+      };
+
+      final showSearchBar = ValueNotifier(true);
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: ValueListenableBuilder<bool>(
+            valueListenable: showSearchBar,
+            builder: (context, show, child) {
+              return TerminalView(
+                terminal,
+                controller: controller,
+                showSearchBar: show,
+                autofocus: true,
+              );
+            },
+          ),
+        ),
+      ));
+
+      await tester.pump();
+
+      // Initially search bar is enabled
+      expect(find.byType(TerminalSearchBar), findsNothing);
+
+      // Open search
+      controller.openSearch();
+      await tester.pumpAndSettle();
+
+      // Search should be open
+      expect(find.byType(TerminalSearchBar), findsOneWidget);
+
+      // Disable search bar
+      showSearchBar.value = false;
+      await tester.pumpAndSettle();
+
+      // Search bar should be gone
+      expect(find.byType(TerminalSearchBar), findsNothing);
     });
   });
 }
