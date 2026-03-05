@@ -15,6 +15,7 @@ import 'package:kterm/src/ui/keyboard_listener.dart';
 import 'package:kterm/src/ui/keyboard_visibility.dart';
 import 'package:kterm/src/ui/render.dart';
 import 'package:kterm/src/ui/scroll_handler.dart';
+import 'package:kterm/src/ui/search_bar.dart';
 import 'package:kterm/src/ui/shortcut/actions.dart';
 import 'package:kterm/src/ui/shortcut/shortcuts.dart';
 import 'package:kterm/src/ui/terminal_text_style.dart';
@@ -49,6 +50,7 @@ class TerminalView extends StatefulWidget {
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
     this.simulateScroll = true,
+    this.showSearchBar = false,
   });
 
   /// The underlying terminal that this widget renders.
@@ -142,6 +144,12 @@ class TerminalView extends StatefulWidget {
   /// emulators. True by default.
   final bool simulateScroll;
 
+  /// If true, shows a search bar above the terminal and enables search
+  /// keyboard shortcuts (Ctrl+F / Cmd+F to open, F3 to find next,
+  /// Shift+F3 to find previous, Escape to close).
+  /// Default is false.
+  final bool showSearchBar;
+
   @override
   State<TerminalView> createState() => TerminalViewState();
 }
@@ -163,6 +171,8 @@ class TerminalViewState extends State<TerminalView> {
 
   late ScrollController _scrollController;
 
+  bool _showSearchBar = false;
+
   RenderTerminal get renderTerminal =>
       _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
 
@@ -174,6 +184,14 @@ class TerminalViewState extends State<TerminalView> {
     _shortcutManager = ShortcutManager(
       shortcuts: widget.shortcuts ?? defaultTerminalShortcuts,
     );
+    _showSearchBar = widget.showSearchBar;
+
+    // Setup search callbacks
+    _controller.onGetText = () => widget.terminal.buffer.getText();
+    _controller.onCreateAnchor = (offset) {
+      return widget.terminal.buffer.createAnchorFromOffset(offset);
+    };
+
     super.initState();
   }
 
@@ -198,6 +216,12 @@ class TerminalViewState extends State<TerminalView> {
       _scrollController = widget.scrollController ?? ScrollController();
     }
     _shortcutManager.shortcuts = widget.shortcuts ?? defaultTerminalShortcuts;
+    if (oldWidget.showSearchBar != widget.showSearchBar) {
+      _showSearchBar = widget.showSearchBar;
+      if (!_showSearchBar) {
+        _controller.closeSearch();
+      }
+    }
     super.didUpdateWidget(oldWidget);
   }
 
@@ -321,6 +345,65 @@ class TerminalViewState extends State<TerminalView> {
       padding: widget.padding,
       child: child,
     );
+
+    // Add search bar if enabled
+    if (_showSearchBar) {
+      child = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              if (_controller.isSearching) {
+                return TerminalSearchBar(
+                  controller: _controller,
+                  onClose: () {
+                    _controller.closeSearch();
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Expanded(child: child),
+        ],
+      );
+    }
+
+    // Wrap with keyboard shortcuts handler for search
+    if (_showSearchBar) {
+      child = CallbackShortcuts(
+        bindings: <ShortcutActivator, VoidCallback>{
+          // Ctrl+F / Cmd+F - Open search
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+            _controller.openSearch();
+          },
+          const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () {
+            _controller.openSearch();
+          },
+          // F3 - Next match
+          const SingleActivator(LogicalKeyboardKey.f3): () {
+            _controller.searchNext();
+          },
+          // Shift+F3 - Previous match
+          const SingleActivator(LogicalKeyboardKey.f3, shift: true): () {
+            _controller.searchPrevious();
+          },
+          // Cmd+G - Next match (macOS)
+          const SingleActivator(LogicalKeyboardKey.keyG, meta: true): () {
+            _controller.searchNext();
+          },
+          // Cmd+Shift+G - Previous match (macOS)
+          const SingleActivator(LogicalKeyboardKey.keyG, meta: true, shift: true): () {
+            _controller.searchPrevious();
+          },
+        },
+        child: Focus(
+          autofocus: false,
+          child: child,
+        ),
+      );
+    }
 
     return child;
   }

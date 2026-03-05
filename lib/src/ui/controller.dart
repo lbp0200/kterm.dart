@@ -9,6 +9,24 @@ import 'package:kterm/src/core/buffer/range_line.dart';
 import 'package:kterm/src/ui/pointer_input.dart';
 import 'package:kterm/src/ui/selection_mode.dart';
 
+/// Options for search behavior.
+enum SearchOption {
+  /// Case-sensitive search.
+  caseSensitive,
+
+  /// Treat pattern as regular expression.
+  regex,
+
+  /// Match whole words only.
+  wholeWord,
+}
+
+/// Callback type for searching text in the terminal buffer.
+typedef SearchCallback = String Function();
+
+/// Callback type for creating a cell anchor from a position.
+typedef CreateAnchorCallback = CellAnchor Function(CellOffset offset);
+
 class TerminalController with ChangeNotifier {
   TerminalController({
     SelectionMode selectionMode = SelectionMode.line,
@@ -17,6 +35,12 @@ class TerminalController with ChangeNotifier {
   })  : _selectionMode = selectionMode,
         _pointerInputs = pointerInputs,
         _suspendPointerInputs = suspendPointerInput;
+
+  /// Callback to get the terminal buffer text for searching.
+  SearchCallback? onGetText;
+
+  /// Callback to create a cell anchor from a buffer offset.
+  CreateAnchorCallback? onCreateAnchor;
 
   CellAnchor? _selectionBase;
   CellAnchor? _selectionExtent;
@@ -34,6 +58,43 @@ class TerminalController with ChangeNotifier {
 
   List<TerminalHighlight> get highlights => _highlights;
   final _highlights = <TerminalHighlight>[];
+
+  // Search state
+  String? _searchPattern;
+  bool _isSearching = false;
+  Set<SearchOption> _searchOptions = {};
+  List<BufferRange> _searchResults = [];
+  int _currentSearchIndex = -1;
+
+  /// The current search pattern.
+  String? get searchPattern => _searchPattern;
+
+  /// Whether a search is currently active.
+  bool get isSearching => _isSearching;
+
+  /// Current search options.
+  Set<SearchOption> get searchOptions => _searchOptions;
+
+  /// All search results matching the current pattern.
+  List<BufferRange> get searchResults => _searchResults;
+
+  /// The index of the current search result (0-based).
+  /// -1 if no result is selected.
+  int get currentSearchIndex => _currentSearchIndex;
+
+  /// The current search result, or null if no result is selected.
+  BufferRange? get currentSearchResult {
+    if (_currentSearchIndex >= 0 && _currentSearchIndex < _searchResults.length) {
+      return _searchResults[_currentSearchIndex];
+    }
+    return null;
+  }
+
+  /// Number of search results.
+  int get searchResultCount => _searchResults.length;
+
+  /// Whether there are any search results.
+  bool get hasSearchResults => _searchResults.isNotEmpty;
 
   BufferRange? get selection {
     final base = _selectionBase;
@@ -144,6 +205,172 @@ class TerminalController with ChangeNotifier {
     });
 
     return highlight;
+  }
+
+  // Search methods
+
+  /// Opens the search UI (called when user activates search mode).
+  void openSearch() {
+    _isSearching = true;
+    notifyListeners();
+  }
+
+  /// Closes the search UI and clears the search state.
+  void closeSearch() {
+    _isSearching = false;
+    _searchPattern = null;
+    _searchResults = [];
+    _currentSearchIndex = -1;
+    notifyListeners();
+  }
+
+  /// Sets the search options.
+  void setSearchOptions(Set<SearchOption> options) {
+    _searchOptions = options;
+    // Re-run search if pattern exists
+    if (_searchPattern != null && _searchPattern!.isNotEmpty) {
+      search(_searchPattern!);
+    } else {
+      notifyListeners();
+    }
+  }
+
+  /// Toggles a search option.
+  void toggleSearchOption(SearchOption option) {
+    if (_searchOptions.contains(option)) {
+      _searchOptions = Set.from(_searchOptions)..remove(option);
+    } else {
+      _searchOptions = Set.from(_searchOptions)..add(option);
+    }
+    // Re-run search if pattern exists
+    if (_searchPattern != null && _searchPattern!.isNotEmpty) {
+      search(_searchPattern!);
+    } else {
+      notifyListeners();
+    }
+  }
+
+  /// Performs a search for [pattern] in the terminal buffer.
+  void search(String pattern) {
+    _searchPattern = pattern;
+
+    if (pattern.isEmpty) {
+      _searchResults = [];
+      _currentSearchIndex = -1;
+      notifyListeners();
+      return;
+    }
+
+    // Get text from buffer using callback
+    final text = onGetText?.call() ?? '';
+    if (text.isEmpty) {
+      _searchResults = [];
+      _currentSearchIndex = -1;
+      notifyListeners();
+      return;
+    }
+
+    _searchResults = _performSearch(text, pattern);
+    _currentSearchIndex = _searchResults.isNotEmpty ? 0 : -1;
+    notifyListeners();
+  }
+
+  /// Performs the actual search logic.
+  List<BufferRange> _performSearch(String text, String pattern) {
+    final results = <BufferRange>[];
+    final isCaseSensitive = _searchOptions.contains(SearchOption.caseSensitive);
+    final isRegex = _searchOptions.contains(SearchOption.regex);
+    final isWholeWord = _searchOptions.contains(SearchOption.wholeWord);
+
+    try {
+      late RegExp regex;
+      if (isRegex) {
+        regex = RegExp(pattern, caseSensitive: isCaseSensitive);
+      } else {
+        // Escape special regex characters for literal search
+        final escaped = RegExp.escape(pattern);
+        final patternStr = isWholeWord ? '\\b$escaped\\b' : escaped;
+        regex = RegExp(patternStr, caseSensitive: isCaseSensitive);
+      }
+
+      for (final match in regex.allMatches(text)) {
+        final start = match.start;
+        final end = match.end;
+
+        // Convert text offset to cell offset
+        final startOffset = _textOffsetToCellOffset(text, start);
+        final endOffset = _textOffsetToCellOffset(text, end);
+
+        if (startOffset != null && endOffset != null) {
+          results.add(BufferRangeLine(startOffset, endOffset));
+        }
+      }
+    } catch (e) {
+      // Invalid regex, ignore
+    }
+
+    return results;
+  }
+
+  /// Converts a text offset to a cell offset.
+  /// This is a simplified implementation that assumes monospace cells.
+  CellOffset? _textOffsetToCellOffset(String text, int offset) {
+    // Get line information from buffer
+    // This is a simplified implementation
+    // In reality, we need to track line breaks in the buffer
+    final onGetText = this.onGetText;
+    if (onGetText == null) return null;
+
+    // Calculate line and column from offset
+    final bufferText = onGetText();
+    if (offset > bufferText.length) return null;
+
+    // Find the line number and column
+    int lineNumber = 0;
+    int col = 0;
+
+    for (int i = 0; i < offset; i++) {
+      if (bufferText[i] == '\n') {
+        lineNumber++;
+        col = 0;
+      } else {
+        col++;
+      }
+    }
+
+    return CellOffset(col, lineNumber);
+  }
+
+  /// Moves to the next search result.
+  void searchNext() {
+    if (_searchResults.isEmpty) return;
+
+    _currentSearchIndex = (_currentSearchIndex + 1) % _searchResults.length;
+    notifyListeners();
+  }
+
+  /// Moves to the previous search result.
+  void searchPrevious() {
+    if (_searchResults.isEmpty) return;
+
+    _currentSearchIndex = (_currentSearchIndex - 1 + _searchResults.length) % _searchResults.length;
+    notifyListeners();
+  }
+
+  /// Clears the current search but keeps search mode active.
+  void clearSearch() {
+    _searchPattern = null;
+    _searchResults = [];
+    _currentSearchIndex = -1;
+    notifyListeners();
+  }
+
+  /// Gets the search result at [index].
+  BufferRange? getSearchResultAt(int index) {
+    if (index >= 0 && index < _searchResults.length) {
+      return _searchResults[index];
+    }
+    return null;
   }
 }
 

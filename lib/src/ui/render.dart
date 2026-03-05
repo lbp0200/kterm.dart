@@ -474,6 +474,15 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
         effectLastLine,
       );
     }
+
+    // Paint search highlights
+    if (_controller.isSearching && _controller.hasSearchResults) {
+      _paintSearchHighlights(
+        canvas,
+        effectFirstLine,
+        effectLastLine,
+      );
+    }
   }
 
   /// Paints the text that is currently being composed in IME to [canvas] at
@@ -570,5 +579,36 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     );
 
     _painter.paintHighlight(canvas, startOffset, end - start, color);
+  }
+
+  void _paintSearchHighlights(
+    Canvas canvas,
+    int firstLine,
+    int lastLine,
+  ) {
+    final results = _controller.searchResults;
+    final currentIndex = _controller.currentSearchIndex;
+
+    for (var i = 0; i < results.length; i++) {
+      final range = results[i].normalized;
+      final isCurrent = i == currentIndex;
+
+      // Use different colors for current and non-current results
+      final color = isCurrent
+          ? _painter.theme.searchHitBackgroundCurrent
+          : _painter.theme.searchHitBackground;
+
+      for (var segment in range.toSegments()) {
+        if (segment.line < firstLine) {
+          continue;
+        }
+
+        if (segment.line > lastLine) {
+          break;
+        }
+
+        _paintSegment(canvas, segment, color);
+      }
+    }
   }
 }

@@ -383,6 +383,10 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// See also:
   /// - [textInput]
   void paste(String text) {
+    // Filter ANSI escape sequences to prevent formatting (like inverse colors)
+    // from being pasted into the terminal.
+    text = text.replaceAll(RegExp(r'\x1b\[[0-9;]*[a-zA-Z]'), '');
+
     if (_bracketedPasteMode) {
       onOutput?.call(_emitter.bracketedPaste(text));
     } else {

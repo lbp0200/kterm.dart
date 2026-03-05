@@ -54,6 +54,7 @@
 - 🖥️ **Modern Key Support**: Full Kitty Keyboard Protocol implementation.
 - 📚 **Progressive Enhancement**: Supports CSI > n u stack (push/pop) for nested terminal modes.
 - 🔍 **Zero Ambiguity**: No more Tab vs Ctrl+I confusion in Neovim/Helix — modifier keys are always distinguishable.
+- 🔎 **Search**: Built-in search with regex, case sensitivity, and whole word matching support.
 
 **What's new in 3.0.0:**
 
@@ -146,6 +147,102 @@ TerminalView(
 ```dart
 terminal.setKittyMode(true);
 ```
+
+### Search Functionality
+
+kterm includes built-in search functionality with support for:
+- **Case sensitive search**
+- **Regular expression patterns**
+- **Whole word matching**
+
+#### Option 1: Enable via TerminalView (with keyboard shortcuts)
+
+The simplest way to enable search - automatically sets up callbacks and keyboard shortcuts.
+
+```dart
+import 'package:kterm/kterm.dart';
+import 'package:kterm/flutter.dart';
+
+final terminal = Terminal();
+final controller = TerminalController();
+
+TerminalView(
+  terminal,
+  controller: controller,
+  showSearchBar: true,  // Enables search bar and keyboard shortcuts
+);
+```
+
+**Keyboard shortcuts:**
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+F` / `Cmd+F` | Open search |
+| `F3` / `Cmd+G` | Next match |
+| `Shift+F3` / `Cmd+Shift+G` | Previous match |
+| `Escape` | Close search |
+
+#### Option 2: Manual search bar implementation
+
+```dart
+import 'package:kterm/kterm.dart';
+import 'package:kterm/flutter.dart';
+
+final terminal = Terminal();
+final controller = TerminalController();
+
+// Setup search text provider
+controller.onGetText = () => terminal.buffer.getText();
+
+Column(
+  children: [
+    TerminalSearchBar(
+      controller: controller,
+      onClose: () => controller.closeSearch(),
+    ),
+    Expanded(
+      child: TerminalView(terminal, controller: controller),
+    ),
+  ],
+);
+```
+
+#### Programmatic search control
+
+```dart
+// Open search mode
+controller.openSearch();
+
+// Perform a search
+controller.search('pattern');
+
+// Navigate results
+controller.searchNext();
+controller.searchPrevious();
+
+// Set search options
+controller.setSearchOptions({
+  SearchOption.caseSensitive,
+  SearchOption.regex,
+  SearchOption.wholeWord,
+});
+
+// Toggle individual options
+controller.toggleSearchOption(SearchOption.caseSensitive);
+
+// Close search
+controller.closeSearch();
+```
+
+#### Search-related properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `isSearching` | `bool` | Whether search mode is active |
+| `searchPattern` | `String?` | Current search pattern |
+| `searchResults` | `List<BufferRange>` | All matching results |
+| `currentSearchIndex` | `int` | Index of current result (-1 if none) |
+| `searchResultCount` | `int` | Total number of matches |
+| `hasSearchResults` | `bool` | Whether any matches found |
 
 ## More examples
 
