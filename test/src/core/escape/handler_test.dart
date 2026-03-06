@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:kterm/src/core/escape/handler.dart';
 import 'package:kterm/src/core/mouse/mode.dart';
 

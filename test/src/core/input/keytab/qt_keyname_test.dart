@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:kterm/src/core/input/keytab/qt_keyname.dart';
 import 'package:kterm/src/core/input/keys.dart';
 
