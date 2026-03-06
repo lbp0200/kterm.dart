@@ -3,13 +3,13 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:test/test.dart';
 import 'package:kterm/src/ui/char_metrics.dart';
-import 'package:kterm/src/ui/terminal_theme.dart';
+import 'package:kterm/src/ui/terminal_text_style.dart';
 
 void main() {
   group('calcCharSize', () {
     test('Given default style, When calcCharSize called, Then returns valid size', () {
       // Arrange
-      final style = TerminalStyle.defaultStyle();
+      const style = TerminalStyle();
       final textScaler = TextScaler.noScaling;
 
       // Act
@@ -22,7 +22,7 @@ void main() {
 
     test('Given custom font size, When calcCharSize called, Then returns larger size', () {
       // Arrange
-      final style = TerminalStyle.defaultStyle().copyWith(fontSize: 24.0);
+      const style = TerminalStyle(fontSize: 24.0);
       final textScaler = TextScaler.noScaling;
 
       // Act
@@ -35,7 +35,7 @@ void main() {
 
     test('Given textScaler, When calcCharSize called, Then accounts for scaling', () {
       // Arrange
-      final style = TerminalStyle.defaultStyle();
+      const style = TerminalStyle();
       final textScaler = TextScaler.linear(2.0);
 
       // Act
@@ -48,7 +48,7 @@ void main() {
 
     test('Given default style, When calcCharSize called, Then width is less than height', () {
       // Arrange - monospace fonts typically have width < height
-      final style = TerminalStyle.defaultStyle();
+      const style = TerminalStyle();
       final textScaler = TextScaler.noScaling;
 
       // Act
@@ -60,8 +60,8 @@ void main() {
 
     test('Given different styles, When calcCharSize called, Then returns different sizes', () {
       // Arrange
-      final style1 = TerminalStyle.defaultStyle().copyWith(fontSize: 12.0);
-      final style2 = TerminalStyle.defaultStyle().copyWith(fontSize: 18.0);
+      const style1 = TerminalStyle(fontSize: 12.0);
+      const style2 = TerminalStyle(fontSize: 18.0);
       final textScaler = TextScaler.noScaling;
 
       // Act

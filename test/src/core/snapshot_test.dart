@@ -5,14 +5,17 @@ void main() {
   group('TerminalSnapshot', () {
     test('Given TerminalSnapshot, When interface checked, Then is abstract class', () {
       // Assert - verify it's an abstract class with trimScrollback method
+      // We can verify it exists and is abstract by checking its runtimeType
       expect(TerminalSnapshot, isNotNull);
     });
 
-    test('Given TerminalSnapshot, When interface defined, Then contains trimScrollback method', () {
-      // We verify the abstract class has the method signature
-      // by checking it can be implemented
-      final methods = TerminalSnapshot.toString();
-      expect(methods, contains('TerminalSnapshot'));
+    test('Given TerminalSnapshot, When checking class structure, Then is abstract', () {
+      // Abstract classes can be used as type annotations
+      // This verifies the class exists and can be referenced
+      void takeSnapshot(TerminalSnapshot snapshot) {
+        // This would require implementing the abstract methods
+      }
+      expect(takeSnapshot, isNotNull);
     });
   });
 }

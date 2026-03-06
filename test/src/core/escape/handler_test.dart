@@ -4,32 +4,34 @@ import 'package:kterm/src/core/mouse/mode.dart';
 
 void main() {
   group('EscapeHandler', () {
-    test('Given EscapeHandler, When interface checked, Then contains required methods', () {
-      // Assert - verify the abstract class has all expected method signatures
-      // We verify through implementation in Terminal class
+    test('Given EscapeHandler, When interface checked, Then exists as abstract class', () {
+      // Assert - verify the abstract class exists
       expect(EscapeHandler, isNotNull);
     });
 
-    test('Given EscapeHandler, When SBC methods checked, Then contains required methods', () {
-      // Assert - verify SBC methods exist in interface
-      // This is tested by verifying the abstract class can be implemented
-      final methods = EscapeHandler
-          .toString()
-          .split(',')
-          .map((s) => s.trim())
-          .toList();
-      expect(methods, isNotEmpty);
+    test('Given EscapeHandler, When used as type, Then can be referenced', () {
+      // Assert - verify EscapeHandler can be used as a type annotation
+      void takeHandler(EscapeHandler handler) {
+        // Would require implementing all abstract methods
+      }
+      expect(takeHandler, isNotNull);
     });
 
-    test('Given EscapeHandler, When MouseMode checked, Then contains expected values', () {
+    test('Given MouseMode, When checked, Then contains expected values', () {
       // Assert - verify MouseMode enum is available
       expect(MouseMode.values.contains(MouseMode.none), isTrue);
-      expect(MouseMode.values.contains(MouseMode.x10), isTrue);
-      expect(MouseMode.values.contains(MouseMode.vt200), isTrue);
-      expect(MouseMode.values.contains(MouseMode.vt200Highlight), isTrue);
-      expect(MouseMode.values.contains(MouseMode.sgr), isTrue);
-      expect(MouseMode.values.contains(MouseMode.sgrRelease), isTrue);
-      expect(MouseMode.values.contains(MouseMode.urxvt), isTrue);
+      expect(MouseMode.values.contains(MouseMode.clickOnly), isTrue);
+      expect(MouseMode.values.contains(MouseMode.upDownScroll), isTrue);
+      expect(MouseMode.values.contains(MouseMode.upDownScrollDrag), isTrue);
+      expect(MouseMode.values.contains(MouseMode.upDownScrollMove), isTrue);
+    });
+
+    test('Given MouseReportMode, When checked, Then contains expected values', () {
+      // Assert - verify MouseReportMode enum is available
+      expect(MouseReportMode.values.contains(MouseReportMode.normal), isTrue);
+      expect(MouseReportMode.values.contains(MouseReportMode.utf), isTrue);
+      expect(MouseReportMode.values.contains(MouseReportMode.sgr), isTrue);
+      expect(MouseReportMode.values.contains(MouseReportMode.urxvt), isTrue);
     });
   });
 }
