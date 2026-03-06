@@ -1,3 +1,8 @@
+## [1.0.8] - 2026-03-06
+* Add search functionality
+* Add comprehensive test coverage for core and utility modules
+* Fix test import issues (flutter_test compatibility)
+
 ## [1.0.7] - 2026-02-20
 * Fix CI badge URL
 

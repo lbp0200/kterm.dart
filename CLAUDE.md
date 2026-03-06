@@ -134,3 +134,15 @@ flutter test test/path/to/file_test.dart
 - **Pub Hygiene:** Keep the package lean. Refer to `.pubignore` before adding large assets.
 - **Backward Compatibility:** Maintain stable API for all exported libraries.
 - **Bugs:** Report protocol-level issues to kitty_protocol upstream.
+
+## Release Process
+
+**发布前检查清单:**
+1. 更新 `CHANGELOG.md` - 必须在顶部添加新版本条目，格式: `## [x.x.x] - YYYY-MM-DD`
+2. 确保 `pubspec.yaml` 版本号已更新
+3. 提交并打 tag: `git tag v{x.x.x} && git push origin v{x.x.x}`
+
+**常见发布失败原因:**
+- CHANGELOG.md 缺少当前版本条目 (pub.dev 验证会失败)
+- `flutter analyze` 在 example/ 或 script/ 目录有错误 (只分析 lib/)
+- 测试失败
