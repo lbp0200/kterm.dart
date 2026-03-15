@@ -1,3 +1,7 @@
+## [1.0.9] - 2026-03-15
+* Fix terminal input not rendering until window resize
+* Filter control characters in paste function for security
+
 ## [1.0.8] - 2026-03-06
 * Add search functionality
 * Add comprehensive test coverage for core and utility modules
