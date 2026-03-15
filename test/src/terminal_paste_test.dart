@@ -147,5 +147,37 @@ void main() {
       expect(terminalOutput.join(), contains('\x1b]0;title\x1b\\'));
       expect(terminalOutput.join(), contains('text'));
     });
+
+    test('Given text with control characters, When paste called, Then filters control characters except TAB/LF/CR', () {
+      final terminalOutput = <String>[];
+      final terminal = Terminal(onOutput: terminalOutput.add);
+
+      // Control characters: BEL (\x07), FF (\x0c), SO (\x0e), SI (\x0f)
+      terminal.paste('hello\x07world\x0ctest\x0eabc\x0fdef');
+
+      // All control characters should be filtered, only visible text remains
+      expect(terminalOutput.join(), equals('helloworldtestabcdef'));
+    });
+
+    test('Given text with TAB/LF/CR, When paste called, Then keeps these characters', () {
+      final terminalOutput = <String>[];
+      final terminal = Terminal(onOutput: terminalOutput.add);
+
+      // TAB (\x09), LF (\x0a), CR (\x0d) should be preserved
+      terminal.paste('line1\x09col2\x0aline2\x0dcarriage');
+
+      expect(terminalOutput.join(), equals('line1\tcol2\nline2\rcarriage'));
+    });
+
+    test('Given text with mixed escape sequences and control characters, When paste called, Then filters both', () {
+      final terminalOutput = <String>[];
+      final terminal = Terminal(onOutput: terminalOutput.add);
+
+      // ANSI color + control char + ANSI cursor movement + text
+      terminal.paste('\x1b[31mred\x07text\x1b[0m\x0c normal');
+
+      // Both ANSI sequences and control chars filtered, only visible text remains
+      expect(terminalOutput.join(), equals('redtext normal'));
+    });
   });
 }

@@ -387,6 +387,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // from being pasted into the terminal.
     text = text.replaceAll(RegExp(r'\x1b\[[0-9;]*[a-zA-Z]'), '');
 
+    // Filter control characters (0x00-0x1F) except TAB (\x09), LF (\x0a), CR (\x0d), ESC (\x1b)
+    // These include: BEL (\x07), FF (\x0c - clears screen), SO (\x0e), SI (\x0f), etc.
+    // Note: We keep ESC (\x1b) to preserve OSC and other escape sequences
+    text = text.replaceAll(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f]'), '');
+
     if (_bracketedPasteMode) {
       onOutput?.call(_emitter.bracketedPaste(text));
     } else {
