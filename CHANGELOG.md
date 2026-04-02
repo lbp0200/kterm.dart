@@ -1,3 +1,13 @@
+## [1.1.0] - 2026-04-03
+
+### Bug Fixes
+- Fix cursor jumping/UI desync when `textInput()`, `charInput()`, `keyInput()` called - these methods now properly call `notifyListeners()` to update the UI
+- Fix paste with control characters not notifying listeners in bracketed paste mode
+
+### Tests
+- Add comprehensive widget tests for TerminalView input rendering (26 new tests)
+- Test mixed control characters, Chinese/English input, cursor behavior, timing control
+
 ## [1.0.9] - 2026-03-15
 * Fix terminal input not rendering until window resize
 * Filter control characters in paste function for security

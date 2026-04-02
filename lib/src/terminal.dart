@@ -319,6 +319,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
     if (output != null) {
       onOutput?.call(output);
+      notifyListeners();
       return true;
     }
 
@@ -342,6 +343,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       if (charCode >= Ascii.a && charCode <= Ascii.z) {
         final output = charCode - Ascii.a + 1;
         onOutput?.call(String.fromCharCode(output));
+        notifyListeners();
         return true;
       }
 
@@ -349,6 +351,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       if (charCode >= Ascii.openBracket && charCode <= Ascii.underscore) {
         final output = charCode - Ascii.openBracket + 27;
         onOutput?.call(String.fromCharCode(output));
+        notifyListeners();
         return true;
       }
     }
@@ -358,6 +361,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
         final code = charCode - Ascii.a + 65;
         final input = [0x1b, code];
         onOutput?.call(String.fromCharCodes(input));
+        notifyListeners();
         return true;
       }
     }
@@ -373,6 +377,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// - [paste]
   void textInput(String text) {
     onOutput?.call(text);
+    notifyListeners();
   }
 
   /// Similar to [textInput], except that when the program tells the terminal
@@ -394,6 +399,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
     if (_bracketedPasteMode) {
       onOutput?.call(_emitter.bracketedPaste(text));
+      notifyListeners();
     } else {
       textInput(text);
     }
