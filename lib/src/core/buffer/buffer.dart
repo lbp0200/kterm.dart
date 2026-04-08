@@ -47,7 +47,7 @@ class Buffer {
 
   var _savedCursorY = 0;
 
-  final _savedCursorStyle = CursorStyle();
+  CursorStyle _savedCursorStyle = CursorStyle();
 
   final charset = Charset();
 
@@ -322,9 +322,8 @@ class Buffer {
   void saveCursor() {
     _savedCursorX = _cursorX;
     _savedCursorY = _cursorY;
-    _savedCursorStyle.foreground = terminal.cursor.foreground;
-    _savedCursorStyle.background = terminal.cursor.background;
-    _savedCursorStyle.attrs = terminal.cursor.attrs;
+    final cursor = terminal.cursor;
+    _savedCursorStyle = cursor.copy();
     charset.save();
   }
 

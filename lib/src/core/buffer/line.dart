@@ -435,12 +435,12 @@ class CellAnchor {
   }
 
   int get y {
-    assert(attached);
+    assert(_owner != null, 'Cannot access y on detached CellAnchor');
     return _owner!.index;
   }
 
   CellOffset get offset {
-    assert(attached);
+    assert(_owner != null, 'Cannot access offset on detached CellAnchor');
     return CellOffset(_offset, _owner!.index);
   }
 

@@ -1,3 +1,17 @@
+## [1.1.2] - 2026-04-09
+
+### Bug Fixes
+- Fix SGR parameter bounds checking in escape parser (CSI 38/48/58) - prevents IndexError from malformed escape sequences
+- Fix ZModemMux memory leak - added dispose() method to cancel StreamSubscription
+- Fix CellAnchor owner null-safety - improved assert messages for detached anchors
+- Fix Buffer._savedCursorStyle mutation - now uses copy() for proper immutability
+- Fix GraphicsManager cleanupStalePlacements never called - integrated into terminal image clearing
+- Fix _hyperlinks unbounded memory growth - added cleanup when hyperlink ends
+
+### Code Quality
+- All code passes flutter analyze (no issues)
+- 1184 tests passing
+
 ## [1.1.1] - 2026-04-08
 
 ### Bug Fixes

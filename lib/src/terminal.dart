@@ -1233,6 +1233,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
         }
       }
     }
+    // Clean up stale placements after clearing cells
+    _cleanupStalePlacements();
   }
 
   /// Clear all image references from cells
@@ -1246,6 +1248,23 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
         }
       }
     }
+    // Clean up stale placements after clearing cells
+    _cleanupStalePlacements();
+  }
+
+  /// Collect active placement IDs from cells and clean up stale ones
+  void _cleanupStalePlacements() {
+    final activePlacements = <int>{};
+    for (var y = 0; y < lines.length; y++) {
+      final line = lines[y];
+      for (var x = 0; x < buffer.viewWidth; x++) {
+        final cellImageData = line.getImageData(x);
+        if (CellImage.hasImage(cellImageData)) {
+          activePlacements.add(CellImage.getPlacementId(cellImageData));
+        }
+      }
+    }
+    graphicsManager.cleanupStalePlacements(activePlacements);
   }
 
   /// Place image at cell position
@@ -1459,11 +1478,31 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       // End hyperlink
       _currentHyperlinkId = null;
       _cursorStyle.hyperlinkId = 0;
+      // Clean up stale hyperlinks
+      _cleanupStaleHyperlinks();
     } else {
       // Register or find existing hyperlink
       _currentHyperlinkId = _registerHyperlink(uri, id);
       _cursorStyle.hyperlinkId = _currentHyperlinkId!;
     }
+  }
+
+  /// Clean up hyperlink entries that are no longer referenced by cells.
+  void _cleanupStaleHyperlinks() {
+    // Collect hyperlink IDs that are currently in use by cells
+    final activeHyperlinkIds = <int>{};
+    for (var y = 0; y < lines.length; y++) {
+      final line = lines[y];
+      for (var x = 0; x < buffer.viewWidth; x++) {
+        final hyperlinkId = line.getHyperlinkId(x);
+        if (hyperlinkId != 0) {
+          activeHyperlinkIds.add(hyperlinkId);
+        }
+      }
+    }
+    // Remove hyperlinks that are no longer active (but keep the current one)
+    _hyperlinks.removeWhere(
+        (key, _) => key != _currentHyperlinkId && !activeHyperlinkIds.contains(key));
   }
 
   int _registerHyperlink(String uri, String? id) {

@@ -297,6 +297,12 @@ class ZModemMux {
       stdin.add(dataToSend);
     }
   }
+
+  /// Disposes of the ZModemMux, cancelling subscriptions and closing streams.
+  void dispose() {
+    _stdoutSubscription.cancel();
+    _terminalSink.close();
+  }
 }
 
 extension ListExtension on List<int> {
