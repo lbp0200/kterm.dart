@@ -4,11 +4,14 @@ import 'package:kterm/src/core/input/keytab/keytab_escape.dart';
 void main() {
   group('keytabUnescape', () {
     group('escape sequences', () {
-      test('Given escaped backslash, When unescaped, Then returns single backslash', () {
+      test(
+          'Given escaped backslash, When unescaped, Then returns single backslash',
+          () {
         expect(keytabUnescape(r'\\'), equals('\\'));
       });
 
-      test('Given escaped quote, When unescaped, Then returns single quote', () {
+      test('Given escaped quote, When unescaped, Then returns single quote',
+          () {
         expect(keytabUnescape(r'\"'), equals('"'));
       });
 
@@ -16,7 +19,9 @@ void main() {
         expect(keytabUnescape(r'\t'), equals('\t'));
       });
 
-      test('Given escaped carriage return, When unescaped, Then returns carriage return', () {
+      test(
+          'Given escaped carriage return, When unescaped, Then returns carriage return',
+          () {
         expect(keytabUnescape(r'\r'), equals('\r'));
       });
 
@@ -24,17 +29,22 @@ void main() {
         expect(keytabUnescape(r'\n'), equals('\n'));
       });
 
-      test('Given escaped backspace, When unescaped, Then returns backspace', () {
+      test('Given escaped backspace, When unescaped, Then returns backspace',
+          () {
         expect(keytabUnescape(r'\b'), equals('\b'));
       });
 
-      test('Given escaped escape character, When unescaped, Then returns escape', () {
+      test(
+          'Given escaped escape character, When unescaped, Then returns escape',
+          () {
         expect(keytabUnescape(r'\E'), equals('\x1b'));
       });
     });
 
     group('hex sequences', () {
-      test('Given valid hex sequence, When unescaped, Then returns corresponding character', () {
+      test(
+          'Given valid hex sequence, When unescaped, Then returns corresponding character',
+          () {
         expect(keytabUnescape(r'\x41'), equals('A'));
       });
 
@@ -42,7 +52,9 @@ void main() {
         expect(keytabUnescape(r'\x61'), equals('a'));
       });
 
-      test('Given multiple hex sequences, When unescaped, Then returns all characters', () {
+      test(
+          'Given multiple hex sequences, When unescaped, Then returns all characters',
+          () {
         // Each hex sequence is converted to its character code
         // H=0x48, e=0x65, l=0x6c, l=0x6c, o=0x6f
         expect(keytabUnescape(r'\x48\x65\x6c\x6c\x6f'), equals('Hello'));
@@ -55,15 +67,20 @@ void main() {
     });
 
     group('complex sequences', () {
-      test('Given combined escape and text, When unescaped, Then processes all', () {
+      test('Given combined escape and text, When unescaped, Then processes all',
+          () {
         expect(keytabUnescape(r'\E[31m'), equals('\x1b[31m'));
       });
 
-      test('Given arrow key sequence, When unescaped, Then returns correct sequence', () {
+      test(
+          'Given arrow key sequence, When unescaped, Then returns correct sequence',
+          () {
         expect(keytabUnescape(r'\E[A'), equals('\x1b[A'));
       });
 
-      test('Given function key sequence, When unescaped, Then returns correct sequence', () {
+      test(
+          'Given function key sequence, When unescaped, Then returns correct sequence',
+          () {
         expect(keytabUnescape(r'\EOP'), equals('\x1bOP'));
       });
     });

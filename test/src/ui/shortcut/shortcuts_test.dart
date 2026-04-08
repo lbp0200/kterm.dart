@@ -7,7 +7,9 @@ import 'package:kterm/src/ui/shortcut/shortcuts.dart';
 void main() {
   group('defaultTerminalShortcuts', () {
     group('structure', () {
-      test('Given default terminal shortcuts, When accessed, Then returns non-empty map', () {
+      test(
+          'Given default terminal shortcuts, When accessed, Then returns non-empty map',
+          () {
         // Act
         final shortcuts = defaultTerminalShortcuts;
 
@@ -15,16 +17,21 @@ void main() {
         expect(shortcuts.isNotEmpty, isTrue);
       });
 
-      test('Given default terminal shortcuts, When checked, Then contains copy intent', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then contains copy intent',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
         // Assert
-        final hasCopy = shortcuts.values.any((v) => v is CopySelectionTextIntent);
+        final hasCopy =
+            shortcuts.values.any((v) => v is CopySelectionTextIntent);
         expect(hasCopy, isTrue);
       });
 
-      test('Given default terminal shortcuts, When checked, Then contains paste intent', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then contains paste intent',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
@@ -33,16 +40,21 @@ void main() {
         expect(hasPaste, isTrue);
       });
 
-      test('Given default terminal shortcuts, When checked, Then contains select all intent', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then contains select all intent',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
         // Assert
-        final hasSelectAll = shortcuts.values.any((v) => v is SelectAllTextIntent);
+        final hasSelectAll =
+            shortcuts.values.any((v) => v is SelectAllTextIntent);
         expect(hasSelectAll, isTrue);
       });
 
-      test('Given default terminal shortcuts, When checked, Then has at least 3 shortcuts', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then has at least 3 shortcuts',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
@@ -50,7 +62,9 @@ void main() {
         expect(shortcuts.length, greaterThanOrEqualTo(3));
       });
 
-      test('Given default terminal shortcuts, When checked, Then all values are non-null', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then all values are non-null',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
@@ -60,7 +74,9 @@ void main() {
         }
       });
 
-      test('Given default terminal shortcuts, When checked, Then all keys are non-null', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then all keys are non-null',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
@@ -72,7 +88,9 @@ void main() {
     });
 
     group('intent mapping', () {
-      test('Given default terminal shortcuts, When checked, Then maps to valid intents', () {
+      test(
+          'Given default terminal shortcuts, When checked, Then maps to valid intents',
+          () {
         // Arrange
         final shortcuts = defaultTerminalShortcuts;
 
@@ -80,10 +98,11 @@ void main() {
         for (final entry in shortcuts.entries) {
           expect(
             entry.value is CopySelectionTextIntent ||
-            entry.value is PasteTextIntent ||
-            entry.value is SelectAllTextIntent,
+                entry.value is PasteTextIntent ||
+                entry.value is SelectAllTextIntent,
             isTrue,
-            reason: 'Each shortcut should map to Copy, Paste, or SelectAll intent',
+            reason:
+                'Each shortcut should map to Copy, Paste, or SelectAll intent',
           );
         }
       });

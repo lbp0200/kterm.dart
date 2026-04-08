@@ -13,7 +13,8 @@ void main() {
       };
 
       // Multiple notifications
-      terminal.write('\x1b]777;notify;Build Complete;Compilation succeeded\x1b\\');
+      terminal
+          .write('\x1b]777;notify;Build Complete;Compilation succeeded\x1b\\');
       terminal.write('\x1b]777;notify;Deploy Ready\x1b\\');
       terminal.write('\x1b]777;notify;Error;Something went wrong\x1b\\');
 

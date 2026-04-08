@@ -76,7 +76,8 @@ void main() {
   });
 
   group('CustomTextEditState', () {
-    test('Given state, When created, Then has no input connection initially', () {
+    test('Given state, When created, Then has no input connection initially',
+        () {
       // This is tested through widget construction since state is internal
     });
   });

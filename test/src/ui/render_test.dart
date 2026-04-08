@@ -14,7 +14,8 @@ import 'package:kterm/src/core/buffer/buffer.dart';
 
 import 'render_test.mocks.dart';
 
-@GenerateMocks([Terminal, TerminalController, ViewportOffset, FocusNode, Buffer])
+@GenerateMocks(
+    [Terminal, TerminalController, ViewportOffset, FocusNode, Buffer])
 void main() {
   group('RenderTerminal', () {
     late MockTerminal mockTerminal;

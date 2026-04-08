@@ -38,7 +38,9 @@ void main() {
       expect(CellFlags.invisible, equals(1 << 6));
     });
 
-    test('Given CellFlags, When flags combined, Then produce expected bit patterns', () {
+    test(
+        'Given CellFlags, When flags combined, Then produce expected bit patterns',
+        () {
       // Assert - verify flags can be combined
       final boldItalic = CellFlags.bold | CellFlags.italic;
       expect(boldItalic, equals((1 << 0) | (1 << 2)));

@@ -16,7 +16,8 @@ void main() {
       focusNode.dispose();
     });
 
-    testWidgets('Given valid parameters, When widget built, Then renders child', (tester) async {
+    testWidgets('Given valid parameters, When widget built, Then renders child',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomKeyboardListener(
@@ -32,7 +33,9 @@ void main() {
       expect(find.byType(SizedBox), findsOneWidget);
     });
 
-    testWidgets('Given autofocus true, When widget built, Then widget builds successfully', (tester) async {
+    testWidgets(
+        'Given autofocus true, When widget built, Then widget builds successfully',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CustomKeyboardListener(
@@ -50,7 +53,9 @@ void main() {
       expect(find.byType(CustomKeyboardListener), findsOneWidget);
     });
 
-    testWidgets('Given key event returns handled, When pressed, Then character is not inserted', (tester) async {
+    testWidgets(
+        'Given key event returns handled, When pressed, Then character is not inserted',
+        (tester) async {
       String? insertedText;
 
       await tester.pumpWidget(
@@ -71,7 +76,9 @@ void main() {
       expect(insertedText, isNull);
     });
 
-    testWidgets('Given key event returns ignored and no character, When pressed, Then no insert', (tester) async {
+    testWidgets(
+        'Given key event returns ignored and no character, When pressed, Then no insert',
+        (tester) async {
       String? insertedText;
 
       await tester.pumpWidget(

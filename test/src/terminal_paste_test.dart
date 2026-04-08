@@ -37,7 +37,9 @@ void main() {
       expect(terminalOutput.join(), equals('styled'));
     });
 
-    test('Given text with cursor movement sequences, When paste called, Then filters sequences', () {
+    test(
+        'Given text with cursor movement sequences, When paste called, Then filters sequences',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -59,7 +61,9 @@ void main() {
 
     // Note: The current regex doesn't handle colon-separated parameters like \x1b[4:5m
     // This test documents the current behavior (colons are not filtered)
-    test('Given text with colon-style escape sequences, When paste called, Then filters standard CSI but not colon variants', () {
+    test(
+        'Given text with colon-style escape sequences, When paste called, Then filters standard CSI but not colon variants',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -114,7 +118,9 @@ void main() {
       expect(terminalOutput.join(), equals('Hello World!'));
     });
 
-    test('Given text with 256-color escape codes, When paste called, Then filters sequences', () {
+    test(
+        'Given text with 256-color escape codes, When paste called, Then filters sequences',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -124,7 +130,9 @@ void main() {
       expect(terminalOutput.join(), equals('red'));
     });
 
-    test('Given text with RGB escape codes, When paste called, Then filters sequences', () {
+    test(
+        'Given text with RGB escape codes, When paste called, Then filters sequences',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -136,7 +144,9 @@ void main() {
 
     // Note: The current regex only handles CSI sequences (\x1b[...letter),
     // not OSC sequences (\x1b]...\x1b\\ or \x1b]...\x07)
-    test('Given text with OSC escape codes, When paste called, Then does not filter OSC sequences', () {
+    test(
+        'Given text with OSC escape codes, When paste called, Then does not filter OSC sequences',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -148,7 +158,9 @@ void main() {
       expect(terminalOutput.join(), contains('text'));
     });
 
-    test('Given text with control characters, When paste called, Then filters control characters except TAB/LF/CR', () {
+    test(
+        'Given text with control characters, When paste called, Then filters control characters except TAB/LF/CR',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -159,7 +171,9 @@ void main() {
       expect(terminalOutput.join(), equals('helloworldtestabcdef'));
     });
 
-    test('Given text with TAB/LF/CR, When paste called, Then keeps these characters', () {
+    test(
+        'Given text with TAB/LF/CR, When paste called, Then keeps these characters',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
@@ -169,7 +183,9 @@ void main() {
       expect(terminalOutput.join(), equals('line1\tcol2\nline2\rcarriage'));
     });
 
-    test('Given text with mixed escape sequences and control characters, When paste called, Then filters both', () {
+    test(
+        'Given text with mixed escape sequences and control characters, When paste called, Then filters both',
+        () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 

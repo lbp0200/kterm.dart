@@ -36,7 +36,8 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController(text: widget.controller.searchPattern ?? '');
+    _textController =
+        TextEditingController(text: widget.controller.searchPattern ?? '');
     _focusNode = FocusNode();
 
     _textController.addListener(_onTextChanged);
@@ -168,7 +169,8 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
                 final current = widget.controller.currentSearchIndex;
                 final total = widget.controller.searchResultCount;
 
-                if (!widget.controller.isSearching || _textController.text.isEmpty) {
+                if (!widget.controller.isSearching ||
+                    _textController.text.isEmpty) {
                   return const SizedBox.shrink();
                 }
 

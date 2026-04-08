@@ -169,8 +169,8 @@ class _TerminalDebuggerHandler implements EscapeHandler {
   }
 
   @override
-  void unkownEscape(int char) {
-    onCommand('unkownEscape(${String.fromCharCode(char)})', error: true);
+  void unknownEscape(int char) {
+    onCommand('unknownEscape(${String.fromCharCode(char)})', error: true);
   }
 
   /* CSI */
@@ -182,7 +182,7 @@ class _TerminalDebuggerHandler implements EscapeHandler {
 
   @override
   void unknownCSI(int finalByte) {
-    onCommand('unkownCSI(${String.fromCharCode(finalByte)})', error: true);
+    onCommand('unknownCSI(${String.fromCharCode(finalByte)})', error: true);
   }
 
   @override

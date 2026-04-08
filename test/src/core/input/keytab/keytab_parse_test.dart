@@ -28,7 +28,9 @@ void main() {
     });
 
     group('peek', () {
-      test('Given tokens, When peek called, Then returns first token without advancing', () {
+      test(
+          'Given tokens, When peek called, Then returns first token without advancing',
+          () {
         final tokens = [
           KeytabToken(KeytabTokenType.input, 'first'),
           KeytabToken(KeytabTokenType.input, 'second'),
@@ -44,7 +46,9 @@ void main() {
     });
 
     group('take', () {
-      test('Given tokens, When take called, Then returns token and advances position', () {
+      test(
+          'Given tokens, When take called, Then returns token and advances position',
+          () {
         final tokens = [
           KeytabToken(KeytabTokenType.input, 'first'),
           KeytabToken(KeytabTokenType.input, 'second'),
@@ -68,7 +72,9 @@ void main() {
 
   group('KeytabParser', () {
     group('addTokens', () {
-      test('Given valid keytab tokens, When parsed, Then returns Keytab with records', () {
+      test(
+          'Given valid keytab tokens, When parsed, Then returns Keytab with records',
+          () {
         final parser = KeytabParser();
         parser.addTokens([
           KeytabToken(KeytabTokenType.keyboard, ''),
@@ -88,7 +94,8 @@ void main() {
         expect(result.records[0].keyPad, isTrue);
       });
 
-      test('Given multiple modifiers, When parsed, Then captures all modifiers', () {
+      test('Given multiple modifiers, When parsed, Then captures all modifiers',
+          () {
         final parser = KeytabParser();
         parser.addTokens([
           KeytabToken(KeytabTokenType.keyboard, ''),
@@ -108,7 +115,8 @@ void main() {
         expect(result.records[0].shift, isTrue);
       });
 
-      test('Given invalid token sequence, When parsed, Then throws ParseError', () {
+      test('Given invalid token sequence, When parsed, Then throws ParseError',
+          () {
         final parser = KeytabParser();
         expect(
           () => parser.addTokens([
@@ -133,7 +141,8 @@ void main() {
         );
       });
 
-      test('Given shortcut action, When parsed, Then parses as shortcut type', () {
+      test('Given shortcut action, When parsed, Then parses as shortcut type',
+          () {
         final parser = KeytabParser();
         parser.addTokens([
           KeytabToken(KeytabTokenType.keyboard, ''),
@@ -145,13 +154,16 @@ void main() {
         ]);
 
         final result = parser.result;
-        expect(result.records[0].action.type, equals(KeytabActionType.shortcut));
+        expect(
+            result.records[0].action.type, equals(KeytabActionType.shortcut));
         expect(result.records[0].action.unescapedValue(), equals('copy'));
       });
     });
 
     group('result', () {
-      test('Given empty tokens, When result accessed, Then returns Keytab with null name', () {
+      test(
+          'Given empty tokens, When result accessed, Then returns Keytab with null name',
+          () {
         final parser = KeytabParser();
         parser.addTokens([
           KeytabToken(KeytabTokenType.keyboard, ''),

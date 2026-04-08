@@ -4,12 +4,16 @@ import 'package:kterm/kterm.dart';
 void main() {
   group('TerminalKey', () {
     group('enum values', () {
-      test('Given TerminalKey enum, When checked, Then has correct number of values', () {
+      test(
+          'Given TerminalKey enum, When checked, Then has correct number of values',
+          () {
         // Assert - verify the enum has expected number of values
         expect(TerminalKey.values.length, greaterThan(150));
       });
 
-      test('Given TerminalKey enum, When checked, Then contains common control keys', () {
+      test(
+          'Given TerminalKey enum, When checked, Then contains common control keys',
+          () {
         // Assert - verify control keys exist
         expect(TerminalKey.values.contains(TerminalKey.escape), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.enter), isTrue);
@@ -18,7 +22,9 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.space), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains alphanumeric keys', () {
+      test(
+          'Given TerminalKey enum, When checked, Then contains alphanumeric keys',
+          () {
         // Assert - verify alphanumeric keys exist
         expect(TerminalKey.values.contains(TerminalKey.keyA), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.keyZ), isTrue);
@@ -26,14 +32,16 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.digit9), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains function keys', () {
+      test('Given TerminalKey enum, When checked, Then contains function keys',
+          () {
         // Assert - verify function keys exist
         expect(TerminalKey.values.contains(TerminalKey.f1), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.f12), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.f24), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains modifier keys', () {
+      test('Given TerminalKey enum, When checked, Then contains modifier keys',
+          () {
         // Assert - verify modifier keys exist
         expect(TerminalKey.values.contains(TerminalKey.controlLeft), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.controlRight), isTrue);
@@ -45,7 +53,9 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.metaRight), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains navigation keys', () {
+      test(
+          'Given TerminalKey enum, When checked, Then contains navigation keys',
+          () {
         // Assert - verify navigation keys exist
         expect(TerminalKey.values.contains(TerminalKey.arrowUp), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.arrowDown), isTrue);
@@ -57,7 +67,8 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.pageDown), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains numpad keys', () {
+      test('Given TerminalKey enum, When checked, Then contains numpad keys',
+          () {
         // Assert - verify numpad keys exist
         expect(TerminalKey.values.contains(TerminalKey.numpad0), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.numpad9), isTrue);
@@ -69,7 +80,8 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.numpadEnter), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains media keys', () {
+      test('Given TerminalKey enum, When checked, Then contains media keys',
+          () {
         // Assert - verify media keys exist
         expect(TerminalKey.values.contains(TerminalKey.mediaPlay), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.mediaPause), isTrue);
@@ -77,7 +89,8 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.mediaRecord), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains browser keys', () {
+      test('Given TerminalKey enum, When checked, Then contains browser keys',
+          () {
         // Assert - verify browser keys exist
         expect(TerminalKey.values.contains(TerminalKey.browserBack), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.browserForward), isTrue);
@@ -85,14 +98,17 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.browserHome), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains special values', () {
+      test('Given TerminalKey enum, When checked, Then contains special values',
+          () {
         // Assert - verify special values exist
         expect(TerminalKey.values.contains(TerminalKey.none), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.backtab), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.returnKey), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains union modifier keys', () {
+      test(
+          'Given TerminalKey enum, When checked, Then contains union modifier keys',
+          () {
         // Assert - verify union modifier keys exist
         expect(TerminalKey.values.contains(TerminalKey.shift), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.meta), isTrue);
@@ -100,12 +116,16 @@ void main() {
         expect(TerminalKey.values.contains(TerminalKey.control), isTrue);
       });
 
-      test('Given TerminalKey enum, When checked, Then contains game button keys', () {
+      test(
+          'Given TerminalKey enum, When checked, Then contains game button keys',
+          () {
         // Assert - verify game button keys exist
         expect(TerminalKey.values.contains(TerminalKey.gameButton1), isTrue);
         expect(TerminalKey.values.contains(TerminalKey.gameButtonA), isTrue);
-        expect(TerminalKey.values.contains(TerminalKey.gameButtonStart), isTrue);
-        expect(TerminalKey.values.contains(TerminalKey.gameButtonSelect), isTrue);
+        expect(
+            TerminalKey.values.contains(TerminalKey.gameButtonStart), isTrue);
+        expect(
+            TerminalKey.values.contains(TerminalKey.gameButtonSelect), isTrue);
       });
     });
   });

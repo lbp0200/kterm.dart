@@ -4,7 +4,9 @@ import 'package:kterm/src/core/mouse/mode.dart';
 
 void main() {
   group('EscapeHandler', () {
-    test('Given EscapeHandler, When interface checked, Then exists as abstract class', () {
+    test(
+        'Given EscapeHandler, When interface checked, Then exists as abstract class',
+        () {
       // Assert - verify the abstract class exists
       expect(EscapeHandler, isNotNull);
     });
@@ -26,7 +28,8 @@ void main() {
       expect(MouseMode.values.contains(MouseMode.upDownScrollMove), isTrue);
     });
 
-    test('Given MouseReportMode, When checked, Then contains expected values', () {
+    test('Given MouseReportMode, When checked, Then contains expected values',
+        () {
       // Assert - verify MouseReportMode enum is available
       expect(MouseReportMode.values.contains(MouseReportMode.normal), isTrue);
       expect(MouseReportMode.values.contains(MouseReportMode.utf), isTrue);

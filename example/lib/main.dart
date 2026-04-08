@@ -100,9 +100,12 @@ class _HomeState extends State<Home> {
 
     // Header
     terminal.write('\x1b[1;36m'); // Cyan
-    terminal.write('╔════════════════════════════════════════════════════════╗\x1b[0m\r\n');
-    terminal.write('║         🐱 Kitty Protocol Showcase - kterm 🐱          ║\x1b[0m\r\n');
-    terminal.write('╚════════════════════════════════════════════════════════╝\x1b[0m\r\n\r\n');
+    terminal.write(
+        '╔════════════════════════════════════════════════════════╗\x1b[0m\r\n');
+    terminal.write(
+        '║         🐱 Kitty Protocol Showcase - kterm 🐱          ║\x1b[0m\r\n');
+    terminal.write(
+        '╚════════════════════════════════════════════════════════╝\x1b[0m\r\n\r\n');
 
     // 1. Hyperlinks
     terminal.write('\x1b[1;33m📎 Hyperlinks (OSC 8):\x1b[0m\r\n');
@@ -145,7 +148,8 @@ class _HomeState extends State<Home> {
 
     // 6. Clipboard (info)
     terminal.write('\x1b[1;33m📋 Clipboard (OSC 52):\x1b[0m\r\n');
-    terminal.write('Use right-click to copy/paste. SSH workflows supported!\r\n\r\n');
+    terminal.write(
+        'Use right-click to copy/paste. SSH workflows supported!\r\n\r\n');
 
     // 7. Desktop Notifications (info)
     terminal.write('\x1b[1;33m🔔 Notifications (OSC 777):\x1b[0m\r\n');
@@ -153,7 +157,8 @@ class _HomeState extends State<Home> {
 
     // 8. Mouse Tracking (info)
     terminal.write('\x1b[1;33m🐭 Mouse Tracking (SGR 1006):\x1b[0m\r\n');
-    terminal.write('Enabled for terminal applications like htop, vim, etc.\r\n\r\n');
+    terminal.write(
+        'Enabled for terminal applications like htop, vim, etc.\r\n\r\n');
 
     // 9. Bracketed Paste (info)
     terminal.write('\x1b[1;33m📥 Bracketed Paste (SGR 2004):\x1b[0m\r\n');
@@ -164,9 +169,12 @@ class _HomeState extends State<Home> {
     terminal.write('Press the image button to send a test image!\r\n\r\n');
 
     // Footer
-    terminal.write('\x1b[1;32m✅ All 19 Kitty Protocol features implemented!\x1b[0m\r\n');
-    terminal.write('\x1b[90mMore info: https://sw.kovidgoyal.net/kitty/protocols/\x1b[0m\r\n');
+    terminal.write(
+        '\x1b[1;32m✅ All 19 Kitty Protocol features implemented!\x1b[0m\r\n');
+    terminal.write(
+        '\x1b[90mMore info: https://sw.kovidgoyal.net/kitty/protocols/\x1b[0m\r\n');
   }
+
   void _showKeyboardPanel() {
     terminal.write('\x1b[2J'); // Clear screen
     terminal.write('\x1b[H'); // Move cursor to home
@@ -268,12 +276,13 @@ class _HomeState extends State<Home> {
       shell,
       columns: terminal.viewWidth,
       rows: terminal.viewHeight,
+      ackRead: true,
     );
 
-    pty.output
-        .cast<List<int>>()
-        .transform(Utf8Decoder())
-        .listen(terminal.write);
+    pty.output.cast<List<int>>().transform(Utf8Decoder()).listen((data) {
+      terminal.write(data);
+      pty.ackRead();
+    });
 
     pty.exitCode.then((code) {
       terminal.write('the process exited with exit code $code');

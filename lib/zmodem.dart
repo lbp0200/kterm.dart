@@ -65,6 +65,9 @@ class ZModemMux {
 
   ZModemMux({required this.stdin, required this.stdout}) {
     _stdoutSubscription = stdout.listen(_handleStdout);
+    _terminalSink.stream
+        .transform(Utf8Decoder(allowMalformed: true))
+        .listen(_handleTerminalData);
   }
 
   /// Subscriptions to [stdout]. Used to pause/resume the stream when no more
@@ -74,10 +77,11 @@ class ZModemMux {
   late final _terminalSink = StreamController<List<int>>(
       // onPause: _stdoutSubscription.pause,
       // onResume: _stdoutSubscription.resume,
-      )
-    ..stream
-        .transform(Utf8Decoder(allowMalformed: true))
-        .listen(onTerminalInput);
+      );
+
+  void _handleTerminalData(String data) {
+    onTerminalInput?.call(data);
+  }
 
   /// Current ZModem session. If null, no session is active.
   ZModemCore? _session;
@@ -135,28 +139,33 @@ class ZModemMux {
   }
 
   void _handleZModem(Uint8List chunk) async {
-    for (final event in _session!.receive(chunk)) {
-      /// remote is sz
-      if (event is ZFileOfferedEvent) {
-        _handleZFileOfferedEvent(event);
-      } else if (event is ZFileDataEvent) {
-        _handleZFileDataEvent(event);
-      } else if (event is ZFileEndEvent) {
-        await _handleZFileEndEvent(event);
-      } else if (event is ZSessionFinishedEvent) {
-        await _handleZSessionFinishedEvent(event);
-      }
+    try {
+      for (final event in _session!.receive(chunk)) {
+        /// remote is sz
+        if (event is ZFileOfferedEvent) {
+          _handleZFileOfferedEvent(event);
+        } else if (event is ZFileDataEvent) {
+          _handleZFileDataEvent(event);
+        } else if (event is ZFileEndEvent) {
+          await _handleZFileEndEvent(event);
+        } else if (event is ZSessionFinishedEvent) {
+          await _handleZSessionFinishedEvent(event);
+          break; // Session ended, stop processing further events
+        }
 
-      /// remote is rz
-      else if (event is ZReadyToSendEvent) {
-        await _handleFileRequestEvent(event);
-      } else if (event is ZFileAcceptedEvent) {
-        await _handleFileAcceptedEvent(event);
-      } else if (event is ZFileSkippedEvent) {
-        _handleFileSkippedEvent(event);
-      }
+        /// remote is rz
+        else if (event is ZReadyToSendEvent) {
+          await _handleFileRequestEvent(event);
+        } else if (event is ZFileAcceptedEvent) {
+          await _handleFileAcceptedEvent(event);
+        } else if (event is ZFileSkippedEvent) {
+          _handleFileSkippedEvent(event);
+        }
 
-      _flush();
+        _flush();
+      }
+    } catch (e) {
+      rethrow;
     }
 
     _flush();
@@ -218,7 +227,13 @@ class ZModemMux {
 
   /// Sends next file offer if available, or closes the session if not.
   void _moveToNextOffer() {
-    if (_fileOffers?.moveNext() != true) {
+    // If _fileOffers is null, onFileRequest was not set - keep session open
+    // waiting for remote to send ZFIN or for onFileRequest to be set later.
+    if (_fileOffers == null) {
+      return;
+    }
+
+    if (!_fileOffers!.moveNext()) {
       _closeSession();
       return;
     }
@@ -293,7 +308,7 @@ extension ListExtension on List<int> {
     if (other.length + start > length) {
       return null;
     }
-    for (var i = start; i < length - other.length; i++) {
+    for (var i = start; i <= length - other.length; i++) {
       if (this[i] == other[0]) {
         var found = true;
         for (var j = 1; j < other.length; j++) {

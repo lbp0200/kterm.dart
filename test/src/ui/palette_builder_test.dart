@@ -42,7 +42,9 @@ void main() {
     });
 
     group('build', () {
-      test('Given test theme, When build called, Then returns list of 256 colors', () {
+      test(
+          'Given test theme, When build called, Then returns list of 256 colors',
+          () {
         final theme = createTestTheme();
         final builder = PaletteBuilder(theme);
         final palette = builder.build();
@@ -50,7 +52,9 @@ void main() {
         expect(palette.length, equals(256));
       });
 
-      test('Given test theme, When build called, Then first 8 colors are standard ANSI', () {
+      test(
+          'Given test theme, When build called, Then first 8 colors are standard ANSI',
+          () {
         final theme = createTestTheme();
         final builder = PaletteBuilder(theme);
         final palette = builder.build();
@@ -66,7 +70,9 @@ void main() {
         expect(palette[7], equals(theme.white));
       });
 
-      test('Given test theme, When build called, Then bright colors (8-15) are correct', () {
+      test(
+          'Given test theme, When build called, Then bright colors (8-15) are correct',
+          () {
         final theme = createTestTheme();
         final builder = PaletteBuilder(theme);
         final palette = builder.build();
@@ -82,7 +88,8 @@ void main() {
         expect(palette[15], equals(theme.brightWhite));
       });
 
-      test('Given custom theme, When build called, Then uses custom colors', () {
+      test('Given custom theme, When build called, Then uses custom colors',
+          () {
         final theme = const TerminalTheme(
           cursor: Colors.white,
           selection: Colors.blue,

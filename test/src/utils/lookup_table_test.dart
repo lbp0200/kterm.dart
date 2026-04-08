@@ -100,7 +100,10 @@ void main() {
       });
 
       test('works with custom class values', () {
-        final table = FastLookupTable<List<int>>({0: [1, 2], 1: [3, 4]});
+        final table = FastLookupTable<List<int>>({
+          0: [1, 2],
+          1: [3, 4]
+        });
         expect(table[0], equals([1, 2]));
         expect(table[1], equals([3, 4]));
       });

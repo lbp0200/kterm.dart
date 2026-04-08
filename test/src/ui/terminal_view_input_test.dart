@@ -451,7 +451,8 @@ void main() {
           await tester.pump();
 
           // Buffer should reflow
-          expect(terminal.buffer.lines[0].toString().length, lessThanOrEqualTo(5));
+          expect(
+              terminal.buffer.lines[0].toString().length, lessThanOrEqualTo(5));
         },
       );
     });
@@ -555,7 +556,8 @@ void main() {
           await tester.pump(const Duration(milliseconds: 100));
 
           // Dispose widget by replacing with empty
-          await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+          await tester
+              .pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
           await tester.pump();
 
           // Terminal should still have content

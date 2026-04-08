@@ -69,7 +69,8 @@ TerminalMouseEvent createMouseEvent({
 
 void main() {
   group('TerminalMouseEvent', () {
-    test('Given valid parameters, When created, Then stores all properties', () {
+    test('Given valid parameters, When created, Then stores all properties',
+        () {
       final event = createMouseEvent(
         button: TerminalMouseButton.right,
         buttonState: TerminalMouseButtonState.up,
@@ -84,7 +85,9 @@ void main() {
   });
 
   group('ClickMouseHandler', () {
-    test('Given clickOnly mode with left button down, When call called, Then returns report string', () {
+    test(
+        'Given clickOnly mode with left button down, When call called, Then returns report string',
+        () {
       final handler = ClickMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.left,
@@ -97,7 +100,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given clickOnly mode with right button down, When call called, Then returns report string', () {
+    test(
+        'Given clickOnly mode with right button down, When call called, Then returns report string',
+        () {
       final handler = ClickMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.right,
@@ -110,7 +115,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given clickOnly mode with middle button down, When call called, Then returns report string', () {
+    test(
+        'Given clickOnly mode with middle button down, When call called, Then returns report string',
+        () {
       final handler = ClickMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.middle,
@@ -123,7 +130,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given clickOnly mode with button up, When call called, Then returns null', () {
+    test(
+        'Given clickOnly mode with button up, When call called, Then returns null',
+        () {
       final handler = ClickMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.left,
@@ -156,7 +165,9 @@ void main() {
   });
 
   group('UpDownMouseHandler', () {
-    test('Given upDownScroll mode with wheel up, When call called, Then returns null', () {
+    test(
+        'Given upDownScroll mode with wheel up, When call called, Then returns null',
+        () {
       final handler = UpDownMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.wheelUp,
@@ -169,7 +180,9 @@ void main() {
       expect(result, isNull);
     });
 
-    test('Given upDownScroll mode with wheel down down, When call called, Then returns report', () {
+    test(
+        'Given upDownScroll mode with wheel down down, When call called, Then returns report',
+        () {
       final handler = UpDownMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.wheelDown,
@@ -182,7 +195,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given upDownScrollDrag mode with left button, When call called, Then returns report', () {
+    test(
+        'Given upDownScrollDrag mode with left button, When call called, Then returns report',
+        () {
       final handler = UpDownMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.left,
@@ -195,7 +210,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given upDownScrollMove mode with left button, When call called, Then returns report', () {
+    test(
+        'Given upDownScrollMove mode with left button, When call called, Then returns report',
+        () {
       final handler = UpDownMouseHandler();
       final event = createMouseEvent(
         button: TerminalMouseButton.left,
@@ -228,7 +245,9 @@ void main() {
   });
 
   group('CascadeMouseHandler', () {
-    test('Given first handler returns result, When call called, Then returns first result', () {
+    test(
+        'Given first handler returns result, When call called, Then returns first result',
+        () {
       final handler1 = _MockHandler('result1');
       final handler2 = _MockHandler('result2');
       final cascade = CascadeMouseHandler([handler1, handler2]);
@@ -239,7 +258,9 @@ void main() {
       expect(result, equals('result1'));
     });
 
-    test('Given first handler returns null, When call called, Then returns second result', () {
+    test(
+        'Given first handler returns null, When call called, Then returns second result',
+        () {
       final handler1 = _MockHandler(null);
       final handler2 = _MockHandler('result2');
       final cascade = CascadeMouseHandler([handler1, handler2]);
@@ -250,7 +271,8 @@ void main() {
       expect(result, equals('result2'));
     });
 
-    test('Given all handlers return null, When call called, Then returns null', () {
+    test('Given all handlers return null, When call called, Then returns null',
+        () {
       final handler1 = _MockHandler(null);
       final handler2 = _MockHandler(null);
       final cascade = CascadeMouseHandler([handler1, handler2]);
@@ -263,7 +285,9 @@ void main() {
   });
 
   group('defaultMouseHandler', () {
-    test('Given default handler with clickOnly mode, When call called, Then returns result', () {
+    test(
+        'Given default handler with clickOnly mode, When call called, Then returns result',
+        () {
       final event = createMouseEvent(
         button: TerminalMouseButton.left,
         buttonState: TerminalMouseButtonState.down,
@@ -275,7 +299,9 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Given default handler with upDownScroll mode, When call called, Then returns result', () {
+    test(
+        'Given default handler with upDownScroll mode, When call called, Then returns result',
+        () {
       final event = createMouseEvent(
         button: TerminalMouseButton.wheelDown,
         buttonState: TerminalMouseButtonState.down,

@@ -341,7 +341,8 @@ class TerminalViewState extends State<TerminalView> {
     );
 
     child = Container(
-      color: widget.theme.background.withOpacity(widget.backgroundOpacity),
+      color:
+          widget.theme.background.withValues(alpha: widget.backgroundOpacity),
       padding: widget.padding,
       child: child,
     );
@@ -394,7 +395,8 @@ class TerminalViewState extends State<TerminalView> {
             _controller.searchNext();
           },
           // Cmd+Shift+G - Previous match (macOS)
-          const SingleActivator(LogicalKeyboardKey.keyG, meta: true, shift: true): () {
+          const SingleActivator(LogicalKeyboardKey.keyG,
+              meta: true, shift: true): () {
             _controller.searchPrevious();
           },
         },
@@ -499,8 +501,9 @@ class TerminalViewState extends State<TerminalView> {
         // 1. reportAllKeysAsEscape is true, OR
         // 2. Modifiers are pressed
         // Otherwise, ignore KeyUp to avoid duplicate output
-        final shouldEncodeKeyUp = widget
-            .terminal.kittyEncoder.flags.reportAllKeysAsEscape || hasModifiers;
+        final shouldEncodeKeyUp =
+            widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
+                hasModifiers;
 
         if (shouldEncodeKeyUp) {
           final seq = _encodeWithKitty(event);
@@ -539,8 +542,9 @@ class TerminalViewState extends State<TerminalView> {
         // 1. reportAllKeysAsEscape is true, OR
         // 2. Modifiers are pressed
         // Otherwise, use standard character input
-        final useKittyEncoding = widget
-            .terminal.kittyEncoder.flags.reportAllKeysAsEscape || hasModifiers;
+        final useKittyEncoding =
+            widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
+                hasModifiers;
 
         if (!useKittyEncoding) {
           // Use standard character input for bare keys

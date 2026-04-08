@@ -84,7 +84,8 @@ void main() {
         painter.theme = customTheme;
 
         // Foreground should now be the new theme's foreground
-        expect(painter.resolveForegroundColor(0), equals(const Color(0xFF123456)));
+        expect(
+            painter.resolveForegroundColor(0), equals(const Color(0xFF123456)));
       });
 
       test('same textStyle value does not clear cache', () {

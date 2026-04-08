@@ -12,7 +12,9 @@ class TestObserver with Observable {
 void main() {
   group('Observable', () {
     group('addListener', () {
-      test('Given no listeners, When addListener called, Then listener is registered', () {
+      test(
+          'Given no listeners, When addListener called, Then listener is registered',
+          () {
         final observer = TestObserver();
         int callCount = 0;
 
@@ -21,7 +23,9 @@ void main() {
         expect(observer.listeners.length, equals(1));
       });
 
-      test('Given multiple listeners, When addListener called, Then all listeners are registered', () {
+      test(
+          'Given multiple listeners, When addListener called, Then all listeners are registered',
+          () {
         final observer = TestObserver();
 
         observer.addListener(() {});
@@ -30,7 +34,9 @@ void main() {
         expect(observer.listeners.length, equals(2));
       });
 
-      test('Given duplicate listener, When addListener called, Then listener is only added once', () {
+      test(
+          'Given duplicate listener, When addListener called, Then listener is only added once',
+          () {
         final observer = TestObserver();
         void listener() {}
 
@@ -42,7 +48,9 @@ void main() {
     });
 
     group('removeListener', () {
-      test('Given registered listener, When removeListener called, Then listener is removed', () {
+      test(
+          'Given registered listener, When removeListener called, Then listener is removed',
+          () {
         final observer = TestObserver();
         void listener() {}
 
@@ -52,7 +60,9 @@ void main() {
         expect(observer.listeners.isEmpty, isTrue);
       });
 
-      test('Given unregistered listener, When removeListener called, Then no error thrown', () {
+      test(
+          'Given unregistered listener, When removeListener called, Then no error thrown',
+          () {
         final observer = TestObserver();
 
         expect(() => observer.removeListener(() {}), returnsNormally);
@@ -60,7 +70,9 @@ void main() {
     });
 
     group('notifyListeners', () {
-      test('Given single listener, When notifyListeners called, Then listener is invoked', () {
+      test(
+          'Given single listener, When notifyListeners called, Then listener is invoked',
+          () {
         final observer = TestObserver();
         int callCount = 0;
 
@@ -70,7 +82,9 @@ void main() {
         expect(callCount, equals(1));
       });
 
-      test('Given multiple listeners, When notifyListeners called, Then all listeners are invoked', () {
+      test(
+          'Given multiple listeners, When notifyListeners called, Then all listeners are invoked',
+          () {
         final observer = TestObserver();
         int callCount1 = 0;
         int callCount2 = 0;
@@ -83,7 +97,9 @@ void main() {
         expect(callCount2, equals(1));
       });
 
-      test('Given listener removed during notification, When notifyListeners called, Then does not crash', () {
+      test(
+          'Given listener removed during notification, When notifyListeners called, Then does not crash',
+          () {
         // Note: This test documents that modifying the set during iteration
         // will throw ConcurrentModificationError - this is expected behavior
         final observer = TestObserver();

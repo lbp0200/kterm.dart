@@ -9,14 +9,18 @@ import 'package:kterm/src/ui/controller.dart';
 
 void main() {
   group('TerminalActions', () {
-    test('Given TerminalActions widget, When created, Then builds without error', () {
+    test(
+        'Given TerminalActions widget, When created, Then builds without error',
+        () {
       // This test verifies the widget can be instantiated
       // Note: Full widget testing would require a proper test harness
       // This tests the class structure exists
       expect(TerminalActions, isNotNull);
     });
 
-    test('Given TerminalActions, When checking default constructor, Then accepts required parameters', () {
+    test(
+        'Given TerminalActions, When checking default constructor, Then accepts required parameters',
+        () {
       // Verify the constructor exists with expected parameters
       // This is a compile-time check plus basic instantiation test
       final terminal = Terminal();
@@ -44,10 +48,12 @@ void main() {
       expect(hasPaste, isTrue);
     });
 
-    test('Given default terminal shortcuts, Should contain select all shortcut', () {
+    test('Given default terminal shortcuts, Should contain select all shortcut',
+        () {
       // Verify select all shortcut exists
       final shortcuts = defaultTerminalShortcuts;
-      final hasSelectAll = shortcuts.values.any((v) => v is SelectAllTextIntent);
+      final hasSelectAll =
+          shortcuts.values.any((v) => v is SelectAllTextIntent);
       expect(hasSelectAll, isTrue);
     });
 
@@ -58,15 +64,17 @@ void main() {
       for (final entry in shortcuts.entries) {
         expect(
           entry.value is CopySelectionTextIntent ||
-          entry.value is PasteTextIntent ||
-          entry.value is SelectAllTextIntent,
+              entry.value is PasteTextIntent ||
+              entry.value is SelectAllTextIntent,
           isTrue,
-          reason: 'Each shortcut should map to Copy, Paste, or SelectAll intent',
+          reason:
+              'Each shortcut should map to Copy, Paste, or SelectAll intent',
         );
       }
     });
 
-    test('Given default terminal shortcuts, Should have at least 3 entries', () {
+    test('Given default terminal shortcuts, Should have at least 3 entries',
+        () {
       // Verify minimum shortcut count
       final shortcuts = defaultTerminalShortcuts;
       expect(shortcuts.length, greaterThanOrEqualTo(3));

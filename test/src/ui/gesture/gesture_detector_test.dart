@@ -121,7 +121,8 @@ void main() {
       expect(find.byType(RawGestureDetector), findsOneWidget);
     });
 
-    testWidgets('widget tree contains RawGestureDetector with child', (tester) async {
+    testWidgets('widget tree contains RawGestureDetector with child',
+        (tester) async {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,

@@ -5,22 +5,29 @@ import 'package:kterm/src/core/input/keys.dart';
 void main() {
   group('qtKeynameMap', () {
     group('navigation keys', () {
-      test('Given qtKeynameMap, When contains Escape, Then maps to TerminalKey.escape', () {
+      test(
+          'Given qtKeynameMap, When contains Escape, Then maps to TerminalKey.escape',
+          () {
         // Assert
         expect(qtKeynameMap['Escape'], equals(TerminalKey.escape));
       });
 
-      test('Given qtKeynameMap, When contains Tab, Then maps to TerminalKey.tab', () {
+      test(
+          'Given qtKeynameMap, When contains Tab, Then maps to TerminalKey.tab',
+          () {
         // Assert
         expect(qtKeynameMap['Tab'], equals(TerminalKey.tab));
       });
 
-      test('Given qtKeynameMap, When contains Backspace, Then maps to TerminalKey.backspace', () {
+      test(
+          'Given qtKeynameMap, When contains Backspace, Then maps to TerminalKey.backspace',
+          () {
         // Assert
         expect(qtKeynameMap['Backspace'], equals(TerminalKey.backspace));
       });
 
-      test('Given qtKeynameMap, When contains arrow keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains arrow keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Left'], equals(TerminalKey.arrowLeft));
         expect(qtKeynameMap['Right'], equals(TerminalKey.arrowRight));
@@ -28,13 +35,17 @@ void main() {
         expect(qtKeynameMap['Down'], equals(TerminalKey.arrowDown));
       });
 
-      test('Given qtKeynameMap, When contains Home and End, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains Home and End, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Home'], equals(TerminalKey.home));
         expect(qtKeynameMap['End'], equals(TerminalKey.end));
       });
 
-      test('Given qtKeynameMap, When contains PageUp and PageDown, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains PageUp and PageDown, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['PageUp'], equals(TerminalKey.pageUp));
         expect(qtKeynameMap['PageDown'], equals(TerminalKey.pageDown));
@@ -51,7 +62,9 @@ void main() {
         expect(qtKeynameMap['F24'], equals(TerminalKey.f24));
       });
 
-      test('Given qtKeynameMap, When contains function keys F13-F24, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains function keys F13-F24, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['F13'], equals(TerminalKey.f13));
         expect(qtKeynameMap['F20'], equals(TerminalKey.f20));
@@ -59,7 +72,9 @@ void main() {
     });
 
     group('modifier keys', () {
-      test('Given qtKeynameMap, When contains modifier keys, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains modifier keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Shift'], equals(TerminalKey.shift));
         expect(qtKeynameMap['Control'], equals(TerminalKey.control));
@@ -67,7 +82,8 @@ void main() {
         expect(qtKeynameMap['Alt'], equals(TerminalKey.alt));
       });
 
-      test('Given qtKeynameMap, When contains lock keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains lock keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['CapsLock'], equals(TerminalKey.capsLock));
         expect(qtKeynameMap['NumLock'], equals(TerminalKey.numLock));
@@ -76,19 +92,23 @@ void main() {
     });
 
     group('alphanumeric keys', () {
-      test('Given qtKeynameMap, When contains digit keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains digit keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['0'], equals(TerminalKey.digit0));
         expect(qtKeynameMap['9'], equals(TerminalKey.digit9));
       });
 
-      test('Given qtKeynameMap, When contains letter keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains letter keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['A'], equals(TerminalKey.keyA));
         expect(qtKeynameMap['Z'], equals(TerminalKey.keyZ));
       });
 
-      test('Given qtKeynameMap, When contains punctuation keys, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains punctuation keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Space'], equals(TerminalKey.space));
         expect(qtKeynameMap['Comma'], equals(TerminalKey.comma));
@@ -100,7 +120,8 @@ void main() {
     });
 
     group('media keys', () {
-      test('Given qtKeynameMap, When contains media keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains media keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['MediaPlay'], equals(TerminalKey.mediaPlay));
         expect(qtKeynameMap['MediaStop'], equals(TerminalKey.mediaStop));
@@ -108,7 +129,8 @@ void main() {
         expect(qtKeynameMap['MediaRecord'], equals(TerminalKey.mediaRecord));
       });
 
-      test('Given qtKeynameMap, When contains volume keys, Then maps correctly', () {
+      test('Given qtKeynameMap, When contains volume keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['VolumeUp'], equals(TerminalKey.audioVolumeUp));
         expect(qtKeynameMap['VolumeDown'], equals(TerminalKey.audioVolumeDown));
@@ -117,20 +139,26 @@ void main() {
     });
 
     group('special keys', () {
-      test('Given qtKeynameMap, When contains Return and Enter, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains Return and Enter, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Return'], equals(TerminalKey.returnKey));
         expect(qtKeynameMap['Enter'], equals(TerminalKey.enter));
         expect(qtKeynameMap['NumEnter'], equals(TerminalKey.numpadEnter));
       });
 
-      test('Given qtKeynameMap, When contains Insert and Delete, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains Insert and Delete, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Insert'], equals(TerminalKey.insert));
         expect(qtKeynameMap['Delete'], equals(TerminalKey.delete));
       });
 
-      test('Given qtKeynameMap, When contains clipboard keys, Then maps correctly', () {
+      test(
+          'Given qtKeynameMap, When contains clipboard keys, Then maps correctly',
+          () {
         // Assert
         expect(qtKeynameMap['Copy'], equals(TerminalKey.copy));
         expect(qtKeynameMap['Cut'], equals(TerminalKey.cut));
@@ -142,7 +170,9 @@ void main() {
       });
     });
 
-    test('Given qtKeynameMap, When checked, Then contains expected number of mappings', () {
+    test(
+        'Given qtKeynameMap, When checked, Then contains expected number of mappings',
+        () {
       // Assert - verify map has substantial entries
       expect(qtKeynameMap.length, greaterThan(50));
     });

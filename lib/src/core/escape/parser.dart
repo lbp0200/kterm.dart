@@ -58,7 +58,7 @@ class EscapeParser {
 
     final sbcHandler = _sbcHandlers[char];
     if (sbcHandler == null) {
-      handler.unkownEscape(char);
+      handler.unknownEscape(char);
       return;
     }
 
@@ -74,7 +74,7 @@ class EscapeParser {
     final escapeHandler = _escHandlers[escapeChar];
 
     if (escapeHandler == null) {
-      handler.unkownEscape(escapeChar);
+      handler.unknownEscape(escapeChar);
       return true;
     }
 
@@ -105,8 +105,7 @@ class EscapeParser {
     // 'P'.charCode: _unsupportedHandler, // Sixel
     // 'c'.charCode: _unsupportedHandler,
     // '#'.charCode: _unsupportedHandler,
-    'P'.charCode:
-        _escHandleDCS, // DCS (Device Control String) - Remote Control
+    'P'.charCode: _escHandleDCS, // DCS (Device Control String) - Remote Control
     '_'.charCode:
         _escHandleAPC, // APC (Application Program Command) - Kitty Graphics
     '('.charCode: _escHandleDesignateCharset0, //  SCS - G0

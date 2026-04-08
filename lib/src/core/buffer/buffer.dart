@@ -65,11 +65,11 @@ class Buffer {
   /// [viewHeight].
   int get height => lines.length;
 
-  /// Horizontal position of the cursor relative to the top-left cornor of the
+  /// Horizontal position of the cursor relative to the top-left corner of the
   /// screen, starting from 0.
   int get cursorX => _cursorX.clamp(0, terminal.viewWidth - 1);
 
-  /// Vertical position of the cursor relative to the top-left cornor of the
+  /// Vertical position of the cursor relative to the top-left corner of the
   /// screen, starting from 0.
   int get cursorY => _cursorY;
 

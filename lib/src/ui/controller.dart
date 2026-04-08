@@ -84,7 +84,8 @@ class TerminalController with ChangeNotifier {
 
   /// The current search result, or null if no result is selected.
   BufferRange? get currentSearchResult {
-    if (_currentSearchIndex >= 0 && _currentSearchIndex < _searchResults.length) {
+    if (_currentSearchIndex >= 0 &&
+        _currentSearchIndex < _searchResults.length) {
       return _searchResults[_currentSearchIndex];
     }
     return null;
@@ -353,7 +354,8 @@ class TerminalController with ChangeNotifier {
   void searchPrevious() {
     if (_searchResults.isEmpty) return;
 
-    _currentSearchIndex = (_currentSearchIndex - 1 + _searchResults.length) % _searchResults.length;
+    _currentSearchIndex = (_currentSearchIndex - 1 + _searchResults.length) %
+        _searchResults.length;
     notifyListeners();
   }
 

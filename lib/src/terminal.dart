@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert' show base64, utf8;
 import 'dart:math' show max;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -395,7 +394,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // Filter control characters (0x00-0x1F) except TAB (\x09), LF (\x0a), CR (\x0d), ESC (\x1b)
     // These include: BEL (\x07), FF (\x0c - clears screen), SO (\x0e), SI (\x0f), etc.
     // Note: We keep ESC (\x1b) to preserve OSC and other escape sequences
-    text = text.replaceAll(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f]'), '');
+    text =
+        text.replaceAll(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f]'), '');
 
     if (_bracketedPasteMode) {
       onOutput?.call(_emitter.bracketedPaste(text));
@@ -556,7 +556,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   }
 
   @override
-  void unkownEscape(int char) {
+  void unknownEscape(int char) {
     // no-op
   }
 
@@ -952,7 +952,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
         break;
       case 50: // GIF
         // GIF handling - store as animated image
-        final imageId = await graphicsManager.storeGif(Uint8List.fromList(combinedData));
+        final imageId =
+            await graphicsManager.storeGif(Uint8List.fromList(combinedData));
         // Continue with placement using first frame
         await _createPlacementForImage(imageId);
         _currentGraphicsArgs.clear();
@@ -1033,23 +1034,47 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
     // Use decodeImageFromPixels with callback
     final completer = Completer<ui.Image?>();
-    ui.decodeImageFromPixels(
-      Uint8List.fromList(data),
-      width,
-      height,
-      ui.PixelFormat.rgba8888,
-      (image) => completer.complete(image),
-      rowBytes: width * 4,
-    );
-
     try {
-      return await completer.future.timeout(
+      ui.decodeImageFromPixels(
+        Uint8List.fromList(data),
+        width,
+        height,
+        ui.PixelFormat.rgba8888,
+        // Use dynamic to safely handle cases where decoder passes null on failure
+        (dynamic image) {
+          if (!completer.isCompleted) {
+            if (image is ui.Image) {
+              completer.complete(image);
+            } else {
+              completer.complete(null);
+            }
+          }
+        },
+        rowBytes: width * 4,
+      );
+    } catch (e) {
+      // Synchronous decode failure (e.g., invalid buffer size)
+      return null;
+    }
+
+    ui.Image? image;
+    try {
+      image = await completer.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () => null,
       );
     } catch (e) {
       return null;
     }
+    if (image == null) return null;
+    // Validate that the image has valid dimensions (catch corrupted images)
+    try {
+      if (image.width <= 0 || image.height <= 0) return null;
+    } catch (e) {
+      // Accessing properties threw - invalid image
+      return null;
+    }
+    return image;
   }
 
   /// Create image from PNG/JPEG data

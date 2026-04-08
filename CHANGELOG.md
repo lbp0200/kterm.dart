@@ -1,3 +1,19 @@
+## [1.1.1] - 2026-04-08
+
+### Bug Fixes
+- Fix ZModem protocol parsing: correct LF constant (0x8a → 0x0a) and add missing XON consumption in hex frame parsing
+- Fix ZModem session lifecycle: keep session open when onFileRequest is null, add ZFIN handling in _ZReadyToSendState
+- Fix ZModem test data: complete ZRINIT frames (19 bytes with CRC and XON), correct ZFIN CRC (0x022d)
+- Fix assertion in zmodem_test.dart: use contains(equals(...)) for proper list matching
+- Fix simple_ext_test.dart import path: use package:kterm/kterm.dart
+- Fix typo: unkownEscape → unknownEscape in escape parser
+- Fix comment typo: "cornor" → "corner" in buffer.dart
+
+### Code Quality
+- Remove redundant assertions on required parameters in action constructors
+- Clean up debug print statements and unused variables in zmodem.dart
+- Update analysis_options.yaml: exclude coverage/example/docs/test/script directories, suppress deprecated OverlayPortal.targetsRootOverlay warning
+
 ## [1.1.0] - 2026-04-03
 
 ### Bug Fixes

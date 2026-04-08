@@ -37,7 +37,7 @@ abstract class EscapeHandler {
 
   void designateCharset(int charset, int name);
 
-  void unkownEscape(int char);
+  void unknownEscape(int char);
 
   /* CSI */
 

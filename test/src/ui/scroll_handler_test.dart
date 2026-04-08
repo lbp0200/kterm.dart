@@ -13,7 +13,9 @@ void main() {
       terminal = Terminal();
     });
 
-    testWidgets('Given terminal not in alt buffer, When widget built, Then renders child', (tester) async {
+    testWidgets(
+        'Given terminal not in alt buffer, When widget built, Then renders child',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TerminalScrollGestureHandler(
@@ -30,7 +32,9 @@ void main() {
       expect(find.byType(SizedBox), findsOneWidget);
     });
 
-    testWidgets('Given simulateScroll false, When widget built, Then widget builds successfully', (tester) async {
+    testWidgets(
+        'Given simulateScroll false, When widget built, Then widget builds successfully',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TerminalScrollGestureHandler(
@@ -46,7 +50,9 @@ void main() {
       expect(find.byType(SizedBox), findsOneWidget);
     });
 
-    testWidgets('Given custom getCellOffset, When widget built, Then widget builds successfully', (tester) async {
+    testWidgets(
+        'Given custom getCellOffset, When widget built, Then widget builds successfully',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TerminalScrollGestureHandler(

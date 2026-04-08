@@ -20,7 +20,8 @@ void main() {
       test('setForegroundColorRgb sets RGB color', () {
         final style = CursorStyle();
         style.setForegroundColorRgb(255, 128, 64);
-        expect(style.foreground, equals((255 << 16) | (128 << 8) | 64 | CellColor.rgb));
+        expect(style.foreground,
+            equals((255 << 16) | (128 << 8) | 64 | CellColor.rgb));
       });
 
       test('setBackgroundColor16 sets named color', () {
@@ -38,7 +39,8 @@ void main() {
       test('setBackgroundColorRgb sets RGB color', () {
         final style = CursorStyle();
         style.setBackgroundColorRgb(0, 255, 128);
-        expect(style.background, equals((0 << 16) | (255 << 8) | 128 | CellColor.rgb));
+        expect(style.background,
+            equals((0 << 16) | (255 << 8) | 128 | CellColor.rgb));
       });
 
       test('resetForegroundColor resets to default', () {
@@ -216,7 +218,8 @@ void main() {
       test('setUnderlineColorRgb sets RGB color', () {
         final style = CursorStyle();
         style.setUnderlineColorRgb(128, 64, 32);
-        expect(style.underlineColor, equals((128 << 16) | (64 << 8) | 32 | CellColor.rgb));
+        expect(style.underlineColor,
+            equals((128 << 16) | (64 << 8) | 32 | CellColor.rgb));
       });
 
       test('resetUnderlineColor resets to default', () {

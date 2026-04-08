@@ -4,7 +4,8 @@ import 'package:kterm/src/base/event.dart';
 void main() {
   group('EventEmitter', () {
     group('call (add listener)', () {
-      test('Given no listeners, When call called, Then returns subscription', () {
+      test('Given no listeners, When call called, Then returns subscription',
+          () {
         final emitter = EventEmitter<String>();
 
         final subscription = emitter.call((event) {});
@@ -24,7 +25,9 @@ void main() {
     });
 
     group('emit', () {
-      test('Given single listener, When emit called, Then listener receives event', () {
+      test(
+          'Given single listener, When emit called, Then listener receives event',
+          () {
         final emitter = EventEmitter<String>();
         String? received;
 
@@ -34,7 +37,9 @@ void main() {
         expect(received, equals('hello'));
       });
 
-      test('Given multiple listeners, When emit called, Then all listeners receive event', () {
+      test(
+          'Given multiple listeners, When emit called, Then all listeners receive event',
+          () {
         final emitter = EventEmitter<int>();
         int result1 = 0;
         int result2 = 0;
@@ -55,7 +60,8 @@ void main() {
     });
 
     group('event', () {
-      test('Given emitter, When event accessed, Then returns Event instance', () {
+      test('Given emitter, When event accessed, Then returns Event instance',
+          () {
         final emitter = EventEmitter<String>();
 
         final event = emitter.event;
@@ -67,7 +73,9 @@ void main() {
   });
 
   group('Event', () {
-    test('Given event with listener, When call called, Then listener is invoked', () {
+    test(
+        'Given event with listener, When call called, Then listener is invoked',
+        () {
       final emitter = EventEmitter<String>();
       String? received;
 
@@ -79,7 +87,9 @@ void main() {
   });
 
   group('EventSubscription', () {
-    test('Given subscription, When dispose called, Then listener is removed from emitter', () {
+    test(
+        'Given subscription, When dispose called, Then listener is removed from emitter',
+        () {
       final emitter = EventEmitter<String>();
       int callCount = 0;
 
@@ -91,7 +101,9 @@ void main() {
       expect(callCount, equals(0));
     });
 
-    test('Given already disposed subscription, When dispose called again, Then no error thrown', () {
+    test(
+        'Given already disposed subscription, When dispose called again, Then no error thrown',
+        () {
       final emitter = EventEmitter<String>();
       final subscription = emitter.call((event) {});
 
@@ -100,14 +112,18 @@ void main() {
       expect(() => subscription.dispose(), returnsNormally);
     });
 
-    test('Given subscription, When disposed property accessed, Then returns false initially', () {
+    test(
+        'Given subscription, When disposed property accessed, Then returns false initially',
+        () {
       final emitter = EventEmitter<String>();
       final subscription = emitter.call((event) {});
 
       expect(subscription.disposed, isFalse);
     });
 
-    test('Given subscription after dispose, When disposed property accessed, Then returns true', () {
+    test(
+        'Given subscription after dispose, When disposed property accessed, Then returns true',
+        () {
       final emitter = EventEmitter<String>();
       final subscription = emitter.call((event) {});
 
@@ -119,7 +135,8 @@ void main() {
   });
 
   group('EventEmitter with onDisposed', () {
-    test('Given disposable, When dispose called, Then onDisposed is emitted', () {
+    test('Given disposable, When dispose called, Then onDisposed is emitted',
+        () {
       final emitter = EventEmitter<String>();
       int callCount = 0;
 

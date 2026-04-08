@@ -11,15 +11,20 @@ void main() {
       expect(MouseMode.clickOnly.reportScroll, isFalse);
     });
 
-    test('Given upDownScroll, When reportScroll accessed, Then returns true', () {
+    test('Given upDownScroll, When reportScroll accessed, Then returns true',
+        () {
       expect(MouseMode.upDownScroll.reportScroll, isTrue);
     });
 
-    test('Given upDownScrollDrag, When reportScroll accessed, Then returns true', () {
+    test(
+        'Given upDownScrollDrag, When reportScroll accessed, Then returns true',
+        () {
       expect(MouseMode.upDownScrollDrag.reportScroll, isTrue);
     });
 
-    test('Given upDownScrollMove, When reportScroll accessed, Then returns true', () {
+    test(
+        'Given upDownScrollMove, When reportScroll accessed, Then returns true',
+        () {
       expect(MouseMode.upDownScrollMove.reportScroll, isTrue);
     });
   });

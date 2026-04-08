@@ -109,7 +109,9 @@ void main() {
   });
 
   group('TerminalController.search', () {
-    test('Given no text provider, When search called, Then returns empty results', () {
+    test(
+        'Given no text provider, When search called, Then returns empty results',
+        () {
       final controller = TerminalController();
 
       // No onGetText callback set
@@ -148,7 +150,9 @@ void main() {
       expect(controller.currentSearchIndex, equals(-1));
     });
 
-    test('Given case insensitive search, When search called, Then finds matches', () {
+    test(
+        'Given case insensitive search, When search called, Then finds matches',
+        () {
       final terminal = Terminal();
       terminal.write('Hello HELLO hello');
       final controller = TerminalController();
@@ -161,7 +165,9 @@ void main() {
       expect(controller.hasSearchResults, isTrue);
     });
 
-    test('Given case sensitive search, When search called, Then finds exact matches only', () {
+    test(
+        'Given case sensitive search, When search called, Then finds exact matches only',
+        () {
       final terminal = Terminal();
       terminal.write('Hello HELLO hello');
       final controller = TerminalController();
@@ -188,7 +194,9 @@ void main() {
       expect(controller.hasSearchResults, isTrue);
     });
 
-    test('Given whole word search, When search called, Then matches whole words only', () {
+    test(
+        'Given whole word search, When search called, Then matches whole words only',
+        () {
       final terminal = Terminal();
       terminal.write('testing tested test');
       final controller = TerminalController();
@@ -289,13 +297,16 @@ void main() {
     test('toggleSearchOption toggles option correctly', () {
       final controller = TerminalController();
 
-      expect(controller.searchOptions.contains(SearchOption.caseSensitive), isFalse);
+      expect(controller.searchOptions.contains(SearchOption.caseSensitive),
+          isFalse);
 
       controller.toggleSearchOption(SearchOption.caseSensitive);
-      expect(controller.searchOptions.contains(SearchOption.caseSensitive), isTrue);
+      expect(controller.searchOptions.contains(SearchOption.caseSensitive),
+          isTrue);
 
       controller.toggleSearchOption(SearchOption.caseSensitive);
-      expect(controller.searchOptions.contains(SearchOption.caseSensitive), isFalse);
+      expect(controller.searchOptions.contains(SearchOption.caseSensitive),
+          isFalse);
     });
 
     test('currentSearchResult returns correct result', () {
@@ -333,7 +344,9 @@ void main() {
     });
 
     // Boundary tests
-    test('Given empty string search, When search called, Then returns empty results', () {
+    test(
+        'Given empty string search, When search called, Then returns empty results',
+        () {
       final terminal = Terminal();
       terminal.write('hello world');
       final controller = TerminalController();
@@ -345,7 +358,9 @@ void main() {
       expect(controller.currentSearchIndex, equals(-1));
     });
 
-    test('Given no matching text, When search called, Then returns empty results', () {
+    test(
+        'Given no matching text, When search called, Then returns empty results',
+        () {
       final terminal = Terminal();
       terminal.write('hello world');
       final controller = TerminalController();
@@ -357,7 +372,9 @@ void main() {
       expect(controller.hasSearchResults, isFalse);
     });
 
-    test('Given Unicode text search, When search called, Then finds Unicode matches', () {
+    test(
+        'Given Unicode text search, When search called, Then finds Unicode matches',
+        () {
       final terminal = Terminal();
       terminal.write('你好世界 hello 🌍');
       final controller = TerminalController();
@@ -372,7 +389,9 @@ void main() {
       expect(controller.hasSearchResults, isTrue);
     });
 
-    test('Given special regex characters, When search called with regex, Then handles escape', () {
+    test(
+        'Given special regex characters, When search called with regex, Then handles escape',
+        () {
       final terminal = Terminal();
       terminal.write('test[1] test(2) test{3}');
       final controller = TerminalController();
@@ -385,7 +404,9 @@ void main() {
       expect(controller.hasSearchResults, isTrue);
     });
 
-    test('Given invalid regex, When search called with regex option, Then handles gracefully', () {
+    test(
+        'Given invalid regex, When search called with regex option, Then handles gracefully',
+        () {
       final terminal = Terminal();
       terminal.write('test');
       final controller = TerminalController();
@@ -399,7 +420,9 @@ void main() {
       expect(controller.searchResults, isEmpty);
     });
 
-    test('Given very long text search, When search called, Then completes without error', () {
+    test(
+        'Given very long text search, When search called, Then completes without error',
+        () {
       final terminal = Terminal();
       // Create a long text
       final longText = 'a' * 10000 + 'target' + 'b' * 10000;
@@ -413,7 +436,9 @@ void main() {
       expect(controller.searchResultCount, equals(1));
     });
 
-    test('Given search at buffer, When search called, Then finds matches boundaries at edges', () {
+    test(
+        'Given search at buffer, When search called, Then finds matches boundaries at edges',
+        () {
       final terminal = Terminal();
       terminal.write('a'.padRight(100, 'a'));
       terminal.write('start');

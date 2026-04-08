@@ -1,6 +1,6 @@
 name: kterm
 description: kterm is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms.
-version: 1.1.0
+version: 1.1.1
 homepage: https://github.com/lbp0200/kterm.dart
 
 environment:
@@ -17,6 +17,7 @@ dependencies:
   zmodem: ^0.0.6
   kitty_protocol: ^1.2.3
   image: ^4.2.0
+  overlay_support: ^2.0.0
 
 dev_dependencies:
   flutter_test:

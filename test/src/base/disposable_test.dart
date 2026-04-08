@@ -14,13 +14,16 @@ class TestDisposable with Disposable {
 void main() {
   group('Disposable', () {
     group('disposed property', () {
-      test('Given new Disposable, When disposed accessed, Then returns false', () {
+      test('Given new Disposable, When disposed accessed, Then returns false',
+          () {
         final disposable = TestDisposable();
 
         expect(disposable.disposed, isFalse);
       });
 
-      test('Given disposed Disposable, When disposed accessed, Then returns true', () {
+      test(
+          'Given disposed Disposable, When disposed accessed, Then returns true',
+          () {
         final disposable = TestDisposable();
 
         disposable.dispose();
@@ -30,7 +33,9 @@ void main() {
     });
 
     group('register', () {
-      test('Given unregistered disposable, When register called, Then disposable is registered', () {
+      test(
+          'Given unregistered disposable, When register called, Then disposable is registered',
+          () {
         final parent = TestDisposable();
         final child = TestDisposable();
 
@@ -40,7 +45,8 @@ void main() {
         expect(child.disposeCount, equals(1));
       });
 
-      test('Given disposed parent, When register called, Then assertion fails', () {
+      test('Given disposed parent, When register called, Then assertion fails',
+          () {
         final parent = TestDisposable();
         final child = TestDisposable();
 
@@ -51,7 +57,9 @@ void main() {
     });
 
     group('registerCallback', () {
-      test('Given callback, When registerCallback called, Then callback is invoked on dispose', () {
+      test(
+          'Given callback, When registerCallback called, Then callback is invoked on dispose',
+          () {
         final disposable = TestDisposable();
         int callCount = 0;
 
@@ -61,7 +69,9 @@ void main() {
         expect(callCount, equals(1));
       });
 
-      test('Given multiple callbacks, When dispose called, Then all callbacks are invoked', () {
+      test(
+          'Given multiple callbacks, When dispose called, Then all callbacks are invoked',
+          () {
         final disposable = TestDisposable();
         int count1 = 0;
         int count2 = 0;
@@ -74,7 +84,9 @@ void main() {
         expect(count2, equals(1));
       });
 
-      test('Given disposed disposable, When registerCallback called, Then assertion fails', () {
+      test(
+          'Given disposed disposable, When registerCallback called, Then assertion fails',
+          () {
         final disposable = TestDisposable();
 
         disposable.dispose();
@@ -84,7 +96,9 @@ void main() {
     });
 
     group('dispose', () {
-      test('Given multiple registered disposables, When dispose called, Then all are disposed', () {
+      test(
+          'Given multiple registered disposables, When dispose called, Then all are disposed',
+          () {
         final parent = TestDisposable();
         final child1 = TestDisposable();
         final child2 = TestDisposable();
@@ -98,7 +112,9 @@ void main() {
         expect(parent.disposeCount, equals(1));
       });
 
-      test('Given nested disposables, When parent disposed, Then children are disposed first', () {
+      test(
+          'Given nested disposables, When parent disposed, Then children are disposed first',
+          () {
         final parent = TestDisposable();
         final child = TestDisposable();
 
@@ -109,7 +125,9 @@ void main() {
         expect(parent.disposeCount, equals(1));
       });
 
-      test('Given already disposed, When dispose called again, Then does nothing', () {
+      test(
+          'Given already disposed, When dispose called again, Then does nothing',
+          () {
         final disposable = TestDisposable();
 
         disposable.dispose();
@@ -121,7 +139,8 @@ void main() {
     });
 
     group('onDisposed', () {
-      test('Given disposable, When onDisposed accessed, Then returns Event', () {
+      test('Given disposable, When onDisposed accessed, Then returns Event',
+          () {
         final disposable = TestDisposable();
 
         expect(disposable.onDisposed, isNotNull);

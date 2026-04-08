@@ -5,7 +5,9 @@ import 'package:kterm/src/utils/debugger_view.dart';
 
 void main() {
   group('TerminalDebuggerView', () {
-    testWidgets('Given debugger view, When created with empty debugger, Then shows empty list', (tester) async {
+    testWidgets(
+        'Given debugger view, When created with empty debugger, Then shows empty list',
+        (tester) async {
       // Arrange
       final debugger = TerminalDebugger();
 
@@ -22,7 +24,9 @@ void main() {
       expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('Given debugger view, When debugger has commands, Then shows commands', (tester) async {
+    testWidgets(
+        'Given debugger view, When debugger has commands, Then shows commands',
+        (tester) async {
       // Arrange
       final debugger = TerminalDebugger();
       debugger.write('\x1b[31m'); // SGR foreground red
@@ -42,7 +46,8 @@ void main() {
       expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('Given debugger view, When created, Then registers listener', (tester) async {
+    testWidgets('Given debugger view, When created, Then registers listener',
+        (tester) async {
       // Arrange
       final debugger = TerminalDebugger();
 
@@ -59,7 +64,8 @@ void main() {
       expect(find.byType(TerminalDebuggerView), findsOneWidget);
     });
 
-    testWidgets('Given debugger view, When disposed, Then widget is removed', (tester) async {
+    testWidgets('Given debugger view, When disposed, Then widget is removed',
+        (tester) async {
       // Arrange
       final debugger = TerminalDebugger();
 

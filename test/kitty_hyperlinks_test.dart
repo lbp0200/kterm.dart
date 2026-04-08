@@ -27,8 +27,7 @@ void main() {
     terminal.write('\x1b]8;;https://dart.dev\x1b\\');
     terminal.write('Dart');
     terminal.write('\x1b]8;;\x1b\\');
-    expect(
-        terminal.buffer.lines[0].createCellData(0).hyperlinkId,
+    expect(terminal.buffer.lines[0].createCellData(0).hyperlinkId,
         equals(terminal.buffer.lines[0].createCellData(3).hyperlinkId));
   });
 }

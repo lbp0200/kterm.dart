@@ -9,21 +9,27 @@ void main() {
         expect(TerminalThemes.defaultTheme.cursor, isA<Color>());
       });
 
-      test('Given defaultTheme, When foreground accessed, Then returns light gray', () {
+      test(
+          'Given defaultTheme, When foreground accessed, Then returns light gray',
+          () {
         expect(
           TerminalThemes.defaultTheme.foreground.value,
           equals(0XFFCCCCCC),
         );
       });
 
-      test('Given defaultTheme, When background accessed, Then returns dark gray', () {
+      test(
+          'Given defaultTheme, When background accessed, Then returns dark gray',
+          () {
         expect(
           TerminalThemes.defaultTheme.background.value,
           equals(0XFF1E1E1E),
         );
       });
 
-      test('Given defaultTheme, When all colors accessed, Then returns non-null colors', () {
+      test(
+          'Given defaultTheme, When all colors accessed, Then returns non-null colors',
+          () {
         expect(TerminalThemes.defaultTheme.black, isNotNull);
         expect(TerminalThemes.defaultTheme.red, isNotNull);
         expect(TerminalThemes.defaultTheme.green, isNotNull);
@@ -42,29 +48,36 @@ void main() {
         expect(TerminalThemes.defaultTheme.brightWhite, isNotNull);
       });
 
-      test('Given defaultTheme, When search colors accessed, Then returns colors', () {
+      test(
+          'Given defaultTheme, When search colors accessed, Then returns colors',
+          () {
         expect(TerminalThemes.defaultTheme.searchHitBackground, isNotNull);
-        expect(TerminalThemes.defaultTheme.searchHitBackgroundCurrent, isNotNull);
+        expect(
+            TerminalThemes.defaultTheme.searchHitBackgroundCurrent, isNotNull);
         expect(TerminalThemes.defaultTheme.searchHitForeground, isNotNull);
       });
     });
 
     group('whiteOnBlack', () {
-      test('Given whiteOnBlack, When foreground accessed, Then returns white', () {
+      test('Given whiteOnBlack, When foreground accessed, Then returns white',
+          () {
         expect(
           TerminalThemes.whiteOnBlack.foreground.value,
           equals(0XFFFFFFFF),
         );
       });
 
-      test('Given whiteOnBlack, When background accessed, Then returns black', () {
+      test('Given whiteOnBlack, When background accessed, Then returns black',
+          () {
         expect(
           TerminalThemes.whiteOnBlack.background.value,
           equals(0XFF000000),
         );
       });
 
-      test('Given whiteOnBlack, When colors accessed, Then returns non-null colors', () {
+      test(
+          'Given whiteOnBlack, When colors accessed, Then returns non-null colors',
+          () {
         expect(TerminalThemes.whiteOnBlack.black, isNotNull);
         expect(TerminalThemes.whiteOnBlack.white, isNotNull);
       });

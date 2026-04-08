@@ -7,7 +7,9 @@ import 'package:kterm/src/ui/terminal_text_style.dart';
 
 void main() {
   group('calcCharSize', () {
-    test('Given default style, When calcCharSize called, Then returns valid size', () {
+    test(
+        'Given default style, When calcCharSize called, Then returns valid size',
+        () {
       // Arrange
       const style = TerminalStyle();
       final textScaler = TextScaler.noScaling;
@@ -20,7 +22,9 @@ void main() {
       expect(size.height, greaterThan(0));
     });
 
-    test('Given custom font size, When calcCharSize called, Then returns larger size', () {
+    test(
+        'Given custom font size, When calcCharSize called, Then returns larger size',
+        () {
       // Arrange
       const style = TerminalStyle(fontSize: 24.0);
       final textScaler = TextScaler.noScaling;
@@ -33,7 +37,9 @@ void main() {
       expect(size.height, greaterThan(0));
     });
 
-    test('Given textScaler, When calcCharSize called, Then accounts for scaling', () {
+    test(
+        'Given textScaler, When calcCharSize called, Then accounts for scaling',
+        () {
       // Arrange
       const style = TerminalStyle();
       final textScaler = TextScaler.linear(2.0);
@@ -46,7 +52,9 @@ void main() {
       expect(size.height, greaterThan(0));
     });
 
-    test('Given default style, When calcCharSize called, Then width is less than height', () {
+    test(
+        'Given default style, When calcCharSize called, Then width is less than height',
+        () {
       // Arrange - monospace fonts typically have width < height
       const style = TerminalStyle();
       final textScaler = TextScaler.noScaling;
@@ -58,7 +66,9 @@ void main() {
       expect(size.height, greaterThan(size.width));
     });
 
-    test('Given different styles, When calcCharSize called, Then returns different sizes', () {
+    test(
+        'Given different styles, When calcCharSize called, Then returns different sizes',
+        () {
       // Arrange
       const style1 = TerminalStyle(fontSize: 12.0);
       const style2 = TerminalStyle(fontSize: 18.0);

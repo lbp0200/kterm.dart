@@ -6,7 +6,8 @@ import 'package:kterm/src/ui/paragraph_cache.dart';
 
 void main() {
   group('ParagraphCache', () {
-    test('Given a new cache, When created with max size, Then cache is empty', () {
+    test('Given a new cache, When created with max size, Then cache is empty',
+        () {
       // Arrange & Act
       final cache = ParagraphCache(10);
 
@@ -14,7 +15,9 @@ void main() {
       expect(cache.length, 0);
     });
 
-    test('Given a cache with items, When getLayoutFromCache called with valid key, Then returns cached paragraph', () {
+    test(
+        'Given a cache with items, When getLayoutFromCache called with valid key, Then returns cached paragraph',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
       final style = TextStyle();
@@ -23,7 +26,8 @@ void main() {
       const text = 'Hello World';
 
       // Act
-      final paragraph = cache.performAndCacheLayout(text, style, textScaler, key);
+      final paragraph =
+          cache.performAndCacheLayout(text, style, textScaler, key);
       final retrieved = cache.getLayoutFromCache(key);
 
       // Assert
@@ -31,7 +35,9 @@ void main() {
       expect(retrieved!.toString(), paragraph.toString());
     });
 
-    test('Given a cache, When getLayoutFromCache called with invalid key, Then returns null', () {
+    test(
+        'Given a cache, When getLayoutFromCache called with invalid key, Then returns null',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
 
@@ -42,7 +48,8 @@ void main() {
       expect(result, isNull);
     });
 
-    test('Given a cache with items, When clear called, Then cache is empty', () {
+    test('Given a cache with items, When clear called, Then cache is empty',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
       final style = TextStyle();
@@ -58,7 +65,9 @@ void main() {
       expect(cache.length, 0);
     });
 
-    test('Given a cache with max size, When exceeding max size, Then old items are evicted', () {
+    test(
+        'Given a cache with max size, When exceeding max size, Then old items are evicted',
+        () {
       // Arrange
       final cache = ParagraphCache(2);
       final style = TextStyle();
@@ -77,7 +86,9 @@ void main() {
       expect(cache.getLayoutFromCache(3), isNotNull);
     });
 
-    test('Given a cache, When performAndCacheLayout called with same key twice, Then returns new paragraph', () {
+    test(
+        'Given a cache, When performAndCacheLayout called with same key twice, Then returns new paragraph',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
       final style = TextStyle();
@@ -86,14 +97,18 @@ void main() {
       const text = 'Hello';
 
       // Act
-      final paragraph1 = cache.performAndCacheLayout(text, style, textScaler, key);
-      final paragraph2 = cache.performAndCacheLayout(text, style, textScaler, key);
+      final paragraph1 =
+          cache.performAndCacheLayout(text, style, textScaler, key);
+      final paragraph2 =
+          cache.performAndCacheLayout(text, style, textScaler, key);
 
       // Assert - should return paragraph (not necessarily same instance due to LRU behavior)
       expect(paragraph2, isNotNull);
     });
 
-    test('Given a cache, When performAndCacheLayout called with different styles, Then caches separately', () {
+    test(
+        'Given a cache, When performAndCacheLayout called with different styles, Then caches separately',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
       final style1 = TextStyle(fontSize: 12);
@@ -103,8 +118,10 @@ void main() {
       const key2 = 2;
 
       // Act
-      final paragraph1 = cache.performAndCacheLayout('text', style1, textScaler, key1);
-      final paragraph2 = cache.performAndCacheLayout('text', style2, textScaler, key2);
+      final paragraph1 =
+          cache.performAndCacheLayout('text', style1, textScaler, key1);
+      final paragraph2 =
+          cache.performAndCacheLayout('text', style2, textScaler, key2);
 
       // Assert
       expect(cache.length, 2);
@@ -112,14 +129,17 @@ void main() {
       expect(paragraph2, isNotNull);
     });
 
-    test('Given a cache, When performAndCacheLayout called, Then paragraph is properly laid out', () {
+    test(
+        'Given a cache, When performAndCacheLayout called, Then paragraph is properly laid out',
+        () {
       // Arrange
       final cache = ParagraphCache(10);
       final style = TextStyle();
       final textScaler = TextScaler.noScaling;
 
       // Act
-      final paragraph = cache.performAndCacheLayout('Hello World', style, textScaler, 1);
+      final paragraph =
+          cache.performAndCacheLayout('Hello World', style, textScaler, 1);
 
       // Assert
       expect(paragraph.width, greaterThan(0));

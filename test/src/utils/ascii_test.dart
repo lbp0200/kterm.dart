@@ -4,23 +4,33 @@ import 'package:kterm/src/utils/ascii.dart';
 void main() {
   group('Ascii', () {
     group('isNonPrintable', () {
-      test('Given character code 0, When isNonPrintable called, Then returns true', () {
+      test(
+          'Given character code 0, When isNonPrintable called, Then returns true',
+          () {
         expect(Ascii.isNonPrintable(0), isTrue);
       });
 
-      test('Given character code 31, When isNonPrintable called, Then returns true', () {
+      test(
+          'Given character code 31, When isNonPrintable called, Then returns true',
+          () {
         expect(Ascii.isNonPrintable(31), isTrue);
       });
 
-      test('Given character code 32 (space), When isNonPrintable called, Then returns false', () {
+      test(
+          'Given character code 32 (space), When isNonPrintable called, Then returns false',
+          () {
         expect(Ascii.isNonPrintable(32), isFalse);
       });
 
-      test('Given character code 126 (~), When isNonPrintable called, Then returns false', () {
+      test(
+          'Given character code 126 (~), When isNonPrintable called, Then returns false',
+          () {
         expect(Ascii.isNonPrintable(126), isFalse);
       });
 
-      test('Given character code 127 (DEL), When isNonPrintable called, Then returns true', () {
+      test(
+          'Given character code 127 (DEL), When isNonPrintable called, Then returns true',
+          () {
         expect(Ascii.isNonPrintable(127), isTrue);
       });
     });

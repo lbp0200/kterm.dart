@@ -35,12 +35,12 @@ void main() {
       );
 
       expect(theme.searchHitBackground, equals(const Color(0XFFFFFF2B)));
-      expect(theme.searchHitBackgroundCurrent,
-          equals(const Color(0XFF31FF26)));
+      expect(theme.searchHitBackgroundCurrent, equals(const Color(0XFF31FF26)));
       expect(theme.searchHitForeground, equals(const Color(0XFF000000)));
     });
 
-    test('Given custom theme, When setting search colors, Then uses custom colors',
+    test(
+        'Given custom theme, When setting search colors, Then uses custom colors',
         () {
       const customSearchBg = Color(0xFF00FF00);
       const customSearchBgCurrent = Color(0xFF0000FF);
@@ -77,7 +77,8 @@ void main() {
       expect(theme.searchHitForeground, equals(customSearchFg));
     });
 
-    test('Given default theme from TerminalThemes, When accessing, Then has valid search colors',
+    test(
+        'Given default theme from TerminalThemes, When accessing, Then has valid search colors',
         () {
       final theme = TerminalThemes.defaultTheme;
 
@@ -85,12 +86,12 @@ void main() {
       expect(theme.searchHitBackgroundCurrent, isA<Color>());
       expect(theme.searchHitForeground, isA<Color>());
       expect(theme.searchHitBackground, equals(const Color(0XFFFFFF2B)));
-      expect(theme.searchHitBackgroundCurrent,
-          equals(const Color(0XFF31FF26)));
+      expect(theme.searchHitBackgroundCurrent, equals(const Color(0XFF31FF26)));
       expect(theme.searchHitForeground, equals(const Color(0XFF000000)));
     });
 
-    test('Given whiteOnBlack theme, When accessing, Then has valid search colors',
+    test(
+        'Given whiteOnBlack theme, When accessing, Then has valid search colors',
         () {
       final theme = TerminalThemes.whiteOnBlack;
 
@@ -99,7 +100,8 @@ void main() {
       expect(theme.searchHitForeground, isA<Color>());
     });
 
-    test('Given terminal theme, When creating, Then has all required color fields',
+    test(
+        'Given terminal theme, When creating, Then has all required color fields',
         () {
       const theme = TerminalTheme(
         cursor: Color(0XAAAEAFAD),

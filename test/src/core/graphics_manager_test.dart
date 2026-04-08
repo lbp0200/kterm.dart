@@ -165,8 +165,10 @@ void main() {
 
       test('clearPlacements removes all placements', () {
         final imageId = manager.storeImage(mockImage);
-        manager.createPlacement(imageId: imageId, x: 0, y: 0, width: 10, height: 10);
-        manager.createPlacement(imageId: imageId, x: 5, y: 5, width: 5, height: 5);
+        manager.createPlacement(
+            imageId: imageId, x: 0, y: 0, width: 10, height: 10);
+        manager.createPlacement(
+            imageId: imageId, x: 5, y: 5, width: 5, height: 5);
 
         expect(manager.placementCount, equals(2));
 

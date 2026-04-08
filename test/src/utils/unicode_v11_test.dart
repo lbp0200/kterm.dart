@@ -22,41 +22,52 @@ void main() {
       });
 
       group('ASCII printable', () {
-        test('Given code point 32 (space), When wcwidth called, Then returns 1', () {
+        test('Given code point 32 (space), When wcwidth called, Then returns 1',
+            () {
           expect(unicodeV11.wcwidth(32), equals(1));
         });
 
-        test('Given code point 126 (~), When wcwidth called, Then returns 1', () {
+        test('Given code point 126 (~), When wcwidth called, Then returns 1',
+            () {
           expect(unicodeV11.wcwidth(126), equals(1));
         });
       });
 
       group('C0 controls', () {
-        test('Given code point 127 (DEL), When wcwidth called, Then returns 0', () {
+        test('Given code point 127 (DEL), When wcwidth called, Then returns 0',
+            () {
           expect(unicodeV11.wcwidth(127), equals(0));
         });
       });
 
       group('combining characters', () {
-        test('Given combining grave accent (0x0300), When wcwidth called, Then returns 0', () {
+        test(
+            'Given combining grave accent (0x0300), When wcwidth called, Then returns 0',
+            () {
           expect(unicodeV11.wcwidth(0x0300), equals(0));
         });
 
-        test('Given combining acute (0x0301), When wcwidth called, Then returns 0', () {
+        test(
+            'Given combining acute (0x0301), When wcwidth called, Then returns 0',
+            () {
           expect(unicodeV11.wcwidth(0x0301), equals(0));
         });
       });
 
       group('wide characters (CJK)', () {
-        test('Given Han character (0x4E00, 一), When wcwidth called, Then returns 2', () {
+        test(
+            'Given Han character (0x4E00, 一), When wcwidth called, Then returns 2',
+            () {
           expect(unicodeV11.wcwidth(0x4E00), equals(2));
         });
 
-        test('Given Hiragana (0x3042, あ), When wcwidth called, Then returns 2', () {
+        test('Given Hiragana (0x3042, あ), When wcwidth called, Then returns 2',
+            () {
           expect(unicodeV11.wcwidth(0x3042), equals(2));
         });
 
-        test('Given Katakana (0x30A2, ア), When wcwidth called, Then returns 2', () {
+        test('Given Katakana (0x30A2, ア), When wcwidth called, Then returns 2',
+            () {
           expect(unicodeV11.wcwidth(0x30A2), equals(2));
         });
 
@@ -66,28 +77,36 @@ void main() {
       });
 
       group('emoji', () {
-        test('Given emoji (0x1F600, 😀), When wcwidth called, Then returns 2', () {
+        test('Given emoji (0x1F600, 😀), When wcwidth called, Then returns 2',
+            () {
           expect(unicodeV11.wcwidth(0x1F600), equals(2));
         });
 
-        test('Given arrow (0x1F4A9, 💩), When wcwidth called, Then returns 2', () {
+        test('Given arrow (0x1F4A9, 💩), When wcwidth called, Then returns 2',
+            () {
           expect(unicodeV11.wcwidth(0x1F4A9), equals(2));
         });
       });
 
       group('non-wide BMP', () {
-        test('Given Latin-1 character (0x00A9, ©), When wcwidth called, Then returns 1', () {
+        test(
+            'Given Latin-1 character (0x00A9, ©), When wcwidth called, Then returns 1',
+            () {
           expect(unicodeV11.wcwidth(0x00A9), equals(1));
         });
       });
 
       group('high surrogates', () {
-        test('Given code point > 65535 combining, When wcwidth called, Then returns 0', () {
+        test(
+            'Given code point > 65535 combining, When wcwidth called, Then returns 0',
+            () {
           // First high combining character
           expect(unicodeV11.wcwidth(0x1DC0), equals(0));
         });
 
-        test('Given code point > 65535 wide, When wcwidth called, Then returns 2', () {
+        test(
+            'Given code point > 65535 wide, When wcwidth called, Then returns 2',
+            () {
           // First high wide character (CJK Extension B starts at 0x20000)
           expect(unicodeV11.wcwidth(0x20000), equals(2));
         });
@@ -107,11 +126,13 @@ void main() {
       expect(bisearch(0x0300, BMP_COMBINING), isTrue);
     });
 
-    test('Given value not in range, When bisearch called, Then returns false', () {
+    test('Given value not in range, When bisearch called, Then returns false',
+        () {
       expect(bisearch(0xFFFF, BMP_COMBINING), isFalse);
     });
 
-    test('Given value below range, When bisearch called, Then returns false', () {
+    test('Given value below range, When bisearch called, Then returns false',
+        () {
       expect(bisearch(0x0001, BMP_COMBINING), isFalse);
     });
   });
