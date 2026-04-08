@@ -1,4 +1,4 @@
-## [1.1.2] - 2026-04-09
+## [1.1.3] - 2026-04-09
 
 ### Bug Fixes
 - Fix SGR parameter bounds checking in escape parser (CSI 38/48/58) - prevents IndexError from malformed escape sequences
