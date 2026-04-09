@@ -1,4 +1,11 @@
-## [1.1.3] - 2026-04-09
+## [1.1.4] - 2026-04-09
+
+### Bug Fixes
+- Fix PTY ackRead deadlock in example/main.dart - wrap `pty.ackRead()` with `Future.microtask()` to avoid blocking the C read thread when Dart's event loop is busy. Fixes input being blocked when `ackRead: true` is enabled with high-latency connections (~200-300ms RTT).
+
+### Tests
+- Add buffer integrity tests for PTY flow-control with simulated network delays (300ms, 100 rapid chunks, microtask patterns)
+- All 1190 tests passing
 
 ### Bug Fixes
 - Fix SGR parameter bounds checking in escape parser (CSI 38/48/58) - prevents IndexError from malformed escape sequences
