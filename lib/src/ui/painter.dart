@@ -161,9 +161,12 @@ class TerminalPainter {
       line.getCellData(i, cellData);
 
       final charWidth = cellData.content >> CellContent.widthShift;
-      final cellOffset = offset.translate(i * cellWidth, 0);
 
-      paintCell(canvas, cellOffset, cellData);
+      // Skip zero-width cells (control characters like 0x1F)
+      if (charWidth != 0) {
+        final cellOffset = offset.translate(i * cellWidth, 0);
+        paintCell(canvas, cellOffset, cellData);
+      }
 
       if (charWidth == 2) {
         i++;
@@ -182,6 +185,12 @@ class TerminalPainter {
   void paintCellUnderline(Canvas canvas, Offset offset, CellData cellData) {
     final underlineStyle = cellData.underlineStyle;
     if (underlineStyle == CellAttr.underlineStyleNone) return;
+    // Single underline is handled by Flutter's TextStyle, no need to paint again
+    if (underlineStyle == CellAttr.underlineStyleSingle) return;
+
+    // Don't render underline for zero-width cells (control characters)
+    final charWidth = cellData.content >> CellContent.widthShift;
+    if (charWidth == 0) return;
 
     // Determine underline color
     final underlineColor = cellData.underlineColor;
@@ -438,16 +447,7 @@ class TerminalPainter {
         underline: cellFlags & CellFlags.underline != 0,
       );
 
-      // Flutter does not draw an underline below a space which is not between
-      // other regular characters. As only single characters are drawn, this
-      // will never produce an underline below a space in the terminal. As a
-      // workaround the regular space CodePoint 0x20 is replaced with
-      // the CodePoint 0xA0. This is a non breaking space and a underline can be
-      // drawn below it.
       var char = String.fromCharCode(charCode);
-      if (cellFlags & CellFlags.underline != 0 && charCode == 0x20) {
-        char = String.fromCharCode(0xA0);
-      }
 
       paragraph = _paragraphCache.performAndCacheLayout(
         char,

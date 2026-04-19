@@ -1,3 +1,13 @@
+## [1.1.5] - 2026-04-19
+
+### Bug Fixes
+- Fix modern terminal extended underline parsing with colon separators (`\e[4:0m`) - now properly handles `4:n` syntax for setting/clearing underline styles, which fixes the "entire screen is underlined" issue in TUIs like opencode
+- Remove incorrect space replacement workaround that forced underlines on all spaced when underline was active - matches other terminal behavior where standalone spaces don't display underlines
+- Fix double-drawing issue where single underlines were drawn by both Flutter TextStyle and kterm custom painter
+
+### Compatibility
+- Full support for: `\e[4m`, `\e[24m`, `\e[4:n` (extended underline with colon), `\e[4;n` (extended underline with semicolon)
+
 ## [1.1.4] - 2026-04-09
 
 ### Bug Fixes

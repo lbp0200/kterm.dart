@@ -275,7 +275,7 @@ class EscapeParser {
 
       final char = _queue.consume();
 
-      if (char == Ascii.semicolon) {
+      if (char == Ascii.semicolon || char == Ascii.colon) {
         if (hasParam) {
           _csi.params.add(param);
         }
@@ -471,15 +471,18 @@ class EscapeParser {
           handler.setCursorItalic();
           continue;
         case 4:
-          // CSI 4:nm - Extended underline styles
-          // Check for subparameter
+          // Extended underline: CSI 4:n where n is the style (1-5)
+          // Supports both semicolon (4;n) and colon (4:n) separators
           if (i + 1 < params.length) {
-            final subParam = params[i + 1];
-            handler.setCursorUnderlineStyle(subParam);
-            i++; // Skip the subparameter
-          } else {
-            handler.setCursorUnderline();
+            final nextParam = params[i + 1];
+            if (nextParam >= 0 && nextParam <= 5) {
+              handler.setCursorUnderlineStyle(nextParam);
+              i++; // Skip the subparameter
+              continue;
+            }
           }
+          // Plain SGR 4 - single underline
+          handler.setCursorUnderline();
           continue;
         case 5:
           handler.setCursorBlink();
@@ -488,6 +491,7 @@ class EscapeParser {
           handler.setCursorInverse();
           continue;
         case 8:
+          // Invisible flag
           handler.setCursorInvisible();
           continue;
         case 9:
