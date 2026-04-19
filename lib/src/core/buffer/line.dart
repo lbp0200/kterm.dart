@@ -76,7 +76,8 @@ class BufferLine with IndexedItem {
     final offset = index * _cellSize;
     cellData.foreground = _data[offset + _cellForeground];
     cellData.background = _data[offset + _cellBackground];
-    cellData.flags = _data[offset + _cellAttributes];
+    final attrs = _data[offset + _cellAttributes];
+    cellData.flags = attrs;
     cellData.content = _data[offset + _cellContent];
     cellData.underlineStyle = _data[offset + _cellUnderlineStyle];
     cellData.underlineColor = _data[offset + _cellUnderlineColor];
@@ -216,7 +217,7 @@ class BufferLine with IndexedItem {
     assert(start >= 0 && start < _length);
     assert(count >= 0 && start + count <= _length);
 
-    style ??= CursorStyle.empty;
+    style ??= CursorStyle();
 
     if (start + count < _length) {
       final moveStart = start * _cellSize;
@@ -250,7 +251,7 @@ class BufferLine with IndexedItem {
 
   /// Inserts [count] cells at [start]. New cells are initialized with [style].
   void insertCells(int start, int count, [CursorStyle? style]) {
-    style ??= CursorStyle.empty;
+    style ??= CursorStyle();
 
     if (start > 0 && getWidth(start - 1) == 2) {
       eraseCell(start - 1, style);

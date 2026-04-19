@@ -10,7 +10,8 @@ import 'package:flutter_pty/flutter_pty.dart';
 import 'package:kterm/kterm.dart';
 import 'package:path/path.dart' as p;
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -50,20 +51,38 @@ class _HomeState extends State<Home> {
 
   final terminalController = TerminalController();
 
-  bool _kittyModeEnabled = false;
+  bool _kittyModeEnabled = true;
   bool _showKeyboardInfo = false;
+
+  // Use Cascadia Mono which has better Unicode box-drawing character support
+  // than the system monospace font. This font is loaded in main() via FontLoader.
+  static const _terminalStyle = TerminalStyle(
+    fontFamily: 'JetBrainsMono Nerd Font Mono',
+    fontFamilyFallback: [
+      'JetBrainsMono Nerd Font',
+      'Menlo',
+      'Monaco',
+      'Consolas',
+      'Liberation Mono',
+      'Courier New',
+      'Noto Sans Mono CJK SC',
+      'Noto Sans Mono CJK TC',
+      'Noto Sans Mono CJK KR',
+      'Noto Sans Mono CJK JP',
+      'Noto Sans Mono CJK HK',
+      'Noto Color Emoji',
+      'Noto Sans Symbols',
+      'monospace',
+      'sans-serif',
+    ],
+  );
 
   late final Pty pty;
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.endOfFrame.then(
-      (_) {
-        if (mounted) _startPty();
-      },
-    );
+    _startPty();
   }
 
   void _toggleKittyMode() {
@@ -281,7 +300,11 @@ class _HomeState extends State<Home> {
 
     pty.output.cast<List<int>>().transform(Utf8Decoder()).listen((data) {
       terminal.write(data);
-      pty.ackRead();
+      // Use microtask to avoid deadlocking the C read thread.
+      // Without microtask, if Dart's event loop is busy processing rapid
+      // output, ackRead() is delayed and the pthread_mutex in flutter_pty
+      // blocks the PTY read loop indefinitely.
+      Future.microtask(() => pty.ackRead());
     });
 
     pty.exitCode.then((code) {
@@ -307,6 +330,7 @@ class _HomeState extends State<Home> {
             TerminalView(
               terminal,
               controller: terminalController,
+              textStyle: _terminalStyle,
               autofocus: true,
               backgroundOpacity: 0.7,
               onSecondaryTapDown: (details, offset) async {

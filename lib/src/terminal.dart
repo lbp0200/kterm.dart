@@ -1501,8 +1501,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       }
     }
     // Remove hyperlinks that are no longer active (but keep the current one)
-    _hyperlinks.removeWhere(
-        (key, _) => key != _currentHyperlinkId && !activeHyperlinkIds.contains(key));
+    _hyperlinks.removeWhere((key, _) =>
+        key != _currentHyperlinkId && !activeHyperlinkIds.contains(key));
   }
 
   int _registerHyperlink(String uri, String? id) {
@@ -1586,7 +1586,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
         _cursorStyle.foreground = saved.foreground;
         _cursorStyle.background = saved.background;
         _cursorStyle.attrs = saved.attrs;
-        _cursorStyle.underlineStyle = saved.underlineStyle;
+        // Use setUnderlineStyle to ensure attrs underline bit is synced
+        _cursorStyle.setUnderlineStyle(saved.underlineStyle);
         _cursorStyle.underlineColor = saved.underlineColor;
       }
     }

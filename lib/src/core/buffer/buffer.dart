@@ -108,8 +108,8 @@ class Buffer {
   /// See also: [Terminal.writeChar]
   void writeChar(int codePoint) {
     codePoint = charset.translate(codePoint);
-
     final cellWidth = unicodeV11.wcwidth(codePoint);
+
     if (_cursorX >= terminal.viewWidth) {
       index();
       setCursorX(0);
@@ -154,7 +154,7 @@ class Buffer {
     for (var i = absoluteCursorY + 1; i < height; i++) {
       final line = lines[i];
       line.isWrapped = false;
-      line.eraseRange(0, viewWidth, terminal.cursor);
+      line.eraseRange(0, viewWidth, CursorStyle());
     }
   }
 
@@ -166,7 +166,7 @@ class Buffer {
     for (var i = 0; i < _cursorY; i++) {
       final line = lines[i + scrollBack];
       line.isWrapped = false;
-      line.eraseRange(0, viewWidth, terminal.cursor);
+      line.eraseRange(0, viewWidth, CursorStyle());
     }
   }
 
@@ -175,7 +175,7 @@ class Buffer {
     for (var i = 0; i < viewHeight; i++) {
       final line = lines[i + scrollBack];
       line.isWrapped = false;
-      line.eraseRange(0, viewWidth, terminal.cursor);
+      line.eraseRange(0, viewWidth, CursorStyle());
     }
   }
 
@@ -183,26 +183,26 @@ class Buffer {
   /// cursor position.
   void eraseLineFromCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(_cursorX, viewWidth, terminal.cursor);
+    currentLine.eraseRange(_cursorX, viewWidth, CursorStyle());
   }
 
   /// Erases the line from the start of the line to the cursor, including the
   /// cursor.
   void eraseLineToCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(0, _cursorX, terminal.cursor);
+    currentLine.eraseRange(0, _cursorX, CursorStyle());
   }
 
   /// Erases the line at the current cursor position.
   void eraseLine() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(0, viewWidth, terminal.cursor);
+    currentLine.eraseRange(0, viewWidth, CursorStyle());
   }
 
   /// Erases [count] cells starting at the cursor position.
   void eraseChars(int count) {
     final start = _cursorX;
-    currentLine.eraseRange(start, start + count, terminal.cursor);
+    currentLine.eraseRange(start, start + count, CursorStyle());
   }
 
   void scrollDown(int lines) {
@@ -334,6 +334,8 @@ class Buffer {
     terminal.cursor.foreground = _savedCursorStyle.foreground;
     terminal.cursor.background = _savedCursorStyle.background;
     terminal.cursor.attrs = _savedCursorStyle.attrs;
+    terminal.cursor.setUnderlineStyle(_savedCursorStyle.underlineStyle);
+    terminal.cursor.underlineColor = _savedCursorStyle.underlineColor;
     charset.restore();
   }
 

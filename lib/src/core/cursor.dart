@@ -41,6 +41,7 @@ class CursorStyle {
 
   void setUnderline() {
     attrs |= CellAttr.underline;
+    underlineStyle = CellAttr.underlineStyleSingle;
   }
 
   void setBlink() {
@@ -61,10 +62,13 @@ class CursorStyle {
 
   void setUnderlineStyle(int style) {
     underlineStyle = style;
-    // Also set the basic underline flag for compatibility
-    if (style == CellAttr.underlineStyleSingle ||
-        style == CellAttr.underlineStyleDouble) {
+    // Only style 1 (single) uses the basic underline flag.
+    // Styles 2-5 are custom-drawn and should NOT set the attrs underline bit.
+    // Style 0 (none) must clear it.
+    if (style == CellAttr.underlineStyleSingle) {
       attrs |= CellAttr.underline;
+    } else {
+      attrs &= ~CellAttr.underline;
     }
   }
 
@@ -95,6 +99,7 @@ class CursorStyle {
   void unsetUnderline() {
     attrs &= ~CellAttr.underline;
     underlineStyle = CellAttr.underlineStyleNone;
+    underlineColor = 0;
   }
 
   void unsetBlink() {
@@ -119,7 +124,9 @@ class CursorStyle {
 
   bool get isItalis => (attrs & CellAttr.italic) != 0;
 
-  bool get isUnderline => (attrs & CellAttr.underline) != 0;
+  bool get isUnderline =>
+      (attrs & CellAttr.underline) != 0 ||
+      underlineStyle != CellAttr.underlineStyleNone;
 
   bool get isBlink => (attrs & CellAttr.blink) != 0;
 

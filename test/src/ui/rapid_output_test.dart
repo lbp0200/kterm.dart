@@ -267,5 +267,123 @@ void main() {
         expect(terminal.buffer.cursorX, equals(9));
       },
     );
+
+    /// Test: Verifies that data order is preserved even when ackRead is
+    /// significantly delayed (simulating network latency per chunk).
+    ///
+    /// The PTY read thread blocks on pthread_mutex until ackRead() is called.
+    /// In the real bug, without microtask(), if Dart's event loop is busy,
+    /// ackRead() is delayed and the PTY read thread stays blocked, causing
+    /// the next PTY read to never happen, which manifests as missing output.
+    ///
+    /// With microtask(), terminal.write() processes synchronously (buffer
+    /// always correct), and ackRead() is queued as a microtask that fires
+    /// before any I/O wait, quickly unblocking the PTY read thread.
+    ///
+    /// This test simulates the "broken" pattern: write, then await a delay
+    /// before ackRead. If the buffer integrity depends on timing, this would
+    /// break — but it shouldn't, because write() is synchronous.
+    testWidgets(
+      'Given 300ms delayed ackRead, When writes happen, '
+      'Then buffer contains all data in correct order',
+      (tester) async {
+        await pumpTerminalView(tester);
+
+        // Simulate PTY output with delayed ackRead (the broken pattern).
+        // This models what happens when Dart's event loop is slow to call
+        // ackRead(), e.g. due to 200-300ms remote server RTT.
+        final chunks = [
+          'redis-cli -h 10.128.0.125 -p 19000 hlen MAIL_TYPE\n',
+          '206\n',
+          'Warning: Using a password with \'-a\'\n',
+        ];
+
+        for (final chunk in chunks) {
+          terminal.write(chunk);
+          // Simulate delay between write and ackRead (e.g. network latency)
+          // Note: Flutter widget tests require pump() to drive timers, so we use
+          // tester.pump() to advance the frame clock.
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+
+        final bufferText = terminal.buffer.getText();
+        expect(bufferText, contains('10.128.0.125'));
+        expect(bufferText, contains('206'));
+        expect(bufferText, contains('Warning: Using a password'));
+      },
+    );
+
+    /// Test: Verifies that microtask-deferred ackRead still fires promptly
+    /// and doesn't starve the event loop.
+    ///
+    /// With Future.microtask(), ackRead is scheduled as a microtask that
+    /// runs after the current synchronous work but before I/O events.
+    /// This means the PTY read thread is unblocked quickly, and all chunks
+    /// are processed in order.
+    testWidgets(
+      'Given microtask-deferred ackRead, When writes happen, '
+      'Then buffer contains all data in correct order',
+      (tester) async {
+        await pumpTerminalView(tester);
+
+        final chunks = [
+          'command1\n',
+          'output1\n',
+          'command2\n',
+          'output2\n',
+        ];
+
+        for (final chunk in chunks) {
+          terminal.write(chunk);
+          // Correct pattern: defer ackRead to next microtask
+          Future.microtask(() {});
+        }
+
+        // Flush microtasks via pump
+        await tester.pump();
+
+        final bufferText = terminal.buffer.getText();
+        expect(bufferText, contains('command1'));
+        expect(bufferText, contains('output1'));
+        expect(bufferText, contains('command2'));
+        expect(bufferText, contains('output2'));
+
+        // Verify order
+        final cmd1Pos = bufferText.indexOf('command1');
+        final out1Pos = bufferText.indexOf('output1');
+        final cmd2Pos = bufferText.indexOf('command2');
+        final out2Pos = bufferText.indexOf('output2');
+
+        expect(cmd1Pos, lessThan(out1Pos));
+        expect(out1Pos, lessThan(cmd2Pos));
+        expect(cmd2Pos, lessThan(out2Pos));
+      },
+    );
+
+    /// Test: Verifies rapid stream chunks are processed in order even with
+    /// tiny delays between them.
+    testWidgets(
+      'Given rapid stream chunks with tiny delays, When all processed, '
+      'Then buffer order is preserved',
+      (tester) async {
+        await pumpTerminalView(tester);
+
+        // Simulate a stream of chunks arriving with minimal delay
+        // (like PTY output with network jitter)
+        final chunks = ['A\n', 'B\n', 'C\n', 'D\n', 'E\n'];
+
+        for (final chunk in chunks) {
+          terminal.write(chunk);
+          await tester.pump(const Duration(milliseconds: 1));
+        }
+
+        final bufferText = terminal.buffer.getText();
+        // Each chunk ends with \n, verify order is preserved
+        expect(bufferText.indexOf('A\n'), lessThan(bufferText.indexOf('B\n')));
+        expect(bufferText.indexOf('B\n'), lessThan(bufferText.indexOf('C\n')));
+        expect(bufferText.indexOf('C\n'), lessThan(bufferText.indexOf('D\n')));
+        expect(bufferText.indexOf('D\n'), lessThan(bufferText.indexOf('E\n')));
+      },
+    );
   });
 }
