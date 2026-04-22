@@ -144,12 +144,12 @@ class BufferLine with IndexedItem {
     setContent(index, char | (width << CellContent.widthShift));
   }
 
-  void setCell(int index, int char, int witdh, CursorStyle style) {
+  void setCell(int index, int char, int width, CursorStyle style) {
     final offset = index * _cellSize;
     _data[offset + _cellForeground] = style.foreground;
     _data[offset + _cellBackground] = style.background;
     _data[offset + _cellAttributes] = style.attrs;
-    _data[offset + _cellContent] = char | (witdh << CellContent.widthShift);
+    _data[offset + _cellContent] = char | (width << CellContent.widthShift);
     _data[offset + _cellUnderlineStyle] = style.underlineStyle;
     _data[offset + _cellUnderlineColor] = style.underlineColor;
     _data[offset + _cellImageData] = 0; // No image by default

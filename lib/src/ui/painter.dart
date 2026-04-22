@@ -162,8 +162,8 @@ class TerminalPainter {
 
       final charWidth = cellData.content >> CellContent.widthShift;
 
-      // Skip zero-width cells (control characters like 0x1F)
-      if (charWidth != 0) {
+      // Skip zero-width or negative-width cells (control characters)
+      if (charWidth > 0) {
         final cellOffset = offset.translate(i * cellWidth, 0);
         paintCell(canvas, cellOffset, cellData);
       }
@@ -188,9 +188,9 @@ class TerminalPainter {
     // Single underline is handled by Flutter's TextStyle, no need to paint again
     if (underlineStyle == CellAttr.underlineStyleSingle) return;
 
-    // Don't render underline for zero-width cells (control characters)
+    // Don't render underline for zero-width or negative-width cells (control characters)
     final charWidth = cellData.content >> CellContent.widthShift;
-    if (charWidth == 0) return;
+    if (charWidth <= 0) return;
 
     // Determine underline color
     final underlineColor = cellData.underlineColor;
@@ -464,6 +464,10 @@ class TerminalPainter {
   /// [offset].
   @pragma('vm:prefer-inline')
   void paintCellBackground(Canvas canvas, Offset offset, CellData cellData) {
+    final charWidth = cellData.content >> CellContent.widthShift;
+    // Skip zero-width or negative-width cells (control characters)
+    if (charWidth <= 0) return;
+
     late Color color;
     final colorType = cellData.background & CellColor.typeMask;
 

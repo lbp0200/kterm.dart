@@ -107,10 +107,34 @@ class Buffer {
   ///
   /// See also: [Terminal.writeChar]
   void writeChar(int codePoint) {
+    // Filter ASCII control characters, but keep 0 as it's used to fill the second cell of wide characters
+    if (codePoint != 0 && (codePoint < 0x20 || codePoint == 0x7F)) {
+      return;
+    }
+
+    // Filter common zero-width characters and format control characters
+    if ((codePoint >= 0x200B && codePoint <= 0x200F) ||
+        (codePoint >= 0x202A && codePoint <= 0x202E) ||
+        codePoint == 0xFEFF) {
+      return;
+    }
+
     codePoint = charset.translate(codePoint);
     final cellWidth = unicodeV11.wcwidth(codePoint);
 
-    if (_cursorX >= terminal.viewWidth) {
+    // Filter characters with width <= 0 (control characters, zero-width characters, etc.), but keep 0
+    if (codePoint != 0 && cellWidth <= 0) {
+      return;
+    }
+
+    // Handle wide character boundary issue: wrap before writing if cursor is at the last column
+    if (cellWidth == 2 && _cursorX >= terminal.viewWidth - 1) {
+      index();
+      setCursorX(0);
+      if (terminal.autoWrapMode) {
+        currentLine.isWrapped = true;
+      }
+    } else if (_cursorX >= terminal.viewWidth) {
       index();
       setCursorX(0);
       if (terminal.autoWrapMode) {

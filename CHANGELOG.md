@@ -1,3 +1,11 @@
+## [1.1.6] - 2026-04-22
+
+### Bug Fixes
+- Fix control character display issue: filter ASCII control characters and zero-width characters to avoid rendering strange symbols
+- Fix wide character boundary overflow: automatically wrap line when writing wide characters at the last column to prevent overflow
+- Fix typo in setCell method parameter name (witdh → width)
+- Optimize rendering logic: only render characters with width > 0 to improve performance
+
 ## [1.1.5] - 2026-04-19
 
 ### Bug Fixes
