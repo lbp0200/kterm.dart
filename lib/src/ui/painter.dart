@@ -114,7 +114,10 @@ class TerminalPainter {
 
     switch (cursorType) {
       case TerminalCursorType.block:
+        // Use difference blend mode to invert the colors under the cursor
+        // This makes the text visible while the cursor is clearly shown
         paint.style = PaintingStyle.fill;
+        paint.blendMode = BlendMode.difference;
         canvas.drawRect(offset & _cellSize, paint);
         return;
       case TerminalCursorType.underline:

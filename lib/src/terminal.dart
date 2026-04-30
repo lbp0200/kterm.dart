@@ -397,6 +397,17 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     text =
         text.replaceAll(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1a\x1c-\x1f]'), '');
 
+    // Normalize all line endings to match what the Enter key sends
+    // This ensures consistent behavior regardless of the source of the pasted text
+    // 1. Convert all CRLF to LF
+    text = text.replaceAll('\r\n', '\n');
+    // 2. Convert all remaining CR to LF
+    text = text.replaceAll('\r', '\n');
+    // 3. Convert LF to the appropriate newline sequence based on current mode
+    // Match what the Enter key sends: "\r" when lineFeedMode is false, "\r\n" when true
+    final newline = _lineFeedMode ? '\r\n' : '\r';
+    text = text.replaceAll('\n', newline);
+
     if (_bracketedPasteMode) {
       onOutput?.call(_emitter.bracketedPaste(text));
       notifyListeners();

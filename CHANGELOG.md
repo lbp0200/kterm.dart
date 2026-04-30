@@ -1,3 +1,9 @@
+## [1.1.7] - 2026-04-30
+
+### Features & Improvements
+- Fix block cursor blocking text issue: use BlendMode.difference to invert colors under cursor, ensuring text remains visible while cursor position is clearly indicated
+- Add paste line ending normalization: automatically convert all line endings (CRLF, CR) to match terminal's current newline mode, ensuring consistent paste behavior across different sources
+
 ## [1.1.6] - 2026-04-22
 
 ### Bug Fixes
