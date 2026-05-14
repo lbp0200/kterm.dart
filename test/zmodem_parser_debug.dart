@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:zmodem/zmodem.dart';
+import 'package:zmodem_lbp/zmodem.dart';
 
 void main() {
   // ZFIN frame from the test

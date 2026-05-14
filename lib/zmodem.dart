@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:zmodem/zmodem.dart';
+import 'package:zmodem_lbp/zmodem.dart';
 
-export 'package:zmodem/zmodem.dart' show ZModemFileInfo;
+export 'package:zmodem_lbp/zmodem.dart' show ZModemFileInfo;
 
 typedef ZModemInputHandler = void Function(String output);
 
