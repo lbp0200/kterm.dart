@@ -356,8 +356,8 @@ class _HomeState extends State<Home> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _kittyModeEnabled
-                      ? Colors.green.withOpacity(0.8)
-                      : Colors.grey.withOpacity(0.8),
+                      ? Colors.green.withValues(alpha: 0.8)
+                      : Colors.grey.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(

@@ -676,11 +676,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v0.0.7"
-      resolved-ref: d1d077b771aa81fc5266fd78c38e12738fb03b05
+      ref: "v0.0.10"
+      resolved-ref: "744333ee1d05bb41ceea5eaf79f8f56321d364b4"
       url: "https://github.com/lbp0200/zmodem.git"
     source: git
-    version: "0.0.7"
+    version: "0.0.10"
 sdks:
   dart: ">=3.11.0 <4.0.0"
   flutter: ">=3.19.0"

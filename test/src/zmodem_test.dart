@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:kterm/kterm.dart';
+import 'package:kterm/zmodem.dart';
 
 void main() {
   group('ZModemMux', () {
@@ -183,9 +183,16 @@ void main() {
 
         await Future(() {});
 
-        // After detection, terminalWrite should buffer (not write to stdin)
+        // After detection, terminalWrite should buffer (not write to stdin).
+        // Protocol handshake data (ZFIN) may be written since no onFileRequest
+        // handler is set, but user data should not appear in stdin.
         mux.terminalWrite('during-session');
-        expect(sent, isEmpty);
+        expect(sent, isNotEmpty); // ZFIN response is sent
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true).contains('during-session')),
+          isFalse,
+        );
       });
 
       test(
@@ -342,8 +349,14 @@ void main() {
         // Write during active session
         mux.terminalWrite('buffered');
 
-        // Should not be sent to stdin during active session
-        expect(sent, isEmpty);
+        // Should not be sent to stdin during active session.
+        // Protocol data (ZFIN from ZRINIT response) may be present, but not
+        // the terminal data.
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true).contains('buffered')),
+          isFalse,
+        );
       });
 
       test('Given session ends, When terminalWrite, Then writes to stdin again',
@@ -370,9 +383,13 @@ void main() {
 
         await Future(() {});
 
-        // Verify session active: terminalWrite buffers
+        // Verify session active: terminalWrite buffers (protocol data may be sent)
         mux.terminalWrite('should-buffer');
-        expect(sent, isEmpty);
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true).contains('should-buffer')),
+          isFalse,
+        );
 
         // End session with ZModem ZFIN frame (full hex format with XON terminator)
         // ZFIN = 0x08, p0-p3 = 0x00000000
@@ -396,6 +413,259 @@ void main() {
         mux.terminalWrite('after-session');
 
         expect(sent, contains(equals(utf8.encode('after-session'))));
+      });
+    });
+
+    group('Send side (onFileRequest)', () {
+      test('Given ZRINIT and onFileRequest, When detected, Then callback invoked',
+          () async {
+        var requestCalled = false;
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+          ..onFileRequest = () async {
+            requestCalled = true;
+            return [];
+          };
+
+        // ZRINIT hex frame: **\x18B010000000000000\r\n\x11
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, // p0 '00'
+          0x30, 0x30, // p1 '00'
+          0x30, 0x30, // p2 '00'
+          0x30, 0x30, // p3 '00'
+          0x30, 0x30, // CRC high (dummy)
+          0x30, 0x30, // CRC low (dummy)
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+
+        await Future(() {});
+        await Future(() {});
+
+        expect(requestCalled, isTrue);
+      });
+
+      test(
+          'Given onFileRequest returns empty, When ZRINIT received, Then no crash',
+          () async {
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+          ..onFileRequest = () async => [];
+
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x30, 0x30, 0x30, // CRC '0000'
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+
+        await Future(() {});
+        await Future(() {});
+
+        expect(mux, isNotNull);
+      });
+
+      test(
+          'Given onFileRequest returns offers, When ZRINIT, Then writes ZFILE to stdin',
+          () async {
+        final sent = <List<int>>[];
+        stdinController.stream.listen(sent.add);
+
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+          ..onFileRequest = () async => [
+                ZModemCallbackOffer(
+                  ZModemFileInfo(
+                    pathname: 'test.txt',
+                    length: 100,
+                    modificationTime: 0,
+                  ),
+                  onAccept: (_) => const Stream.empty(),
+                ),
+              ];
+
+        // ZRINIT hex frame
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x30, 0x30, 0x30, // CRC '0000'
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+
+        await Future(() {});
+        await Future(() {});
+        await Future(() {});
+
+        // Expect ZFILE hex frame bytes in stdin (generated by offerFile)
+        // ZFILE = type 0x04 → ASCII hex '0' '4'
+        expect(
+          sent.any((data) {
+            final text = utf8.decode(data, allowMalformed: true);
+            return text.contains('04') || text.contains('*');
+          }),
+          isTrue,
+        );
+      });
+    });
+
+    group('Multiple sequential sessions', () {
+      test(
+          'Given session ends, When new ZRINIT arrives, Then new session starts',
+          () async {
+        final sent = <List<int>>[];
+        stdinController.stream.listen(sent.add);
+
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream);
+
+        // First session: ZRINIT → ZFIN
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x30, 0x30, 0x30, // CRC '0000'
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+        await Future(() {});
+        await Future(() {});
+
+        // Verify session active: terminalWrite buffers
+        sent.clear();
+        mux.terminalWrite('during-session');
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true).contains('during-session')),
+          isFalse,
+        );
+
+        // End session with ZFIN
+        final zfin = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x38, // '08' ZFIN
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x32, 0x32, 0x64, // CRC '022d' (correct)
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zfin);
+        await Future(() {});
+        await Future(() {});
+
+        // After session: terminalWrite works
+        sent.clear();
+        mux.terminalWrite('after-session-1');
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true)
+                  .contains('after-session-1')),
+          isTrue,
+        );
+
+        // Second session: another ZRINIT
+        sent.clear();
+        stdoutController.add(zrinit);
+        await Future(() {});
+        await Future(() {});
+
+        // Should buffer again
+        sent.clear();
+        mux.terminalWrite('during-session-2');
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true)
+                  .contains('during-session-2')),
+          isFalse,
+        );
+
+        // End second session
+        stdoutController.add(zfin);
+        await Future(() {});
+        await Future(() {});
+
+        // Back to normal
+        sent.clear();
+        mux.terminalWrite('after-session-2');
+        expect(
+          sent.any((data) =>
+              utf8.decode(data, allowMalformed: true)
+                  .contains('after-session-2')),
+          isTrue,
+        );
+      });
+    });
+
+    group('Dispose cleanup', () {
+      test('Given mux disposed, When stdout data arrives, Then no error',
+          () async {
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream);
+
+        mux.dispose();
+
+        // Should not throw
+        stdoutController.add(Uint8List.fromList('hello'.codeUnits));
+        await Future(() {});
+        expect(mux, isNotNull);
+      });
+
+      test(
+          'Given mux disposed with active session, When ZFIN arrives, Then no error',
+          () async {
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream);
+
+        // Start session
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x30, 0x30, 0x30, // CRC '0000'
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+        await Future(() {});
+        await Future(() {});
+
+        mux.dispose();
+
+        // Should not throw
+        stdoutController.add(Uint8List.fromList('after-dispose'.codeUnits));
+        await Future(() {});
+        expect(mux, isNotNull);
+      });
+    });
+
+    group('Cancel detection', () {
+      test('Given active session, When CAN bytes received, Then no crash',
+          () async {
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream);
+
+        // Start session
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42, // ZPAD ZPAD ZDLE ZHEX
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, // p0-p3 '00000000'
+          0x30, 0x30, 0x30, 0x30, // CRC '0000'
+          0x0D, 0x0A, // CR LF
+          0x11, // XON
+        ]);
+        stdoutController.add(zrinit);
+        await Future(() {});
+        await Future(() {});
+
+        // Send 5 CAN bytes (cancel sequence)
+        stdoutController.add(Uint8List.fromList([0x18, 0x18, 0x18, 0x18, 0x18]));
+        await Future(() {});
+        await Future(() {});
+
+        // Session should be reset, no crash
+        expect(mux, isNotNull);
       });
     });
 

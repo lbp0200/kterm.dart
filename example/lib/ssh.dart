@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:example/src/virtual_keyboard.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 
 const host = 'localhost';
 const port = 22;
@@ -98,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
       navigationBar: CupertinoNavigationBar(
         middle: Text(title),
         backgroundColor:
-            CupertinoTheme.of(context).barBackgroundColor.withOpacity(0.5),
+            CupertinoTheme.of(context).barBackgroundColor.withValues(alpha: 0.5),
       ),
       child: Column(
         children: [

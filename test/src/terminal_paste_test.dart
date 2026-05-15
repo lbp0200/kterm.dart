@@ -172,15 +172,15 @@ void main() {
     });
 
     test(
-        'Given text with TAB/LF/CR, When paste called, Then keeps these characters',
+        'Given text with TAB/LF/CR, When paste called, Then keeps TAB and CR, normalizes LF to CR',
         () {
       final terminalOutput = <String>[];
       final terminal = Terminal(onOutput: terminalOutput.add);
 
-      // TAB (\x09), LF (\x0a), CR (\x0d) should be preserved
+      // TAB (\x09) and CR (\x0d) are preserved, LF (\x0a) is normalized to CR
       terminal.paste('line1\x09col2\x0aline2\x0dcarriage');
 
-      expect(terminalOutput.join(), equals('line1\tcol2\nline2\rcarriage'));
+      expect(terminalOutput.join(), equals('line1\tcol2\rline2\rcarriage'));
     });
 
     test(

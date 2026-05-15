@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kterm/kterm.dart';
 
 void main() {
-  testWidgets('SGR 8 invisible text renders no foreground pixels', (tester) async {
+  testWidgets('SGR 8 invisible text renders no foreground pixels',
+      (tester) async {
     final terminal = Terminal();
     terminal.write('\x1b[4;8mINVISIBLE\x1b[0m');
 

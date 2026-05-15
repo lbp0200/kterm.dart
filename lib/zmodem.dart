@@ -75,9 +75,9 @@ class ZModemMux {
   late final StreamSubscription<Uint8List> _stdoutSubscription;
 
   late final _terminalSink = StreamController<List<int>>(
-      // onPause: _stdoutSubscription.pause,
-      // onResume: _stdoutSubscription.resume,
-      );
+    onPause: _stdoutSubscription.pause,
+    onResume: _stdoutSubscription.resume,
+  );
 
   void _handleTerminalData(String data) {
     onTerminalInput?.call(data);
@@ -103,9 +103,9 @@ class ZModemMux {
 
   /// This is the entry point of multiplexing, dispatching data to ZModem or
   /// terminal depending on the current state.
-  void _handleStdout(Uint8List chunk) {
+  Future<void> _handleStdout(Uint8List chunk) async {
     if (_session != null) {
-      _handleZModem(chunk);
+      await _handleZModem(chunk);
       return;
     }
 
@@ -138,7 +138,7 @@ class ZModemMux {
     return false;
   }
 
-  void _handleZModem(Uint8List chunk) async {
+  Future<void> _handleZModem(Uint8List chunk) async {
     try {
       for (final event in _session!.receive(chunk)) {
         /// remote is sz
@@ -151,6 +151,8 @@ class ZModemMux {
         } else if (event is ZSessionFinishedEvent) {
           await _handleZSessionFinishedEvent(event);
           break; // Session ended, stop processing further events
+        } else if (event is ZCrcErrorEvent) {
+          continue; // CRC error, skip and wait for retransmit
         }
 
         /// remote is rz
@@ -165,7 +167,7 @@ class ZModemMux {
         _flush();
       }
     } catch (e) {
-      rethrow;
+      await _reset();
     }
 
     _flush();
@@ -227,9 +229,8 @@ class ZModemMux {
 
   /// Sends next file offer if available, or closes the session if not.
   void _moveToNextOffer() {
-    // If _fileOffers is null, onFileRequest was not set - keep session open
-    // waiting for remote to send ZFIN or for onFileRequest to be set later.
     if (_fileOffers == null) {
+      _closeSession();
       return;
     }
 
@@ -262,12 +263,8 @@ class ZModemMux {
 
   void _createReceiveSink() {
     _receiveSink = StreamController<Uint8List>(
-      onPause: () {
-        // _stdoutSubscription.pause();
-      },
-      onResume: () {
-        // _stdoutSubscription.resume();
-      },
+      onPause: _stdoutSubscription.pause,
+      onResume: _stdoutSubscription.resume,
     );
   }
 

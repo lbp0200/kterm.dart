@@ -3,7 +3,8 @@ import 'package:kterm/kterm.dart';
 import 'package:kterm/src/core/cell.dart';
 
 void main() {
-  test('Reproduce opencode-like sequence: verify underline is off after reset', () {
+  test('Reproduce opencode-like sequence: verify underline is off after reset',
+      () {
     final terminal = Terminal();
 
     // Simulate: some initial text with underline ON

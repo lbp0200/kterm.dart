@@ -43,7 +43,8 @@ void main() {
     expect(cell.underlineStyle, equals(5));
   });
 
-  test('CSI 4:6 with SGR 6 (not a valid underline style) yields single underline',
+  test(
+      'CSI 4:6 with SGR 6 (not a valid underline style) yields single underline',
       () {
     terminal.write('\x1b[4;6m');
     terminal.write('X');

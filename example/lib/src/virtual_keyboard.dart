@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kterm/xterm.dart';
+import 'package:kterm/kterm.dart';
 
 class VirtualKeyboardView extends StatelessWidget {
   const VirtualKeyboardView(this.keyboard, {super.key});

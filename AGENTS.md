@@ -7,12 +7,16 @@ A Flutter terminal emulator package (mobile + desktop). Published as `kterm` on 
 ```bash
 flutter pub get
 dart format --set-exit-if-changed .
-flutter analyze lib/ --no-fatal-infos   # CI scope: lib/ only, not --fatal-infos
-# Tests are run in groups by CI:
-flutter test test/kitty_*.dart
-flutter test test/src/core/
-flutter test test/src/utils/
-flutter test test/                  # local: all at once is fine
+dart analyze lib/   # CI scope: no --fatal-infos needed — lib/ analyzes clean
+# Tests — Flutter tests must run individually under flutter test:
+flutter test test/kitty_emitter_test.dart    # fast: ~5s
+flutter test test/kitty_parser_test.dart     # fast: ~5s
+# Pure-Dart core tests can use dart test (no Flutter dependency):
+dart test test/src/core/escape/emitter_test.dart   # 19 tests
+dart test test/src/zmodem_test.dart                 # 38 tests
+# Full suite is available but not run in a single pass (too many test files):
+#   dart test test/src/zmodem_test.dart &
+#   flutter test test/...
 ```
 
 ## Architecture

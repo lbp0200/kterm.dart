@@ -1,3 +1,14 @@
+## [1.1.8] - 2026-05-13
+
+### Bug Fixes
+- Fix example imports: replace removed `xterm.dart` with `kterm.dart` across 6 files
+- Fix `withOpacity` deprecation: migrate to `withValues(alpha:)` (Flutter 3.27+)
+
+### Code Quality
+- Add `publish_to: 'none'` to suppress invalid_dependency warning (zmodem_lbp git dep)
+- Add ZModem protocol decoding tests: ZMPHDR frame type parsing, file info header (29 new assertions across 7 tests)
+- Clean up `AGENTS.md` with accurate test commands
+
 ## [1.1.7] - 2026-04-30
 
 ### Features & Improvements

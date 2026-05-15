@@ -3,7 +3,8 @@ import 'package:kterm/kterm.dart';
 import 'package:kterm/src/core/cell.dart';
 
 void main() {
-  test('Full-screen underline scenario: underline on, fill screen, reset, erase, new text should have no underline',
+  test(
+      'Full-screen underline scenario: underline on, fill screen, reset, erase, new text should have no underline',
       () {
     final terminal = Terminal();
 
@@ -13,7 +14,8 @@ void main() {
 
     // 1. Set underline
     terminal.write('\x1b[4m');
-    expect(terminal.cursor.underlineStyle, equals(CellAttr.underlineStyleSingle));
+    expect(
+        terminal.cursor.underlineStyle, equals(CellAttr.underlineStyleSingle));
     expect(terminal.cursor.attrs & CellAttr.underline, isNot(equals(0)));
 
     // 2. Fill entire screen with text (simulate opencode drawing underlined title)
@@ -47,9 +49,11 @@ void main() {
       for (int col = 0; col < 80; col++) {
         final cell = line.createCellData(col);
         expect(cell.underlineStyle, equals(0),
-            reason: 'After eraseDisplay, cell ($row,$col) should have no underlineStyle');
+            reason:
+                'After eraseDisplay, cell ($row,$col) should have no underlineStyle');
         expect(cell.flags & CellAttr.underline, equals(0),
-            reason: 'After eraseDisplay, cell ($row,$col) should have no underline flag');
+            reason:
+                'After eraseDisplay, cell ($row,$col) should have no underline flag');
       }
     }
 

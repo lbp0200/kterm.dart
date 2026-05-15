@@ -23,7 +23,8 @@ void main() {
     final inv = (flags & CellFlags.invisible) != 0;
     final underl = cell.underlineStyle;
     if (cp != 0 || inv || underl != 0) {
-      print('cell[$i]: char="${String.fromCharCode(cp)}" (0x${cp.toRadixString(16)}) flags=0x${flags.toRadixString(16)} inv=$inv underl=$underl');
+      print(
+          'cell[$i]: char="${String.fromCharCode(cp)}" (0x${cp.toRadixString(16)}) flags=0x${flags.toRadixString(16)} inv=$inv underl=$underl');
     }
   }
 }
