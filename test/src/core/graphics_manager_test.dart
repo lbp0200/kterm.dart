@@ -374,17 +374,16 @@ void main() {
     });
 
     group('touchImage', () {
-      test('updates LRU timestamp', () {
+      test('updates LRU timestamp', () async {
         final imageId = manager.storeImage(mockImage);
         final entryBefore = manager.getImageEntry(imageId);
         final accessBefore = entryBefore!.lastAccess;
 
         // Small delay to ensure different timestamp
-        Future.delayed(const Duration(milliseconds: 10), () {
-          manager.touchImage(imageId);
-          final entryAfter = manager.getImageEntry(imageId);
-          expect(entryAfter!.lastAccess, greaterThanOrEqualTo(accessBefore));
-        });
+        await Future.delayed(const Duration(milliseconds: 10));
+        manager.touchImage(imageId);
+        final entryAfter = manager.getImageEntry(imageId);
+        expect(entryAfter!.lastAccess, greaterThanOrEqualTo(accessBefore));
       });
     });
 

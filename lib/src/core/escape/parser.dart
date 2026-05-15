@@ -265,6 +265,8 @@ class EscapeParser {
       _csi.prefix = null;
     }
 
+    const maxCsiParams = 256;
+
     var param = 0;
     var hasParam = false;
     while (true) {
@@ -276,7 +278,7 @@ class EscapeParser {
       final char = _queue.consume();
 
       if (char == Ascii.semicolon || char == Ascii.colon) {
-        if (hasParam) {
+        if (hasParam && _csi.params.length < maxCsiParams) {
           _csi.params.add(param);
         }
         param = 0;
@@ -296,7 +298,7 @@ class EscapeParser {
       }
 
       if (char >= Ascii.atSign && char <= Ascii.tilde) {
-        if (hasParam) {
+        if (hasParam && _csi.params.length < maxCsiParams) {
           _csi.params.add(param);
         }
 
@@ -552,20 +554,24 @@ class EscapeParser {
           final mode = params[i + 1];
           switch (mode) {
             case 2:
-              if (i + 4 >= params.length) break;
-              final r = params[i + 2];
-              final g = params[i + 3];
-              final b = params[i + 4];
-              handler.setForegroundColorRgb(r, g, b);
+              if (i + 4 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setForegroundColorRgb(
+                  params[i + 2], params[i + 3], params[i + 4]);
               i += 4;
-              break;
+              continue;
             case 5:
-              if (i + 2 >= params.length) break;
-              final index = params[i + 2];
-              handler.setForegroundColor256(index);
+              if (i + 2 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setForegroundColor256(params[i + 2]);
               i += 2;
-              break;
+              continue;
           }
+          i++;
           continue;
         case 39:
           handler.resetForeground();
@@ -600,20 +606,24 @@ class EscapeParser {
           final mode = params[i + 1];
           switch (mode) {
             case 2:
-              if (i + 4 >= params.length) break;
-              final r = params[i + 2];
-              final g = params[i + 3];
-              final b = params[i + 4];
-              handler.setBackgroundColorRgb(r, g, b);
+              if (i + 4 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setBackgroundColorRgb(
+                  params[i + 2], params[i + 3], params[i + 4]);
               i += 4;
-              break;
+              continue;
             case 5:
-              if (i + 2 >= params.length) break;
-              final index = params[i + 2];
-              handler.setBackgroundColor256(index);
+              if (i + 2 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setBackgroundColor256(params[i + 2]);
               i += 2;
-              break;
+              continue;
           }
+          i++;
           continue;
         case 49:
           handler.resetBackground();
@@ -625,20 +635,24 @@ class EscapeParser {
           final mode = params[i + 1];
           switch (mode) {
             case 2:
-              if (i + 4 >= params.length) break;
-              final r = params[i + 2];
-              final g = params[i + 3];
-              final b = params[i + 4];
-              handler.setUnderlineColorRgb(r, g, b);
+              if (i + 4 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setUnderlineColorRgb(
+                  params[i + 2], params[i + 3], params[i + 4]);
               i += 4;
-              break;
+              continue;
             case 5:
-              if (i + 2 >= params.length) break;
-              final index = params[i + 2];
-              handler.setUnderlineColor256(index);
+              if (i + 2 >= params.length) {
+                i++;
+                continue;
+              }
+              handler.setUnderlineColor256(params[i + 2]);
               i += 2;
-              break;
+              continue;
           }
+          i++;
           continue;
         case 59:
           handler.resetUnderlineColor();
@@ -1064,7 +1078,6 @@ class EscapeParser {
       case 66:
         return handler.setAppKeypadMode(enabled);
       case 1000:
-      case 10061000:
         return enabled
             ? handler.setMouseMode(MouseMode.upDownScroll)
             : handler.setMouseMode(MouseMode.none);

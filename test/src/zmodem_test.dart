@@ -189,8 +189,9 @@ void main() {
         mux.terminalWrite('during-session');
         expect(sent, isNotEmpty); // ZFIN response is sent
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true).contains('during-session')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('during-session')),
           isFalse,
         );
       });
@@ -386,8 +387,9 @@ void main() {
         // Verify session active: terminalWrite buffers (protocol data may be sent)
         mux.terminalWrite('should-buffer');
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true).contains('should-buffer')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('should-buffer')),
           isFalse,
         );
 
@@ -417,7 +419,8 @@ void main() {
     });
 
     group('Send side (onFileRequest)', () {
-      test('Given ZRINIT and onFileRequest, When detected, Then callback invoked',
+      test(
+          'Given ZRINIT and onFileRequest, When detected, Then callback invoked',
           () async {
         var requestCalled = false;
         final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
@@ -540,8 +543,9 @@ void main() {
         sent.clear();
         mux.terminalWrite('during-session');
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true).contains('during-session')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('during-session')),
           isFalse,
         );
 
@@ -562,9 +566,9 @@ void main() {
         sent.clear();
         mux.terminalWrite('after-session-1');
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true)
-                  .contains('after-session-1')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('after-session-1')),
           isTrue,
         );
 
@@ -578,9 +582,9 @@ void main() {
         sent.clear();
         mux.terminalWrite('during-session-2');
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true)
-                  .contains('during-session-2')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('during-session-2')),
           isFalse,
         );
 
@@ -593,9 +597,9 @@ void main() {
         sent.clear();
         mux.terminalWrite('after-session-2');
         expect(
-          sent.any((data) =>
-              utf8.decode(data, allowMalformed: true)
-                  .contains('after-session-2')),
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('after-session-2')),
           isTrue,
         );
       });
@@ -660,7 +664,8 @@ void main() {
         await Future(() {});
 
         // Send 5 CAN bytes (cancel sequence)
-        stdoutController.add(Uint8List.fromList([0x18, 0x18, 0x18, 0x18, 0x18]));
+        stdoutController
+            .add(Uint8List.fromList([0x18, 0x18, 0x18, 0x18, 0x18]));
         await Future(() {});
         await Future(() {});
 
