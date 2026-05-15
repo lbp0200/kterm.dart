@@ -174,7 +174,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.1.9"
+    version: "1.1.11"
   leak_tracker:
     dependency: transitive
     description:
@@ -399,11 +399,10 @@ packages:
   zmodem_lbp:
     dependency: transitive
     description:
-      path: "."
-      ref: "v0.0.10"
-      resolved-ref: "744333ee1d05bb41ceea5eaf79f8f56321d364b4"
-      url: "https://github.com/lbp0200/zmodem.git"
-    source: git
+      name: zmodem_lbp
+      sha256: fb5a1c93d448cd0896ec431a42b7ecdaa83df38578202ecf5fd0a1a466a9060d
+      url: "https://pub.flutter-io.cn"
+    source: hosted
     version: "0.0.10"
 sdks:
   dart: ">=3.11.0 <4.0.0"
