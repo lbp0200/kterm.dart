@@ -128,7 +128,7 @@ class _TerminalDebuggerHandler implements EscapeHandler {
 
   @override
   void unknownSBC(int char) {
-    onCommand('unkownSBC(${String.fromCharCode(char)})', error: true);
+    onCommand('unknownSBC(${String.fromCharCode(char)})', error: true);
   }
 
   /* ANSI sequence */
