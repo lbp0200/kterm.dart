@@ -100,8 +100,7 @@ void main() {
           'Given callback set, When stdout data arrives, Then callback invoked',
           () async {
         final received = <String>[];
-        // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
-        final _mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
           ..onTerminalInput = received.add;
 
         stdoutController.add(Uint8List.fromList('test'.codeUnits));
@@ -110,6 +109,7 @@ void main() {
         await Future(() {});
 
         expect(received, equals(['test']));
+        expect(mux, isNotNull);
       });
 
       test('Given callback null, When stdout data arrives, Then no error',
@@ -128,8 +128,7 @@ void main() {
       test('Given multiple data chunks, When callback set, Then all delivered',
           () async {
         final received = <String>[];
-        // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
-        final _mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
           ..onTerminalInput = received.add;
 
         stdoutController.add(Uint8List.fromList('hello'.codeUnits));
@@ -139,14 +138,14 @@ void main() {
         await Future(() {});
 
         expect(received, equals(['hello', ' ', 'world']));
+        expect(mux, isNotNull);
       });
 
       test(
           'Given UTF-8 multi-byte sequence, When callback set, Then correctly decoded',
           () async {
         final received = <String>[];
-        // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
-        final _mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
           ..onTerminalInput = received.add;
 
         stdoutController.add(Uint8List.fromList(utf8.encode('🌍')));
@@ -154,6 +153,7 @@ void main() {
         await Future(() {});
 
         expect(received, equals(['🌍']));
+        expect(mux, isNotNull);
       });
     });
 
@@ -448,6 +448,7 @@ void main() {
         await Future(() {});
 
         expect(requestCalled, isTrue);
+        expect(mux, isNotNull);
       });
 
       test(
@@ -514,6 +515,7 @@ void main() {
           }),
           isTrue,
         );
+        expect(mux, isNotNull);
       });
     });
 
