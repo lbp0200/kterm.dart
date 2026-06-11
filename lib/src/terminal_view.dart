@@ -459,6 +459,14 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   void _onInsert(String text) {
+    // macOS 将 Enter 和 Shift+Enter 都通过文本输入系统发送 \r，
+    // 无法在 _handleKeyEvent 中区分，故在此检测 Shift 状态。
+    if (text == '\r' && HardwareKeyboard.instance.isShiftPressed) {
+      widget.terminal.textInput('\n');
+      _scrollToBottom();
+      return;
+    }
+
     final key = charToTerminalKey(text.trim());
 
     // On mobile platforms there is no guarantee that virtual keyboard will
@@ -559,6 +567,21 @@ class TerminalViewState extends State<TerminalView> {
           if (event.logicalKey == LogicalKeyboardKey.backspace) {
             widget.terminal.textInput('\x7f');
             return KeyEventResult.handled;
+          }
+          // For other special keys (arrows, home, end, page up/down, etc.),
+          // use standard keytab-based input
+          final stdKey = keyToTerminalKey(event.logicalKey);
+          if (stdKey != null) {
+            final handled = widget.terminal.keyInput(
+              stdKey,
+              ctrl: HardwareKeyboard.instance.isControlPressed,
+              alt: HardwareKeyboard.instance.isAltPressed,
+              shift: HardwareKeyboard.instance.isShiftPressed,
+            );
+            if (handled) {
+              _scrollToBottom();
+              return KeyEventResult.handled;
+            }
           }
           // For alphanumeric keys, let Flutter's TextInputClient handle them
           return KeyEventResult.ignored;

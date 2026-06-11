@@ -95,3 +95,6 @@ example2/
 .claude
 docs/plans
 docs/flutter_pty
+
+# Local tool configs
+reasonix.toml

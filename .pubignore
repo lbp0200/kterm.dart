@@ -3,7 +3,6 @@
 # AI & Dev Tools
 .claude/
 .cursors/
-CLAUDE.md
 .github/
 
 # Scripts & Binaries
@@ -33,3 +32,6 @@ pubspec.lock
 
 # Docs (must be "doc" for pub.dev)
 docs/
+
+# Local tool configs
+reasonix.toml
