@@ -571,7 +571,7 @@ class EscapeParser {
           switch (mode) {
             case 2:
               if (i + 4 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setForegroundColorRgb(
@@ -580,14 +580,14 @@ class EscapeParser {
               continue;
             case 5:
               if (i + 2 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setForegroundColor256(params[i + 2]);
               i += 2;
               continue;
           }
-          i++;
+          i += 2;
           continue;
         case 39:
           handler.resetForeground();
@@ -623,7 +623,7 @@ class EscapeParser {
           switch (mode) {
             case 2:
               if (i + 4 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setBackgroundColorRgb(
@@ -632,14 +632,14 @@ class EscapeParser {
               continue;
             case 5:
               if (i + 2 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setBackgroundColor256(params[i + 2]);
               i += 2;
               continue;
           }
-          i++;
+          i += 2;
           continue;
         case 49:
           handler.resetBackground();
@@ -652,7 +652,7 @@ class EscapeParser {
           switch (mode) {
             case 2:
               if (i + 4 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setUnderlineColorRgb(
@@ -661,14 +661,14 @@ class EscapeParser {
               continue;
             case 5:
               if (i + 2 >= params.length) {
-                i++;
+                i += 2;
                 continue;
               }
               handler.setUnderlineColor256(params[i + 2]);
               i += 2;
               continue;
           }
-          i++;
+          i += 2;
           continue;
         case 59:
           handler.resetUnderlineColor();

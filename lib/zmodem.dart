@@ -109,7 +109,7 @@ class ZModemMux {
       return;
     }
 
-    if (_detectZModem(chunk)) {
+    if (await _detectZModem(chunk)) {
       return;
     }
 
@@ -118,7 +118,7 @@ class ZModemMux {
 
   /// Detects a ZModem session in [chunk] and starts it if found. Returns true
   /// if a session was started.
-  bool _detectZModem(Uint8List chunk) {
+  Future<bool> _detectZModem(Uint8List chunk) async {
     final index = chunk.listIndexOf(_zmodemSenderInit) ??
         chunk.listIndexOf(_zmodemReceiverInit);
 
@@ -131,7 +131,7 @@ class ZModemMux {
         },
       );
 
-      _handleZModem(Uint8List.sublistView(chunk, index));
+      await _handleZModem(Uint8List.sublistView(chunk, index));
       return true;
     }
 

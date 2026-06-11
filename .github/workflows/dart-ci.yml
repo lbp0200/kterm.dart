@@ -35,6 +35,7 @@ jobs:
           flutter test test/kitty_*.dart
           flutter test test/src/core/
           flutter test test/src/utils/
+          flutter test test/src/terminal_test.dart test/src/terminal_paste_test.dart test/src/zmodem_test.dart
 
   publish:
     name: "Publish to pub.dev"
