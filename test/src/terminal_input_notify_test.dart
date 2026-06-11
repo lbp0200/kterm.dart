@@ -20,10 +20,7 @@ void main() {
 
       terminal.textInput('hello');
 
-      // BUG: textInput does NOT call notifyListeners currently
-      // This test documents the EXPECTED behavior after the fix
-      expect(notifyCount, equals(1),
-          reason: 'textInput should call notifyListeners to update UI');
+      expect(notifyCount, equals(1));
     });
 
     test('charInput() does not notify when no output', () {
