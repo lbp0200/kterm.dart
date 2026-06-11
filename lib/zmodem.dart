@@ -151,6 +151,12 @@ class ZModemMux {
         } else if (event is ZSessionFinishedEvent) {
           await _handleZSessionFinishedEvent(event);
           break; // Session ended, stop processing further events
+        } else if (event is ZSessionCancelledEvent) {
+          await _reset();
+          break;
+        } else if (event is ZTimeoutEvent) {
+          await _reset();
+          break;
         } else if (event is ZCrcErrorEvent) {
           continue; // CRC error, skip and wait for retransmit
         }
@@ -185,7 +191,11 @@ class ZModemMux {
   }
 
   void _handleZFileDataEvent(ZFileDataEvent event) {
-    _receiveSink!.add(event.data as Uint8List);
+    // If the file was skipped but the remote still sends data, ignore it.
+    final sink = _receiveSink;
+    if (sink != null) {
+      sink.add(event.data as Uint8List);
+    }
   }
 
   Future<void> _handleZFileEndEvent(ZFileEndEvent event) async {

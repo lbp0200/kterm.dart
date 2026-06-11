@@ -648,9 +648,11 @@ void main() {
     });
 
     group('Cancel detection', () {
-      test('Given active session, When CAN bytes received, Then no crash',
+      test('Given active session, When CAN bytes received, Then session resets',
           () async {
         final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream);
+        final sent = <List<int>>[];
+        stdinController.stream.listen(sent.add);
 
         // Start session
         final zrinit = Uint8List.fromList([
@@ -665,14 +667,59 @@ void main() {
         await Future(() {});
         await Future(() {});
 
+        // Verify session active: terminalWrite is buffered
+        mux.terminalWrite('should-buffer');
+        expect(
+          sent.any((data) => utf8
+              .decode(data, allowMalformed: true)
+              .contains('should-buffer')),
+          isFalse,
+        );
+
         // Send 5 CAN bytes (cancel sequence)
         stdoutController
             .add(Uint8List.fromList([0x18, 0x18, 0x18, 0x18, 0x18]));
         await Future(() {});
         await Future(() {});
 
-        // Session should be reset, no crash
-        expect(mux, isNotNull);
+        // After cancel, terminalWrite should write to stdin again
+        mux.terminalWrite('after-cancel');
+        expect(sent, contains(equals(utf8.encode('after-cancel'))));
+      });
+
+      test(
+          'Given active session and CAN, When terminal data arrives, Then routed to terminal',
+          () async {
+        // After cancel, non-ZMODEM data should reach the terminal callback.
+        final terminalOutputs = <String>[];
+        final mux = ZModemMux(stdin: stdinSink, stdout: stdoutStream)
+          ..onTerminalInput = (text) => terminalOutputs.add(text);
+
+        // Start session with ZRINIT
+        final zrinit = Uint8List.fromList([
+          0x2A, 0x2A, 0x18, 0x42,
+          0x30, 0x31, // '01' ZRINIT
+          0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+          0x30, 0x30, 0x30, 0x30,
+          0x0D, 0x0A,
+          0x11,
+        ]);
+        stdoutController.add(zrinit);
+        await Future(() {});
+        await Future(() {});
+
+        // Send 5 CAN bytes (cancel)
+        stdoutController
+            .add(Uint8List.fromList([0x18, 0x18, 0x18, 0x18, 0x18]));
+        await Future(() {});
+        await Future(() {});
+
+        // Send plain text — should reach onTerminalInput
+        stdoutController.add(Uint8List.fromList('hello'.codeUnits));
+        await Future(() {});
+        await Future(() {});
+
+        expect(terminalOutputs, contains('hello'));
       });
     });
 
