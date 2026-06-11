@@ -1,6 +1,8 @@
 # .pubignore - kterm package optimization
 
 # AI & Dev Tools
+.atomcode/
+AGENTS.md
 .claude/
 .cursors/
 .github/
