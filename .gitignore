@@ -96,5 +96,8 @@ example2/
 docs/plans
 docs/flutter_pty
 
+# Golden test failure artifacts
+test/src/failures/
+
 # Local tool configs
 reasonix.toml
