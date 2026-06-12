@@ -366,5 +366,60 @@ void main() {
         verify(handler.setCursor(0, 0));
       });
     });
+
+    group('DCS (Device Control String)', () {
+      test('DCS +q query calls handleDcs', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1bP+qTN\x1b\\');
+        // Parser strips '+' then appends 'q' prefix with remainder
+        verify(handler.handleDcs('+qqTN', [], null));
+      });
+
+      test('DCS +q with hex-encoded query calls handleDcs', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1bP+q544e\x1b\\');
+        verify(handler.handleDcs('+qq544e', [], null));
+      });
+
+      test('DCS +q? calls handleDcs with ?', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1bP+q?\x1b\\');
+        verify(handler.handleDcs('+qq?', [], null));
+      });
+
+      test('non-query DCS is skipped', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1bPp1;2;3\x1b\\');
+        verifyNever(handler.handleDcs(any, any, any));
+      });
+
+      test('DCS with no ST terminator is handled gracefully', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        // DCS without terminator should not crash
+        parser.write('\x1bP+qTN');
+        // The handler may or may not be called depending on buffer state
+      });
+    });
+
+    group('APC (Application Program Command)', () {
+      test('APC G calls graphicsCommandStart', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1b_Gf=100,m=1\x1b\\');
+        verify(handler.graphicsCommandStart({'f': '100', 'm': '1'}));
+      });
+
+      test('non-G APC is skipped', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        parser.write('\x1b_Xcustom\x1b\\');
+        verifyNever(handler.graphicsCommandStart(any));
+      });
+    });
   });
 }

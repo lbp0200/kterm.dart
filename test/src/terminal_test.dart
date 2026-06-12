@@ -684,6 +684,109 @@ void main() {
       expect(output, isNotEmpty);
     });
   });
+
+  group('Terminal.handleDcs (Kitty Remote Control)', () {
+    test('handles qTN query', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1bP+qTN\x1b\\'); // DCS +q TN ST
+      expect(output, isNotEmpty);
+      expect(output.first, contains('kterm'));
+    });
+
+    test('handles q? query listing supported capabilities', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1bP+q?\x1b\\');
+      expect(output, isNotEmpty);
+      expect(output.first, contains('qTN;qcl;qVC'));
+    });
+
+    test('handles unknown query gracefully', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1bP+qXYZ\x1b\\');
+      expect(output, isNotEmpty);
+    });
+
+    test('handles hex-encoded query (q544e = qTN)', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1bP+q544e\x1b\\');
+      expect(output, isNotEmpty);
+      expect(output.first, contains('kterm'));
+    });
+
+    test('does not crash when onOutput is null', () {
+      final terminal = Terminal();
+      terminal.write('\x1bP+qTN\x1b\\');
+      expect(terminal, isNotNull);
+    });
+
+    test('skips non-query DCS gracefully', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1bPp1;2;3\x1b\\');
+      expect(output, isEmpty);
+    });
+  });
+
+  group('Terminal.handleTextSizeQuery', () {
+    test('responds to font size query (OSC 10;?)', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b]10;?\x07'); // Query font size
+      expect(output, isNotEmpty);
+      expect(output.first, contains('12'));
+    });
+
+    test('does not crash without onOutput', () {
+      final terminal = Terminal();
+      terminal.write('\x1b]10;?\x07');
+      expect(terminal, isNotNull);
+    });
+
+    test('ignores OSC 10 without ?', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b]10\x07'); // No query marker
+      expect(output, isEmpty);
+    });
+  });
+
+  group('Terminal.handleShellIntegration', () {
+    test('forwards mark start to onPrivateOSC', () {
+      String? code;
+      List<String>? data;
+      final terminal = Terminal(
+        onPrivateOSC: (c, d) {
+          code = c;
+          data = d;
+        },
+      );
+      terminal.write('\x1b]133;A\x07'); // Shell integration: mark start
+      expect(code, '133');
+      expect(data, ['A']);
+    });
+
+    test('forwards current dir to onPrivateOSC', () {
+      String? code;
+      final terminal = Terminal(
+        onPrivateOSC: (c, _) => code = c,
+      );
+      terminal.write('\x1b]133;D;/home/user\x07');
+      expect(code, '133');
+    });
+
+    test('forwards command start to onPrivateOSC', () {
+      List<String>? data;
+      final terminal = Terminal(
+        onPrivateOSC: (_, d) => data = d,
+      );
+      terminal.write('\x1b]133;C\x07');
+      expect(data, ['C']);
+    });
+  });
 }
 
 class _TestInputHandler implements TerminalInputHandler {

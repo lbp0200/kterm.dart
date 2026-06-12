@@ -1570,9 +1570,6 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     if (command == 10) {
       // Font size query - respond with default
       _emit('\x1b]10;12\x1b\\');
-    } else if (command == 133) {
-      // Font family query - respond with default
-      _emit('\x1b]133;monospace\x1b\\');
     }
   }
 
