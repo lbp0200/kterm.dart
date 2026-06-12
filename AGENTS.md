@@ -23,7 +23,9 @@ flutter test test/src/utils/                         # CI: utils tests
 flutter test test/src/terminal_test.dart             # CI: terminal integration
 flutter test test/src/terminal_paste_test.dart       # CI: paste handling
 flutter test test/src/zmodem_test.dart               # CI: ZModem mux tests
-flutter test test/src/terminal_view_test.dart        # CI: golden/snapshot tests
+flutter test test/kterm_test.dart test/sequence_test.dart test/simple_ext_test.dart test/src/terminal_input_notify_test.dart  # CI: misc
+# Not run in CI (golden / local-only):
+flutter test test/src/terminal_view_test.dart        # golden/snapshot tests
 flutter test test/src/suggestion_test.dart           # suggestion overlay widget tests
 dart test test/src/utils/byte_consumer_test.dart     # pure-Dart smoke (4 files, see run_test.sh)
 dart test test/src/utils/debugger_test.dart          # pure-Dart smoke
