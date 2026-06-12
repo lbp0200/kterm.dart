@@ -66,10 +66,11 @@ class _SuggestionPortalState extends State<SuggestionPortal> {
 /// A widget that places [child] around [cursorRect].
 class SuggestionLayout extends SingleChildRenderObjectWidget {
   SuggestionLayout({
-    super.child,
+    super.key,
     required this.cursorRect,
     required this.padding,
     required this.cursorMargin,
+    super.child,
   });
 
   /// The location of the cursor relative to the top left corner of this widget.
