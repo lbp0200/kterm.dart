@@ -13,5 +13,3 @@ analyzer:
     - docs/**
     - test/**
     - script/**
-  errors:
-    deprecated_member_use: ignore
