@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CustomTextEdit extends StatefulWidget {
-  CustomTextEdit({
+  const CustomTextEdit({
     super.key,
     required this.child,
     required this.onInsert,

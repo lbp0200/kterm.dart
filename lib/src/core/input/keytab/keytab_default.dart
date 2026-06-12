@@ -210,6 +210,5 @@ key End   +Shift-AppScreen  : scrollDownToBottom
 
 void main() {
   final tokens = tokenize(kDefaultKeytab).toList();
-  final parser = KeytabParser()..addTokens(tokens);
-  print(parser.result);
+  KeytabParser().addTokens(tokens);
 }

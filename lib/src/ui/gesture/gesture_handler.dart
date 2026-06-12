@@ -62,7 +62,6 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
   @override
   Widget build(BuildContext context) {
     return TerminalGestureDetector(
-      child: widget.child,
       onTapUp: widget.onTapUp,
       onSingleTapUp: onSingleTapUp,
       onTapDown: onTapDown,
@@ -76,6 +75,7 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
       onDragStart: onDragStart,
       onDragUpdate: onDragUpdate,
       onDoubleTapDown: onDoubleTapDown,
+      child: widget.child,
     );
   }
 

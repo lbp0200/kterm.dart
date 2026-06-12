@@ -111,7 +111,7 @@ class _CommandItem extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
+              SizedBox(
                 width: 50,
                 child: Text(
                   '${index + 1}',
@@ -140,7 +140,7 @@ class _CommandItem extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 20),
-              Container(
+              SizedBox(
                 width: 400,
                 child: Text(
                   command.escapedChars,
@@ -151,13 +151,11 @@ class _CommandItem extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: Container(
-                  child: Text(
-                    command.explanation.join(','),
-                    style: TextStyle(
-                      color: command.error ? Colors.red : null,
-                      fontSize: 14,
-                    ),
+                child: Text(
+                  command.explanation.join(','),
+                  style: TextStyle(
+                    color: command.error ? Colors.red : null,
+                    fontSize: 14,
                   ),
                 ),
               ),

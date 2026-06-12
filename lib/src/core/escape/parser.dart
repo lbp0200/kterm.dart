@@ -1256,7 +1256,7 @@ class EscapeParser {
   }
 
   /// Handle DCS (Device Control String) sequences
-  /// Used by Kitty Remote Control Protocol: ESC P +q <query> ST
+  /// Used by Kitty Remote Control Protocol: ESC P +q `<query>` ST
   bool _escHandleDCS() {
     if (_queue.isEmpty) return false;
 
@@ -1288,7 +1288,7 @@ class EscapeParser {
   }
 
   /// Handle APC (Application Program Command) sequences
-  /// Used by Kitty Graphics Protocol: ESC _ G <args> ; <payload> ST
+  /// Used by Kitty Graphics Protocol: `ESC _ G <args> ; <payload> ST`
   bool _escHandleAPC() {
     if (_queue.isEmpty) return false;
 

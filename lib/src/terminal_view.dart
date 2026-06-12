@@ -302,12 +302,12 @@ class TerminalViewState extends State<TerminalView> {
     } else if (!widget.readOnly) {
       // Only listen for key input from a hardware keyboard.
       child = CustomKeyboardListener(
-        child: child,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         onInsert: _onInsert,
         onComposing: _onComposing,
         onKeyEvent: _handleKeyEvent,
+        child: child,
       );
     }
 

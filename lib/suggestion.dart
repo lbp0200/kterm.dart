@@ -65,7 +65,7 @@ class _SuggestionPortalState extends State<SuggestionPortal> {
 
 /// A widget that places [child] around [cursorRect].
 class SuggestionLayout extends SingleChildRenderObjectWidget {
-  SuggestionLayout({
+  const SuggestionLayout({
     super.key,
     required this.cursorRect,
     required this.padding,
