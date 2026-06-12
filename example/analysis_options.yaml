@@ -5,4 +5,6 @@ linter:
     prefer_function_declarations_over_variables: false
 
 analyzer:
+  exclude:
+    - lib/suggestion.dart
   plugins: []

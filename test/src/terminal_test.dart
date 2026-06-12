@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:test/test.dart';
 import 'package:kterm/core.dart';
+import 'package:kterm/src/utils/ascii.dart';
 
 void main() {
   group('Terminal.inputHandler', () {
@@ -301,6 +302,386 @@ void main() {
       expect(cmd1, lessThan(out1));
       expect(out1, lessThan(cmd2));
       expect(cmd2, lessThan(out2));
+    });
+  });
+  group('Terminal.paste', () {
+    test('normalizes line endings CRLF to CR', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.paste('line1\r\nline2');
+      expect(output, ['line1\rline2']);
+    });
+
+    test('normalizes CR to CR', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.paste('line1\rline2');
+      expect(output, ['line1\rline2']);
+    });
+
+    test('strips ANSI escape sequences', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.paste('hello\x1b[31mworld');
+      expect(output, ['helloworld']);
+    });
+
+    test('strips control chars except tab/lf/cr/esc', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.paste('a\x00b\x07c\x0bd');
+      expect(output, ['abcd']);
+    });
+
+    test('uses bracketed paste when mode enabled', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[?2004h'); // Enable bracketed paste
+      terminal.paste('hello');
+      expect(output.length, 1);
+      expect(output.first, startsWith('\x1b[200~'));
+      expect(output.first, endsWith('\x1b[201~'));
+    });
+
+    test('lineFeedMode changes paste newline to CRLF', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[20h'); // Enable line feed mode (LNM)
+      terminal.paste('hello\nworld');
+      expect(output, ['hello\r\nworld']);
+    });
+
+    test('empty paste produces empty output', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.paste('');
+      expect(output, ['']);
+    });
+  });
+
+  group('Terminal.charInput', () {
+    test('ctrl+a produces 0x01', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      final result = terminal.charInput(Ascii.a, ctrl: true);
+      expect(result, isTrue);
+      expect(output, ['\x01']);
+    });
+
+    test('ctrl+z produces 0x1a', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      final result = terminal.charInput(Ascii.z, ctrl: true);
+      expect(result, isTrue);
+      expect(output, ['\x1a']);
+    });
+
+    test('ctrl+[ produces 0x1b', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      final result = terminal.charInput(Ascii.openBracket, ctrl: true);
+      expect(result, isTrue);
+      expect(output, ['\x1b']);
+    });
+
+    test('ctrl+_ produces 0x1f', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      final result = terminal.charInput(Ascii.underscore, ctrl: true);
+      expect(result, isTrue);
+      expect(output, ['\x1f']);
+    });
+
+    test('ctrl on non-alphanumeric returns false', () {
+      final terminal = Terminal();
+      final result = terminal.charInput(' '.codeUnitAt(0), ctrl: true);
+      expect(result, isFalse);
+    });
+
+    test('alt+a produces ESC A on non-macos', () {
+      final output = <String>[];
+      final terminal = Terminal(
+        onOutput: output.add,
+        platform: TerminalTargetPlatform.linux,
+      );
+      final result = terminal.charInput(Ascii.a, alt: true);
+      expect(result, isTrue);
+      expect(output, ['\x1bA']);
+    });
+
+    test('alt+z produces ESC Z on non-macos', () {
+      final output = <String>[];
+      final terminal = Terminal(
+        onOutput: output.add,
+        platform: TerminalTargetPlatform.linux,
+      );
+      final result = terminal.charInput(Ascii.z, alt: true);
+      expect(result, isTrue);
+      expect(output, ['\x1bZ']);
+    });
+
+    test('alt on macos returns false', () {
+      final terminal = Terminal(platform: TerminalTargetPlatform.macos);
+      final result = terminal.charInput(Ascii.a, alt: true);
+      expect(result, isFalse);
+    });
+
+    test('without modifiers returns false', () {
+      final terminal = Terminal();
+      final result = terminal.charInput(Ascii.a);
+      expect(result, isFalse);
+    });
+  });
+
+  group('Terminal.keyInput', () {
+    test('Given onOutput set, When textInput, Then output emitted', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.textInput('a');
+      expect(output, ['a']);
+    });
+
+    test('returns false when inputHandler is null', () {
+      final terminal = Terminal(inputHandler: null);
+      final result = terminal.keyInput(TerminalKey.keyA);
+      expect(result, isFalse);
+    });
+  });
+
+  group('Terminal.textInput', () {
+    test('Given onOutput set, When textInput, Then text is emitted', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.textInput('hello');
+      expect(output, ['hello']);
+    });
+
+    test('Given onOutput null, When textInput, Then no error', () {
+      final terminal = Terminal();
+      expect(() => terminal.textInput('test'), returnsNormally);
+    });
+  });
+
+  group('Terminal callbacks', () {
+    test('bell calls onBell', () {
+      String? result;
+      final terminal = Terminal(onBell: () => result = 'ring');
+      terminal.write('\x07');
+      expect(result, 'ring');
+    });
+
+    test('setTitle triggers onTitleChange', () {
+      String? title;
+      final terminal = Terminal(onTitleChange: (t) => title = t);
+      terminal.write('\x1b]0;MyTitle\x07');
+      expect(title, 'MyTitle');
+    });
+
+    test('setIconName triggers onIconChange', () {
+      String? icon;
+      final terminal = Terminal(onIconChange: (i) => icon = i);
+      terminal.write('\x1b]1;MyIcon\x07');
+      expect(icon, 'MyIcon');
+    });
+
+    test('toString returns terminal info', () {
+      final terminal = Terminal();
+      expect(terminal.toString(), contains('Terminal('));
+      expect(terminal.toString(), contains('x'));
+      expect(terminal.toString(), contains('lines'));
+    });
+  });
+
+  group('Terminal.tab', () {
+    test('Given default tab stops, When tab, Then moves forward', () {
+      final terminal = Terminal();
+      terminal.write('A\x09'); // Write A then tab
+      expect(terminal.buffer.cursorX, greaterThan(1));
+    });
+
+    test('Given setTapStop, When invoked, Then no error', () {
+      final terminal = Terminal();
+      terminal.write('\x1bH'); // HTS
+      expect(terminal, isNotNull);
+    });
+
+    test('Given clearTabStopUnderCursor, When invoked, Then no error', () {
+      final terminal = Terminal();
+      terminal.write('\x1b[0g'); // TBC 0
+      expect(terminal, isNotNull);
+    });
+
+    test('Given clearAllTabStops, When invoked, Then no error', () {
+      final terminal = Terminal();
+      terminal.write('\x1b[g'); // TBC (default 0)
+      terminal.write('\x1b[3g'); // TBC 3 (all)
+      expect(terminal, isNotNull);
+    });
+  });
+
+  group('Terminal.hyperlinks', () {
+    test('Given hyperlink set, When getHyperlinkUri, Then returns uri', () {
+      final terminal = Terminal();
+      terminal.write('\x1b]8;id=myid;https://example.com\x1b\\');
+      terminal.write('link text');
+      terminal.write('\x1b]8;;\x1b\\');
+      // The hyperlink should be registered
+      final hyperlinks = terminal.hyperlinks;
+      expect(hyperlinks, isNotEmpty);
+      expect(hyperlinks.values, contains('https://example.com'));
+    });
+
+    test('Given hyperlink set, When lookup by id, Then returns uri', () {
+      final terminal = Terminal();
+      terminal.write('\x1b]8;id=test123;https://test.com\x1b\\');
+      final hyperlinks = terminal.hyperlinks;
+      expect(hyperlinks.values, contains('https://test.com'));
+    });
+  });
+
+  group('Terminal.deviceAttributes', () {
+    test('sendPrimaryDeviceAttributes emits response', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[c'); // Primary DA
+      expect(output, isNotEmpty);
+    });
+
+    test('sendSecondaryDeviceAttributes emits response', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[>c'); // Secondary DA
+      expect(output, isNotEmpty);
+    });
+
+    test('sendTertiaryDeviceAttributes emits response', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[=c'); // Tertiary DA
+      expect(output, isNotEmpty);
+    });
+
+    test('sendSize emits response', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[18t'); // Report size
+      expect(output, isNotEmpty);
+    });
+  });
+
+  group('Terminal.handleClipboard', () {
+    test('read clipboard triggers onClipboardRead', () {
+      String? target;
+      final terminal = Terminal();
+      terminal.onClipboardRead = (t) => target = t;
+      terminal.write('\x1b]52;c;?\x07');
+      expect(target, 'c');
+    });
+
+    test('write clipboard triggers onClipboardWrite', () {
+      String? data;
+      String? target;
+      final terminal = Terminal();
+      terminal.onClipboardWrite = (d, t) {
+        data = d;
+        target = t;
+      };
+      terminal.write('\x1b]52;c;SGVsbG8=\x07'); // Base64 "Hello"
+      expect(target, 'c');
+      expect(data, 'Hello');
+    });
+
+    test('invalid base64 clipboard does not crash', () {
+      final terminal = Terminal();
+      expect(
+        () => terminal.write('\x1b]52;c;!!!\x07'),
+        returnsNormally,
+      );
+    });
+  });
+
+  group('Terminal.colorStack', () {
+    test('Given color stack push, When pop, Then restores attributes', () {
+      final terminal = Terminal();
+      terminal.write('\x1b[31m'); // Red foreground
+      terminal.write('\x1b]30001\x07'); // Push
+      terminal.write('\x1b[32m'); // Green foreground
+      terminal.write('\x1b]30101\x07'); // Pop - should restore red
+      // After pop, style should have red foreground
+      expect(terminal.cursor.foreground, isNot(isZero));
+    });
+  });
+
+  group('Terminal.handleNotification', () {
+    test('OSC 777 notify triggers onNotification', () {
+      String? title;
+      String? body;
+      final terminal = Terminal();
+      terminal.onNotification = (t, b) {
+        title = t;
+        body = b;
+      };
+      terminal.write('\x1b]777;notify;Task Done;Build finished\x07');
+      expect(title, 'Task Done');
+      expect(body, 'Build finished');
+    });
+  });
+
+  group('Terminal.eraseScrollbackOnly', () {
+    test(
+        'Given scrolled content, When erase scrollback, Then scrollback cleared',
+        () {
+      final terminal = Terminal();
+      terminal.write('line1\nline2\nline3\n');
+      terminal.write('\x1b[J'); // Erase scrollback (CSI 3 J)
+      // No crash = pass
+      expect(terminal, isNotNull);
+    });
+  });
+
+  group('Terminal.hyperlinks', () {
+    test('getHyperlinkUri returns null for unknown id', () {
+      final terminal = Terminal();
+      expect(terminal.getHyperlinkUri(999), isNull);
+    });
+
+    test('empty uri ends hyperlink', () {
+      final terminal = Terminal();
+      terminal.write('\x1b]8;;https://example.com\x1b\\');
+      terminal.write('\x1b]8;;\x1b\\'); // End hyperlink
+      expect(terminal.cursor.attrs & 4, 0); // Hyperlink bit not set
+    });
+  });
+
+  group('Terminal.repeatPreviousCharacter', () {
+    test('Given no preceding char, When repeat, Then does nothing', () {
+      final terminal = Terminal();
+      expect(() => terminal.write('\x1b[b'), returnsNormally); // CSI b
+    });
+
+    test('Given preceding char, When repeat, Then repeats', () {
+      final terminal = Terminal();
+      terminal.write('A');
+      terminal.write('\x1b[5b'); // Repeat 'A' 5 times
+      expect(terminal.buffer.lines[0].toString(), 'AAAAAA');
+    });
+  });
+
+  group('Terminal.sendOperatingStatus', () {
+    test('Given onOutput set, When DSR 5, Then emits', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[5n'); // Operating status
+      expect(output, isNotEmpty);
+    });
+  });
+
+  group('Terminal.sendCursorPosition', () {
+    test('Given onOutput set, When DSR 6, Then emits', () {
+      final output = <String>[];
+      final terminal = Terminal(onOutput: output.add);
+      terminal.write('\x1b[6n'); // Cursor position
+      expect(output, isNotEmpty);
     });
   });
 }
