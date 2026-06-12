@@ -24,6 +24,7 @@ flutter test test/src/terminal_test.dart             # CI: terminal integration
 flutter test test/src/terminal_paste_test.dart       # CI: paste handling
 flutter test test/src/zmodem_test.dart               # CI: ZModem mux tests
 flutter test test/src/terminal_view_test.dart        # CI: golden/snapshot tests
+flutter test test/src/suggestion_test.dart           # suggestion overlay widget tests
 dart test test/src/utils/byte_consumer_test.dart     # pure-Dart smoke (4 files, see run_test.sh)
 dart test test/src/utils/debugger_test.dart          # pure-Dart smoke
 dart test test/src/utils/debugger_extended_test.dart # pure-Dart smoke
@@ -60,9 +61,8 @@ dart test test/src/utils/lookup_table_test.dart      # pure-Dart smoke
 ## Package dependencies
 
 - `zmodem_lbp: ^0.0.10` — forked git dep (bugfixes: ZFIN frame handling + wrong LF byte). Import as `package:zmodem_lbp/`.
-- `kitty_protocol: ^1.2.3` — upstream Kitty keyboard/graphics protocol; report bugs there
-- `image: ^4.2.0` — image decoding for Kitty Graphics Protocol
-- `overlay_support: ^2.0.0` — overlay popups
+- `kitty_protocol: ^1.3.0` — upstream Kitty keyboard/graphics protocol; report bugs there
+- `image: ^4.9.0` — image decoding for Kitty Graphics Protocol
 
 ## Conventions
 
