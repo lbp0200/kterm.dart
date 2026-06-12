@@ -1,15 +1,43 @@
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:quiver/collection.dart';
+
+/// A simple LRU cache with a maximum size. When the cache exceeds the maximum
+/// size, the least recently accessed entry is evicted.
+class _LruMap<K, V> {
+  _LruMap({required this.maximumSize});
+
+  final int maximumSize;
+  final _map = <K, V>{};
+
+  V? operator [](K key) {
+    final value = _map.remove(key);
+    if (value != null) {
+      _map[key] = value; // Re-insert to update order
+    }
+    return value;
+  }
+
+  void operator []=(K key, V value) {
+    _map.remove(key);
+    _map[key] = value;
+    if (_map.length > maximumSize) {
+      _map.remove(_map.keys.first);
+    }
+  }
+
+  void clear() => _map.clear();
+
+  int get length => _map.length;
+}
 
 /// A cache of laid out [Paragraph]s. This is used to avoid laying out the same
 /// text multiple times, which is expensive.
 class ParagraphCache {
   ParagraphCache(int maximumSize)
-      : _cache = LruMap<int, Paragraph>(maximumSize: maximumSize);
+      : _cache = _LruMap<int, Paragraph>(maximumSize: maximumSize);
 
-  final LruMap<int, Paragraph> _cache;
+  final _LruMap<int, Paragraph> _cache;
 
   /// Returns a [Paragraph] for the given [key]. [key] is the same as the
   /// key argument to [performAndCacheLayout].
