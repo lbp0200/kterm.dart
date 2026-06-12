@@ -74,6 +74,10 @@ class ZModemMux {
   /// space is available in local buffers.
   late final StreamSubscription<Uint8List> _stdoutSubscription;
 
+  /// Periodic timer that polls [ZModemCore.checkTimeout] so the session
+  /// doesn't hang indefinitely on a stalled remote.
+  Timer? _timeoutTimer;
+
   late final _terminalSink = StreamController<List<int>>(
     onPause: _stdoutSubscription.pause,
     onResume: _stdoutSubscription.resume,
@@ -130,6 +134,8 @@ class ZModemMux {
           _terminalSink.add([text]);
         },
       );
+
+      _startTimeoutTimer();
 
       await _handleZModem(Uint8List.sublistView(chunk, index));
       return true;
@@ -291,9 +297,40 @@ class ZModemMux {
 
   /// Clears all ZModem state.
   Future<void> _reset() async {
+    _timeoutTimer?.cancel();
+    _timeoutTimer = null;
     await _closeReceiveSink();
     _fileOffers = null;
     _session = null;
+  }
+
+  /// Starts a periodic timer that polls the ZModemCore for timeouts.
+  /// The minimum timeout in the core is 10 seconds, so a 5-second interval
+  /// catches every time-out within half a period.
+  void _startTimeoutTimer() {
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _checkTimeout(),
+    );
+  }
+
+  /// Called by the timeout timer. If the session has timed out, resets the
+  /// mux so normal terminal operation can resume.
+  void _checkTimeout() {
+    final session = _session;
+    if (session == null) {
+      _timeoutTimer?.cancel();
+      _timeoutTimer = null;
+      return;
+    }
+    final event = session.checkTimeout();
+    if (event is ZTimeoutEvent) {
+      _timeoutTimer?.cancel();
+      _timeoutTimer = null;
+      // Reset synchronously; no new data is being processed.
+      unawaited(_reset());
+    }
   }
 
   /// Sends all pending data packets to the remote. No data is automatically
@@ -307,6 +344,8 @@ class ZModemMux {
 
   /// Disposes of the ZModemMux, cancelling subscriptions and closing streams.
   void dispose() {
+    _timeoutTimer?.cancel();
+    _timeoutTimer = null;
     _stdoutSubscription.cancel();
     _terminalSink.close();
   }
