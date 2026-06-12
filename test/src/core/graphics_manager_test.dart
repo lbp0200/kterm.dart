@@ -59,6 +59,11 @@ void main() {
 
     group('LRU eviction', () {
       test('stores multiple images', () {
+        // Large limits so eviction is not triggered
+        final mgr = GraphicsManager(
+          maxMemoryBytes: 100000,
+          maxImageCount: 100,
+        );
         final mockImage1 = MockImage();
         when(mockImage1.width).thenReturn(10);
         when(mockImage1.height).thenReturn(10);
@@ -67,13 +72,13 @@ void main() {
         when(mockImage2.width).thenReturn(10);
         when(mockImage2.height).thenReturn(10);
 
-        final id1 = manager.storeImage(mockImage1);
-        final id2 = manager.storeImage(mockImage2);
+        final id1 = mgr.storeImage(mockImage1);
+        final id2 = mgr.storeImage(mockImage2);
 
         expect(id1, isNot(equals(id2))); // Different IDs
-        expect(manager.imageCount, equals(2));
-        expect(manager.getImage(id1), equals(mockImage1));
-        expect(manager.getImage(id2), equals(mockImage2));
+        expect(mgr.imageCount, equals(2));
+        expect(mgr.getImage(id1), equals(mockImage1));
+        expect(mgr.getImage(id2), equals(mockImage2));
       });
 
       test('does not evict images with active placements', () {
@@ -100,6 +105,128 @@ void main() {
 
         // The image with placement should still exist
         expect(manager.getImage(imageId), equals(mockImage1));
+      });
+
+      test('evicts oldest when count limit reached', () {
+        final mgr = GraphicsManager(
+          maxMemoryBytes: 100000,
+          maxImageCount: 2,
+        );
+        final img1 = MockImage();
+        when(img1.width).thenReturn(10);
+        when(img1.height).thenReturn(10);
+        final img2 = MockImage();
+        when(img2.width).thenReturn(10);
+        when(img2.height).thenReturn(10);
+        final img3 = MockImage();
+        when(img3.width).thenReturn(10);
+        when(img3.height).thenReturn(10);
+
+        final id1 = mgr.storeImage(img1);
+        final id2 = mgr.storeImage(img2);
+        expect(mgr.imageCount, equals(2));
+
+        // Storing 3rd should evict the oldest (id1)
+        final id3 = mgr.storeImage(img3);
+        expect(mgr.imageCount, equals(2));
+        expect(mgr.getImage(id1), isNull);
+        expect(mgr.getImage(id2), isNotNull);
+        expect(mgr.getImage(id3), isNotNull);
+      });
+
+      test('evicts oldest when memory threshold exceeded', () {
+        final mgr = GraphicsManager(
+          maxMemoryBytes: 1000, // 70% = 700, 50% = 500
+          maxImageCount: 100,
+        );
+        // Each image = 10×10×4 = 400 bytes
+        // 2 images = 800 bytes > 700 → triggers eviction
+        final img1 = MockImage();
+        when(img1.width).thenReturn(10);
+        when(img1.height).thenReturn(10);
+        final img2 = MockImage();
+        when(img2.width).thenReturn(10);
+        when(img2.height).thenReturn(10);
+
+        final id1 = mgr.storeImage(img1);
+        // memory 400, no eviction needed
+        expect(mgr.imageCount, equals(1));
+        expect(mgr.currentMemoryBytes, equals(400));
+
+        final id2 = mgr.storeImage(img2);
+        // 400+400 = 800 > 700 → evict img1 → memory = 0+400 = 400 < 500 ✓
+        expect(mgr.imageCount, equals(1));
+        expect(mgr.currentMemoryBytes, equals(400));
+        expect(mgr.getImage(id1), isNull);
+        expect(mgr.getImage(id2), isNotNull);
+      });
+
+      test('evicts until memory drops below 50% target', () {
+        final mgr = GraphicsManager(
+          maxMemoryBytes: 1000, // 70% = 700, 50% = 500
+          maxImageCount: 100,
+        );
+        // Each image = 10×10×4 = 400 bytes
+        final img1 = MockImage();
+        when(img1.width).thenReturn(10);
+        when(img1.height).thenReturn(10);
+        final img2 = MockImage();
+        when(img2.width).thenReturn(10);
+        when(img2.height).thenReturn(10);
+        final img3 = MockImage();
+        when(img3.width).thenReturn(10);
+        when(img3.height).thenReturn(10);
+
+        mgr.storeImage(img1);
+        mgr.storeImage(img2);
+        // 800 > 700 → evict img1 → memory 400 < 500 → stop
+        expect(mgr.imageCount, equals(1));
+
+        mgr.storeImage(img3);
+        // 400+400 = 800 > 700 → only img3 in cache, but img2 still there too
+        // Actually: after previous step, we have img2 (400 bytes)
+        // storeImage(img3): _evictIfNeeded(400): 400+400=800 > 700 → trigger
+        //   sorted: [{id:2, img2}] → evict img2 → memory 0
+        //   store img3: memory 400
+        expect(mgr.imageCount, equals(1));
+      });
+
+      test('respects LRU ordering during eviction', () {
+        final mgr = GraphicsManager(
+          maxMemoryBytes: 100000,
+          maxImageCount: 3,
+        );
+        final imgA = MockImage();
+        when(imgA.width).thenReturn(10);
+        when(imgA.height).thenReturn(10);
+        final imgB = MockImage();
+        when(imgB.width).thenReturn(10);
+        when(imgB.height).thenReturn(10);
+        final imgC = MockImage();
+        when(imgC.width).thenReturn(10);
+        when(imgC.height).thenReturn(10);
+        final imgD = MockImage();
+        when(imgD.width).thenReturn(10);
+        when(imgD.height).thenReturn(10);
+
+        // Store A, B, C → count = 3 (no eviction yet)
+        final idA = mgr.storeImage(imgA);
+        final idB = mgr.storeImage(imgB);
+        final idC = mgr.storeImage(imgC);
+        expect(mgr.imageCount, equals(3));
+
+        // Touch B to make it most recently used
+        mgr.touchImage(idB);
+
+        // Store D → count limit exceeded → evict oldest (A, since B was touched)
+        final idD = mgr.storeImage(imgD);
+        expect(mgr.imageCount, equals(3));
+        expect(mgr.getImage(idA), isNull,
+            reason: 'A is oldest and should be evicted');
+        expect(mgr.getImage(idB), isNotNull,
+            reason: 'B was touched and should survive');
+        expect(mgr.getImage(idC), isNotNull);
+        expect(mgr.getImage(idD), isNotNull);
       });
     });
 

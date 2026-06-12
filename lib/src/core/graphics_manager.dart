@@ -333,11 +333,12 @@ class GraphicsManager {
     final sortedEntries = _images.entries.toList()
       ..sort((a, b) => a.value.lastAccess.compareTo(b.value.lastAccess));
 
-    // Remove until under 50% of limit
+    // Remove until memory + required is under 50% of limit
     final targetMemory = (maxMemoryBytes * 0.5).toInt();
-    while ((_currentMemoryBytes > targetMemory ||
-            _images.length >= maxImageCount) &&
-        sortedEntries.isNotEmpty) {
+    while (_currentMemoryBytes + requiredBytes > targetMemory ||
+        _images.length >= maxImageCount) {
+      if (sortedEntries.isEmpty) break;
+
       final entry = sortedEntries.removeAt(0);
 
       // Don't evict images that have active placements
