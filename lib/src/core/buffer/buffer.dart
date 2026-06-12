@@ -533,7 +533,6 @@ class Buffer {
     r'*'.codeUnitAt(0),
     r'+'.codeUnitAt(0),
     r'/'.codeUnitAt(0),
-    r'\'.codeUnitAt(0),
   };
 
   BufferRangeLine? getWordBoundary(CellOffset position) {
