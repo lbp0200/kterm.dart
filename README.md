@@ -95,7 +95,6 @@ terminal.onOutput = (output) {
 **3.** Create the view, attach the terminal to the view:
 
 ```dart
-import 'package:kterm/flutter.dart';
 ...
 child: TerminalView(terminal),
 ```
@@ -114,7 +113,6 @@ terminal.write('Hello, world!');
 
 ```dart
 import 'package:kterm/kterm.dart';
-import 'package:kterm/flutter.dart';
 
 final terminal = Terminal();
 final controller = TerminalController();
@@ -129,7 +127,6 @@ TerminalView(
 
 ```dart
 import 'package:kterm/kterm.dart';
-import 'package:kterm/flutter.dart';
 
 final terminal = Terminal(
   graphicsManager: GraphicsManager(),
@@ -161,7 +158,6 @@ The simplest way to enable search - automatically sets up callbacks and keyboard
 
 ```dart
 import 'package:kterm/kterm.dart';
-import 'package:kterm/flutter.dart';
 
 final terminal = Terminal();
 final controller = TerminalController();
@@ -185,7 +181,6 @@ TerminalView(
 
 ```dart
 import 'package:kterm/kterm.dart';
-import 'package:kterm/flutter.dart';
 
 final terminal = Terminal();
 final controller = TerminalController();

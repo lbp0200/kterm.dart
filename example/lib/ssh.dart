@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dartssh2/dartssh2.dart';
-import 'package:example/src/virtual_keyboard.dart';
+import 'src/virtual_keyboard.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:kterm/kterm.dart';
 
