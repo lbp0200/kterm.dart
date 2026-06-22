@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kterm/src/ui/keyboard_visibility.dart';
 
 void main() {
-  group('KeyboardVisibilty', () {
+  group('KeyboardVisibility', () {
     testWidgets(
-      'Given KeyboardVisibilty, When created, Then renders child',
+      'Given KeyboardVisibility, When created, Then renders child',
       (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
-            home: KeyboardVisibilty(
+            home: KeyboardVisibility(
               child: Text('Test'),
             ),
           ),
@@ -20,23 +20,20 @@ void main() {
     );
 
     testWidgets(
-      'Given KeyboardVisibilty with callbacks, When created, Then has callbacks',
+      'Given KeyboardVisibility with callbacks, When created, Then has callbacks',
       (tester) async {
-        var showCalled = false;
-        var hideCalled = false;
-
         await tester.pumpWidget(
           MaterialApp(
-            home: KeyboardVisibilty(
+            home: KeyboardVisibility(
               child: const Text('Test'),
-              onKeyboardShow: () => showCalled = true,
-              onKeyboardHide: () => hideCalled = true,
+              onKeyboardShow: () {},
+              onKeyboardHide: () {},
             ),
           ),
         );
 
-        final state = tester.state<KeyboardVisibiltyState>(
-          find.byType(KeyboardVisibilty),
+        final state = tester.state<KeyboardVisibilityState>(
+          find.byType(KeyboardVisibility),
         );
 
         expect(state, isNotNull);

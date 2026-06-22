@@ -317,7 +317,7 @@ class TerminalViewState extends State<TerminalView> {
       child: child,
     );
 
-    child = KeyboardVisibilty(
+    child = KeyboardVisibility(
       onKeyboardShow: _onKeyboardShow,
       child: child,
     );

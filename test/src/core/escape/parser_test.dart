@@ -451,6 +451,27 @@ void main() {
         parser.write('\x1b_Xcustom\x1b\\');
         verifyNever(handler.graphicsCommandStart(any));
       });
+
+      test('APC G with m=1 and payload sends dataChunk but not commandEnd',
+          () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        // Base64-encoded "test" = dGVzdA==
+        parser.write('\x1b_Gf=100,m=1;dGVzdA==\x1b\\');
+        verify(handler.graphicsCommandStart({'f': '100', 'm': '1'}));
+        verify(handler.graphicsDataChunk([116, 101, 115, 116])); // "test"
+        verifyNever(handler.graphicsCommandEnd());
+      });
+
+      test('APC G with m=0 and payload sends dataChunk and commandEnd', () {
+        final handler = MockEscapeHandler();
+        final parser = EscapeParser(handler);
+        // Base64-encoded "hello" = aGVsbG8=
+        parser.write('\x1b_Gf=100,m=0;aGVsbG8=\x1b\\');
+        verify(handler.graphicsCommandStart({'f': '100', 'm': '0'}));
+        verify(handler.graphicsDataChunk([104, 101, 108, 108, 111])); // "hello"
+        verify(handler.graphicsCommandEnd());
+      });
     });
   });
 }

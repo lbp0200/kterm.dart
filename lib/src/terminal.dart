@@ -885,8 +885,12 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
   @override
   void graphicsCommandStart(Map<String, String> args) {
+    // If we're already in a chunked transmission (m=1 was seen previously),
+    // keep accumulating.  Otherwise start fresh.
+    if (!_graphicsTransmissionActive) {
+      _graphicsChunks.clear();
+    }
     _currentGraphicsArgs = args;
-    _graphicsChunks.clear();
     _graphicsTransmissionActive = true;
   }
 

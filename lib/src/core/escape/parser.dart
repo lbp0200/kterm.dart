@@ -1325,16 +1325,16 @@ class EscapeParser {
     // Notify handler that graphics command is starting
     handler.graphicsCommandStart(args);
 
-    // If m=1, this is not the final chunk - just acknowledge and return
-    // The handler will wait for more chunks
-    if (moreFlag == '1') {
-      return true;
-    }
-
-    // Parse payload (Base64 encoded data)
+    // Parse payload (Base64 encoded data) — do this for ALL chunks,
+    // not just m=0.  The payload is everything between ';' and ST.
     final payloadBytes = _parseGraphicsPayload();
     if (payloadBytes.isNotEmpty) {
       handler.graphicsDataChunk(payloadBytes);
+    }
+
+    // If m=1, more chunks are coming — don't finalize yet.
+    if (moreFlag == '1') {
+      return true;
     }
 
     handler.graphicsCommandEnd();

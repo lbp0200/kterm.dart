@@ -1,3 +1,18 @@
+## [1.4.0] - 2026-06-22
+
+### Bug Fixes
+- Fix Kitty Graphics Protocol chunked transmission: `m=1` (non-final) chunks now properly parse and accumulate payload data instead of leaving raw base64 in the parser queue
+- Fix X10 mouse protocol row coordinate encoding: remove extra `+1` that caused CellOffset y to be reported as 2-based instead of 1-based
+- Fix tertiary (middle) mouse button gesture: `onTertiaryTapUp` was using `TerminalMouseButton.right` instead of `.middle`, inconsistent with `onTertiaryTapDown`
+- Fix `KeyboardVisibilty` class name typo: renamed to `KeyboardVisibility` (missing 'i')
+
+### Code Quality
+- Upgrade `kitty_protocol` dependency from `^1.2.3` to `^1.3.1`
+- Fix unused local variable warnings in `keyboard_visibility_test.dart`
+
+### Tests
+- Add APC parser tests: `m=1` with payload verifies dataChunk without commandEnd (2 tests)
+
 ## [1.3.0] - 2026-06-22
 
 ### Bug Fixes
