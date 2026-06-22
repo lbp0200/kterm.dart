@@ -1,39 +1,9 @@
-# .pubignore - kterm package optimization
-
-# AI & Dev Tools
-.atomcode/
-AGENTS.md
-.claude/
-.cursors/
-.github/
-
-# Scripts & Binaries
-bin/
-scripts/
-script/
-
-# Tests (not published)
+# Exclude tests, examples, media, and development files from the published package
 test/
-integration_test/
-
-# Example (large build files shouldn't be published)
 example/
-!example/README.md
-
-# Media (large demo images)
 media/
-
-# Build & Coverage
-build/
-.dart_tool/
-coverage/
-.packages
-
-# Lock file (library shouldn't include lock)
-pubspec.lock
-
-# Docs (must be "doc" for pub.dev)
 docs/
-
-# Local tool configs
-reasonix.toml
+scripts/
+.github/
+pubspec.lock
+coverage/

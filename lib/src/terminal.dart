@@ -204,7 +204,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
   KittyKeyboardEncoder get kittyEncoder {
     _kittyEncoder ??= KittyKeyboardEncoder();
-    _kittyEncoderWrapper ??= _KittyKeyboardEncoderWrapper(_kittyEncoder!);
+    _kittyEncoderWrapper ??=
+        _KittyKeyboardEncoderWrapper(_kittyEncoder!, _kittyEncoder!.flags);
     return _kittyEncoderWrapper!;
   }
 
@@ -863,7 +864,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   }
 
   void _updateKittyKeyboardEncoder() {
-    if (_kittyEncoder == null) return;
+    _kittyEncoder ??= KittyKeyboardEncoder();
     // Apply flags from stack - use the last flags pushed
     final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
     // Update encoder flags based on Kitty protocol flags
@@ -876,7 +877,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       reportAllKeysAsEscape: (flags & 4) != 0,
     ));
     // Recreate wrapper with updated inner encoder
-    _kittyEncoderWrapper = _KittyKeyboardEncoderWrapper(updatedInner);
+    _kittyEncoderWrapper =
+        _KittyKeyboardEncoderWrapper(updatedInner, updatedInner.flags);
   }
 
   /* Kitty Graphics Protocol */
@@ -1662,7 +1664,8 @@ class _HyperlinkEntry {
 class _KittyKeyboardEncoderWrapper extends KittyKeyboardEncoder {
   final KittyKeyboardEncoder _inner;
 
-  _KittyKeyboardEncoderWrapper(this._inner);
+  _KittyKeyboardEncoderWrapper(this._inner, KittyKeyboardEncoderFlags flags)
+      : super(flags: flags);
 
   @override
   String encode(SimpleKeyEvent event) {

@@ -83,4 +83,33 @@ dart test test/src/utils/lookup_table_test.dart      # pure-Dart smoke
 
 ## Notes
 
-(Add project-specific notes here.)
+### Kitty Keyboard Protocol
+
+The Kitty keyboard protocol (`kitty_protocol: ^1.3.0`) is implemented across three layers:
+
+- **`lib/src/core/escape/parser.dart`** — Parses `CSI > n u` (enable/disable), `CSI > + n u` (push flags), and `CSI > - u` (pop flags) from the application → terminal direction. Intermediate bytes (`+`/`-`) are stored in `_Csi.intermediates` and dispatched in `_handleKittyMode()`.
+
+- **`lib/src/terminal.dart`** — `Terminal` owns the `_kittyFlagsStack` (list of pushed flag ints), `_kittyEncoder` (lazy-created `KittyKeyboardEncoder`), and `_kittyEncoderWrapper` (which delegates `encode()` and `flags` to the inner encoder, while fixing USB HID → Kitty keycode mapping for Enter).
+
+- **`lib/src/terminal_view.dart`** — `TerminalViewState._handleKeyEvent()` intercepts key events when `terminal.kittyMode` is true. Key behavior:
+  - `Ctrl+letter` (A-Z, pure Ctrl, no Shift/Alt): sent as raw ASCII control characters (`0x01`–`0x1A`) for shell backward compatibility.
+  - `Modifier + special-key` (Shift+Enter, Ctrl+Tab, etc.): encoded via Kitty CSI u sequences.
+  - `Modifier + letter` (Alt+A, Meta+U, etc.): Kitty encoder returns empty (letter keys not in keycode map), falls back to standard `keyInput`.
+  - `Bare keys`: let Flutter IME handle.
+  - Shortcuts (copy/paste/select-all): checked BEFORE Kitty mode so they always work.
+
+### Kitty mode test files
+
+```bash
+flutter test test/kitty_*.dart                          # All Kitty protocol tests
+flutter test test/src/core/escape/parser_test.dart       # CSI parser (incl. Kitty push/pop)
+flutter test test/kitty_integration_test.dart            # Terminal integration (push/pop, Ctrl+letter)
+flutter test test/kitty_keyboard_test.dart               # Encoder key encoding tests
+flutter test test/kitty_flags_test.dart                  # Encoder flag behavior tests
+```
+
+### Known limitations
+
+- `Ctrl+Space` in Kitty mode sends Kitty escape sequence `\x1b[0;5u` instead of raw NUL (`0x00`). This is per Kitty protocol spec — applications that enable Kittly protocol are expected to handle CSI u sequences.
+- The `_onInsert` / IME path is Kitty-mode-agnostic (IME text always passes through directly). This is correct: Kitty protocol is a hardware keyboard protocol.
+- `Alt+letter` on macOS returns null from `AltInputHandler` (macOS uses Alt for special character composition).

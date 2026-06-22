@@ -1,5 +1,4 @@
-
-## kterm
+# kterm
 
 <p>
     <a href="https://github.com/lbp0200/kterm.dart/actions/workflows/dart-ci.yml">
@@ -16,25 +15,25 @@
 
 **kterm** is a high-performance terminal emulator engine for Flutter applications, with support for mobile and desktop platforms.
 
-> This package requires Flutter version >=3.0.0
+> This package requires Flutter version >=3.19.0
 
 ## Screenshots
 
 <table>
   <tr>
     <td>
-		<img width="200px" src="https://raw.githubusercontent.com/TerminalStudio/xterm.dart/master/media/demo-shell.png">
+		<img width="200px" src="https://raw.githubusercontent.com/lbp0200/kterm.dart/master/media/demo-shell.png">
     </td>
     <td>
-       <img width="200px" src="https://raw.githubusercontent.com/TerminalStudio/xterm.dart/master/media/demo-vim.png">
+       <img width="200px" src="https://raw.githubusercontent.com/lbp0200/kterm.dart/master/media/demo-vim.png">
     </td>
   <tr>
   </tr>
     <td>
-       <img width="200px" src="https://raw.githubusercontent.com/TerminalStudio/xterm.dart/master/media/demo-htop.png">
+       <img width="200px" src="https://raw.githubusercontent.com/lbp0200/kterm.dart/master/media/demo-htop.png">
     </td>
     <td>
-       <img width="200px" src="https://raw.githubusercontent.com/TerminalStudio/xterm.dart/master/media/demo-dialog.png">
+       <img width="200px" src="https://raw.githubusercontent.com/lbp0200/kterm.dart/master/media/demo-dialog.png">
     </td>
   </tr>
 </table>
@@ -56,15 +55,7 @@
 - 🔍 **Zero Ambiguity**: No more Tab vs Ctrl+I confusion in Neovim/Helix — modifier keys are always distinguishable.
 - 🔎 **Search**: Built-in search with regex, case sensitivity, and whole word matching support.
 
-**What's new in 3.0.0:**
-
-- 📱 Enhanced support for **mobile** platforms.
-- ⌨️ Integrates with Flutter's **shortcut** system.
-- 🎨 Allows changing **theme** at runtime.
-- 💪 Better **performance**. No tree rebuilds anymore.
-- 🈂️ Works with **IMEs**.
-
-## Getting Started
+### Getting Started
 
 **1.** Add this to your package's pubspec.yaml file:
 
@@ -144,6 +135,10 @@ TerminalView(
 ```dart
 terminal.setKittyMode(true);
 ```
+
+Kitty Keyboard Protocol provides:
+- **Progressive Enhancement**: Supports CSI > n u stack (push/pop) for nested terminal modes.
+- **Zero Ambiguity**: No more Tab vs Ctrl+I confusion in Neovim/Helix — modifier keys are always distinguishable.
 
 ### Search Functionality
 

@@ -233,8 +233,28 @@ class EscapeParser {
   /// Handle Kitty keyboard protocol sequences:
   /// - CSI > n u - Set mode (0 = disable, 1 = enable)
   /// - CSI > + n u - Push flags
-  /// - CSI > - n u - Pop flags
+  /// - CSI > - u - Pop flags
   bool _handleKittyMode() {
+    // Check for push/pop using intermediates (+ / -)
+    if (_csi.intermediates.isNotEmpty) {
+      final intermediate = _csi.intermediates[0];
+      // CSI > + n u - Push flags
+      if (intermediate == '+'.codeUnitAt(0)) {
+        if (_csi.params.isNotEmpty) {
+          handler.pushKittyFlags(_csi.params[0]);
+        }
+        return true;
+      }
+      // CSI > - u - Pop flags
+      if (intermediate == '-'.codeUnitAt(0)) {
+        handler.popKittyFlags();
+        return true;
+      }
+      // Unknown intermediate - ignore the sequence to avoid
+      // accidentally falling through to setKittyMode.
+      return true;
+    }
+
     if (_csi.params.isEmpty) return true;
 
     final firstParam = _csi.params[0];
@@ -244,16 +264,6 @@ class EscapeParser {
       handler.setKittyMode(false);
     } else if (firstParam == 1) {
       handler.setKittyMode(true);
-    }
-    // CSI > + n u - Push flags
-    else if (firstParam == '+'.codeUnitAt(0)) {
-      if (_csi.params.length > 1) {
-        handler.pushKittyFlags(_csi.params[1]);
-      }
-    }
-    // CSI > - n u - Pop flags
-    else if (firstParam == '-'.codeUnitAt(0)) {
-      handler.popKittyFlags();
     }
 
     return true;
@@ -271,6 +281,7 @@ class EscapeParser {
     }
 
     _csi.params.clear();
+    _csi.intermediates.clear();
 
     // test whether the csi is a `CSI ? Ps ...` or `CSI Ps ...`
     final prefix = _queue.peek();
@@ -309,7 +320,7 @@ class EscapeParser {
       }
 
       if (char > Ascii.NULL && char < Ascii.num0) {
-        // intermediates.add(char);
+        _csi.intermediates.add(char);
         continue;
       }
 
@@ -1493,7 +1504,6 @@ class _Csi {
   _Csi({
     required this.params,
     required this.finalByte,
-    // required this.intermediates,
   });
 
   int? prefix;
@@ -1501,7 +1511,8 @@ class _Csi {
   List<int> params;
 
   int finalByte;
-  // final List<int> intermediates;
+
+  final List<int> intermediates = [];
 
   @override
   String toString() {

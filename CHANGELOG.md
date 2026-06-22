@@ -1,3 +1,28 @@
+## [1.3.0] - 2026-06-22
+
+### Bug Fixes
+- Fix Ctrl+letter combinations (Ctrl+U/A/E/C, etc.) being silently dropped in Kitty Keyboard Protocol mode — sends raw ASCII control characters for shell backward compatibility
+- Fix Kitty Keyboard Protocol push/pop flag stack: `CSI > + n u` and `CSI > - u` sequences now correctly parse intermediate bytes (`+`/`-`) instead of stripping them
+- Fix `_KittyKeyboardEncoderWrapper.flags` returning default values (wrapper now delegates `flags` to the inner encoder via super constructor)
+- Fix `_updateKittyKeyboardEncoder` lazy init skipping the first push/pop call
+- Fix KeyUp events sending empty strings to `onOutput` when Kitty encoder cannot encode the key
+- Fix modifier+letter keys (Alt+A, Meta+U, etc.) being dropped when Kitty encoder returns empty — fall back to standard keytab input
+- Fix copy/paste/select-all shortcuts not working in Kitty mode (checked before Kitty dispatch now)
+- Fix unknown CSI intermediate bytes in `>+` sequences accidentally triggering `setKittyMode`
+
+### Code Quality
+- Refactor `_handleKeyEvent` (180+ lines) into clean dispatcher: extract `_handleKittyKeyEvent` and `_tryKeyInput` helper, eliminating 3 duplicate keyInput patterns
+- Add `.pubignore` to exclude test, example, media, docs from published package
+
+### Documentation
+- Update AGENTS.md with comprehensive Kitty Keyboard Protocol architecture, test commands, and known limitations
+- Fix README: correct Flutter version requirement to `>=3.19.0`, fix screenshot URLs pointing to old `xterm.dart` repo, remove misleading "What's new in 3.0.0" section from fork
+- Fix README: merge duplicated "Key Features" and "Features" sections
+
+### Tests
+- Add CSI parser tests: push/pop with `+`/`-` intermediate bytes (5 tests)
+- Add Terminal integration tests: push/pop flag stack, Ctrl+letter control codes via keyInput (9 tests, all 26 Ctrl+A–Z verified)
+
 ## [1.2.0] - 2025-07-11
 
 ### Bug Fixes

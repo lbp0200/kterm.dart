@@ -485,132 +485,160 @@ class TerminalViewState extends State<TerminalView> {
     setState(() => _composingText = text);
   }
 
+  /// Try to send the key through the standard keytab/keyInput pipeline.
+  /// Returns `true` if the key was handled and the view should scroll.
+  bool _tryKeyInput(
+    LogicalKeyboardKey logicalKey, {
+    bool ctrl = false,
+    bool alt = false,
+    bool shift = false,
+  }) {
+    final key = keyToTerminalKey(logicalKey);
+    if (key == null) return false;
+    final handled = widget.terminal.keyInput(
+      key,
+      ctrl: ctrl,
+      alt: alt,
+      shift: shift,
+    );
+    if (handled) _scrollToBottom();
+    return handled;
+  }
+
+  /// Handle a key event under Kitty keyboard protocol mode.
+  /// Returns a [KeyEventResult] indicating whether the event was consumed.
+  KeyEventResult _handleKittyKeyEvent(KeyEvent event) {
+    final keyboard = HardwareKeyboard.instance;
+    final hasModifiers = keyboard.isShiftPressed ||
+        keyboard.isControlPressed ||
+        keyboard.isAltPressed ||
+        keyboard.isMetaPressed;
+
+    final isSpecialKey = _isSpecialKey(event.logicalKey);
+
+    // Handle KeyUp events - only encode if reportAllKeysAsEscape or modifiers pressed
+    if (event is KeyUpEvent) {
+      final shouldEncodeKeyUp =
+          widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
+              hasModifiers;
+      if (shouldEncodeKeyUp) {
+        final seq = _encodeWithKitty(event);
+        if (seq != null && seq.isNotEmpty) {
+          widget.terminal.onOutput?.call(seq);
+          return KeyEventResult.handled;
+        }
+      }
+      return KeyEventResult.ignored;
+    }
+
+    // First pass: use Kitty encoding for modifier + special key combinations
+    // (Shift+Enter, Ctrl+Tab, etc.) or when reportAllKeysAsEscape is enabled.
+    final useKittyNow = hasModifiers
+        ? isSpecialKey
+        : widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape;
+
+    if (useKittyNow) {
+      final seq = _encodeWithKitty(event);
+      if (seq != null && seq.isNotEmpty) {
+        widget.terminal.onOutput?.call(seq);
+        return KeyEventResult.handled;
+      }
+    }
+
+    // KeyDown / KeyRepeat: try standard handling with Kitty encoding fallback
+    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+      // Ctrl+letter (A-Z, pure Ctrl, no Shift/Alt):
+      // Send raw ASCII control characters for shell backward compatibility.
+      if (keyboard.isControlPressed &&
+          !keyboard.isShiftPressed &&
+          !keyboard.isAltPressed) {
+        final stdKey = keyToTerminalKey(event.logicalKey);
+        if (stdKey != null &&
+            stdKey.index >= TerminalKey.keyA.index &&
+            stdKey.index <= TerminalKey.keyZ.index) {
+          if (_tryKeyInput(event.logicalKey, ctrl: true)) {
+            return KeyEventResult.handled;
+          }
+        }
+      }
+
+      // Decide whether to use Kitty encoding vs. standard handling
+      final useKittyEncoding =
+          widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
+              hasModifiers;
+
+      if (!useKittyEncoding) {
+        // Standard handling for bare keys (no modifiers, not report-all)
+        if (event.logicalKey == LogicalKeyboardKey.tab) {
+          widget.terminal.textInput('\t');
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.enter) {
+          widget.terminal.textInput('\r');
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.backspace) {
+          widget.terminal.textInput('\x7f');
+          return KeyEventResult.handled;
+        }
+        // Other special keys (arrows, home, end, page up/down, etc.)
+        if (_tryKeyInput(
+          event.logicalKey,
+          ctrl: keyboard.isControlPressed,
+          alt: keyboard.isAltPressed,
+          shift: keyboard.isShiftPressed,
+        )) {
+          return KeyEventResult.handled;
+        }
+        // Alphanumeric keys: let Flutter's TextInputClient handle them
+        return KeyEventResult.ignored;
+      }
+
+      // Try Kitty encoding
+      final seq = _encodeWithKitty(event);
+      if (seq != null && seq.isNotEmpty) {
+        widget.terminal.onOutput?.call(seq);
+        return KeyEventResult.handled;
+      }
+
+      // Kitty encoding produced nothing — fall back to standard keytab input
+      // for modifier+letter combinations (Alt+A, Meta+U, etc.)
+      if (_tryKeyInput(
+        event.logicalKey,
+        ctrl: keyboard.isControlPressed,
+        alt: keyboard.isAltPressed,
+        shift: keyboard.isShiftPressed,
+      )) {
+        return KeyEventResult.handled;
+      }
+
+      return KeyEventResult.ignored;
+    }
+
+    // For alphanumeric keys, let Flutter's TextInputClient handle them
+    return KeyEventResult.ignored;
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode focusNode, KeyEvent event) {
     final resultOverride = widget.onKeyEvent?.call(focusNode, event);
     if (resultOverride != null && resultOverride != KeyEventResult.ignored) {
       return resultOverride;
     }
 
-    // Intercept with Kitty keyboard protocol if enabled
-    if (widget.terminal.kittyMode) {
-      // Check if any modifiers are pressed
-      final keyboard = HardwareKeyboard.instance;
-      final hasModifiers = keyboard.isShiftPressed ||
-          keyboard.isControlPressed ||
-          keyboard.isAltPressed ||
-          keyboard.isMetaPressed;
-
-      // Determine if this is a special key (Enter, Tab, Backspace, Space, Arrows)
-      final isSpecialKey = _isSpecialKey(event.logicalKey);
-
-      // Handle KeyUp events in Kitty mode - only encode if reportAllKeysAsEscape or modifiers
-      if (event is KeyUpEvent) {
-        // Only send KeyUp encoding when:
-        // 1. reportAllKeysAsEscape is true, OR
-        // 2. Modifiers are pressed
-        // Otherwise, ignore KeyUp to avoid duplicate output
-        final shouldEncodeKeyUp =
-            widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
-                hasModifiers;
-
-        if (shouldEncodeKeyUp) {
-          final seq = _encodeWithKitty(event);
-          if (seq != null) {
-            widget.terminal.onOutput?.call(seq);
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      }
-
-      // Only use Kitty encoding for:
-      // 1. Special keys with modifiers (Shift+Enter, Ctrl+Tab, etc.)
-      // 2. When reportAll enabled
-      // For alphanumeric keys (like 'A'), always let IME handleKeysAsEscape is them
-      final shouldUseKittyEncoding = hasModifiers
-          ? isSpecialKey // Modifier + special key → Kitty
-          : widget
-              .terminal.kittyEncoder.flags.reportAllKeysAsEscape; // No modifier
-
-      if (shouldUseKittyEncoding) {
-        final seq = _encodeWithKitty(event);
-        if (seq != null && seq.isNotEmpty) {
-          widget.terminal.onOutput?.call(seq);
-          return KeyEventResult.handled;
-        }
-      }
-
-      // Default Mode:
-      // - Bare Tab/Enter/Backspace: send standard ASCII directly
-      // - Alphanumeric keys: let Flutter IME handle them
-      // - Only send Kitty encoding if reportAllKeysAsEscape is true OR modifiers pressed
-      if (event is KeyDownEvent || event is KeyRepeatEvent) {
-        // Check if we should use Kitty encoding or standard handling
-        // Kitty encoding should only be used when:
-        // 1. reportAllKeysAsEscape is true, OR
-        // 2. Modifiers are pressed
-        // Otherwise, use standard character input
-        final useKittyEncoding =
-            widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
-                hasModifiers;
-
-        if (!useKittyEncoding) {
-          // Use standard character input for bare keys
-          if (event.logicalKey == LogicalKeyboardKey.tab) {
-            widget.terminal.textInput('\t');
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
-            widget.terminal.textInput('\r');
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.backspace) {
-            widget.terminal.textInput('\x7f');
-            return KeyEventResult.handled;
-          }
-          // For other special keys (arrows, home, end, page up/down, etc.),
-          // use standard keytab-based input
-          final stdKey = keyToTerminalKey(event.logicalKey);
-          if (stdKey != null) {
-            final handled = widget.terminal.keyInput(
-              stdKey,
-              ctrl: HardwareKeyboard.instance.isControlPressed,
-              alt: HardwareKeyboard.instance.isAltPressed,
-              shift: HardwareKeyboard.instance.isShiftPressed,
-            );
-            if (handled) {
-              _scrollToBottom();
-              return KeyEventResult.handled;
-            }
-          }
-          // For alphanumeric keys, let Flutter's TextInputClient handle them
-          return KeyEventResult.ignored;
-        }
-
-        // Get the Kitty encoding
-        final seq = _encodeWithKitty(event);
-        if (seq != null && seq.isNotEmpty) {
-          // Send the Kitty encoding
-          widget.terminal.onOutput?.call(seq);
-          return KeyEventResult.handled;
-        }
-
-        // Fallback if Kitty encoding is empty
-        return KeyEventResult.ignored;
-      }
-
-      // For alphanumeric keys, let Flutter's TextInputClient handle them
-      return KeyEventResult.ignored;
-    }
-
+    // Check shortcuts BEFORE Kitty mode, so copy/paste/select-all work
+    // regardless of Kitty keyboard protocol state.
     // ignore: invalid_use_of_protected_member
     final shortcutResult = _shortcutManager.handleKeypress(
       focusNode.context!,
       event,
     );
-
     if (shortcutResult != KeyEventResult.ignored) {
       return shortcutResult;
+    }
+
+    // Intercept with Kitty keyboard protocol if enabled
+    if (widget.terminal.kittyMode) {
+      return _handleKittyKeyEvent(event);
     }
 
     if (event is KeyUpEvent) {

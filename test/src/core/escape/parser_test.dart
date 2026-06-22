@@ -223,6 +223,37 @@ void main() {
         parser.write('\x1b[>1u');
         verify(parser.handler.setKittyMode(true));
       });
+
+      test('> + 1 u pushes flags', () {
+        final parser = EscapeParser(MockEscapeHandler());
+        parser.write('\x1b[>+1u');
+        verify(parser.handler.pushKittyFlags(1));
+      });
+
+      test('> + 5 u pushes flags value 5', () {
+        final parser = EscapeParser(MockEscapeHandler());
+        parser.write('\x1b[>+5u');
+        verify(parser.handler.pushKittyFlags(5));
+      });
+
+      test('> - u pops flags', () {
+        final parser = EscapeParser(MockEscapeHandler());
+        parser.write('\x1b[>-u');
+        verify(parser.handler.popKittyFlags());
+      });
+
+      test('> - 1 u pops flags (numeric param ignored)', () {
+        final parser = EscapeParser(MockEscapeHandler());
+        parser.write('\x1b[>-1u');
+        verify(parser.handler.popKittyFlags());
+      });
+
+      test('> + u without param does not push', () {
+        final parser = EscapeParser(MockEscapeHandler());
+        parser.write('\x1b[>+u');
+        verifyNever(parser.handler.pushKittyFlags(0));
+        verifyNever(parser.handler.popKittyFlags());
+      });
     });
 
     group('SGR style attributes', () {
