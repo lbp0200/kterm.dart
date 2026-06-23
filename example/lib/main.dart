@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'src/platform_menu.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
@@ -15,15 +14,6 @@ Future<void> main() async {
   runApp(MyApp());
 }
 
-bool get isDesktop {
-  if (kIsWeb) return false;
-  return [
-    TargetPlatform.windows,
-    TargetPlatform.linux,
-    TargetPlatform.macOS,
-  ].contains(defaultTargetPlatform);
-}
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -31,7 +21,6 @@ class MyApp extends StatelessWidget {
       title: 'kterm demo',
       debugShowCheckedModeBanner: false,
       home: AppPlatformMenu(child: Home()),
-      // shortcuts: ,
     );
   }
 }
@@ -81,8 +70,8 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    super.initState();
     _startPty();
+    super.initState();
   }
 
   void _toggleKittyMode() {

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -73,7 +72,7 @@ class TerminalView extends StatefulWidget {
   final ScrollController? scrollController;
 
   /// Should this widget automatically notify the underlying terminal when its
-  /// size changes. [true] by default.
+  /// size changes. `true` by default.
   final bool autoResize;
 
   /// Opacity of the terminal background. Set to 0 to make the terminal
@@ -114,11 +113,11 @@ class TerminalView extends StatefulWidget {
   final TerminalCursorType cursorType;
 
   /// Whether to always show the cursor. This is useful for debugging.
-  /// [false] by default.
+  /// `false` by default.
   final bool alwaysShowCursor;
 
   /// Workaround to detect delete key for platforms and IMEs that does not
-  /// emit hardware delete event. Prefered on mobile platforms. [false] by
+  /// emit hardware delete event. Prefered on mobile platforms. `false` by
   /// default.
   final bool deleteDetection;
 
@@ -173,8 +172,13 @@ class TerminalViewState extends State<TerminalView> {
 
   bool _showSearchBar = false;
 
-  RenderTerminal get renderTerminal =>
-      _viewportKey.currentContext!.findRenderObject() as RenderTerminal;
+  RenderTerminal get renderTerminal {
+    final context = _viewportKey.currentContext;
+    if (context == null) {
+      throw StateError('renderTerminal accessed before TerminalView is built');
+    }
+    return context.findRenderObject() as RenderTerminal;
+  }
 
   @override
   void initState() {
@@ -242,6 +246,8 @@ class TerminalViewState extends State<TerminalView> {
 
   @override
   Widget build(BuildContext context) {
+    final viewPadding = MediaQuery.of(context).padding;
+    final textScaler = widget.textScaler ?? MediaQuery.textScalerOf(context);
     Widget child = Scrollable(
       key: _scrollableKey,
       controller: _scrollController,
@@ -251,10 +257,10 @@ class TerminalViewState extends State<TerminalView> {
           terminal: widget.terminal,
           controller: _controller,
           offset: offset,
-          padding: MediaQuery.of(context).padding,
+          padding: viewPadding,
           autoResize: widget.autoResize,
           textStyle: widget.textStyle,
-          textScaler: widget.textScaler ?? MediaQuery.textScalerOf(context),
+          textScaler: textScaler,
           theme: widget.theme,
           focusNode: _focusNode,
           cursorType: widget.cursorType,
@@ -432,7 +438,7 @@ class TerminalViewState extends State<TerminalView> {
     widget.onTapUp?.call(details, offset);
   }
 
-  void _onTapDown(_) {
+  void _onTapDown(TapDownDetails details) {
     if (_controller.selection != null) {
       _controller.clearSelection();
     } else {
@@ -463,6 +469,15 @@ class TerminalViewState extends State<TerminalView> {
     // 无法在 _handleKeyEvent 中区分，故在此检测 Shift 状态。
     if (text == '\r' && HardwareKeyboard.instance.isShiftPressed) {
       widget.terminal.textInput('\n');
+      _scrollToBottom();
+      return;
+    }
+
+    // 多字符文本来自 IME 粘贴操作（而非逐字按键），
+    // 使用 terminal.paste() 确保 ANSI 过滤、控制字符清理、
+    // 换行符规范化以及 bracketed paste 模式正确处理。
+    if (text.length > 1) {
+      widget.terminal.paste(text);
       _scrollToBottom();
       return;
     }
@@ -571,14 +586,17 @@ class TerminalViewState extends State<TerminalView> {
         // Standard handling for bare keys (no modifiers, not report-all)
         if (event.logicalKey == LogicalKeyboardKey.tab) {
           widget.terminal.textInput('\t');
+          _scrollToBottom();
           return KeyEventResult.handled;
         }
         if (event.logicalKey == LogicalKeyboardKey.enter) {
           widget.terminal.textInput('\r');
+          _scrollToBottom();
           return KeyEventResult.handled;
         }
         if (event.logicalKey == LogicalKeyboardKey.backspace) {
           widget.terminal.textInput('\x7f');
+          _scrollToBottom();
           return KeyEventResult.handled;
         }
         // Other special keys (arrows, home, end, page up/down, etc.)

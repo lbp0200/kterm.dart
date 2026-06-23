@@ -452,8 +452,7 @@ void main() {
         verifyNever(handler.graphicsCommandStart(any));
       });
 
-      test('APC G with m=1 and payload sends dataChunk but not commandEnd',
-          () {
+      test('APC G with m=1 and payload sends dataChunk but not commandEnd', () {
         final handler = MockEscapeHandler();
         final parser = EscapeParser(handler);
         // Base64-encoded "test" = dGVzdA==

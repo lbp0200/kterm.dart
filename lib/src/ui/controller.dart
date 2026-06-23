@@ -56,7 +56,7 @@ class TerminalController with ChangeNotifier {
   bool get suspendedPointerInputs => _suspendPointerInputs;
   bool _suspendPointerInputs;
 
-  List<TerminalHighlight> get highlights => _highlights;
+  List<TerminalHighlight> get highlights => List.unmodifiable(_highlights);
   final _highlights = <TerminalHighlight>[];
 
   // Search state
@@ -73,10 +73,10 @@ class TerminalController with ChangeNotifier {
   bool get isSearching => _isSearching;
 
   /// Current search options.
-  Set<SearchOption> get searchOptions => _searchOptions;
+  Set<SearchOption> get searchOptions => Set.unmodifiable(_searchOptions);
 
   /// All search results matching the current pattern.
-  List<BufferRange> get searchResults => _searchResults;
+  List<BufferRange> get searchResults => List.unmodifiable(_searchResults);
 
   /// The index of the current search result (0-based).
   /// -1 if no result is selected.

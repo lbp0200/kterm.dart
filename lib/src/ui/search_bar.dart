@@ -105,7 +105,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
     final iconColor = isDark ? Colors.white70 : Colors.black54;
 
     return KeyboardListener(
-      focusNode: FocusNode(),
+      focusNode: _focusNode,
       onKeyEvent: _handleKeyEvent,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

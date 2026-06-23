@@ -547,7 +547,7 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     int firstLine,
     int lastLine,
   ) {
-    for (var highlight in _controller.highlights) {
+    for (var highlight in highlights) {
       final range = highlight.range?.normalized;
 
       if (range == null ||

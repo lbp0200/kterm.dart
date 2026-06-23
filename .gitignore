@@ -99,5 +99,8 @@ docs/flutter_pty
 # Golden test failure artifacts
 test/src/failures/
 
+# Generated mock files
+*.mocks.dart
+
 # Local tool configs
 reasonix.toml

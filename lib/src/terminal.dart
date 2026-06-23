@@ -42,11 +42,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   void Function()? onBell;
 
   /// Function that is called when the program requests the terminal to change
-  /// the title of the window to [title].
+  /// the title of the window.
   void Function(String title)? onTitleChange;
 
   /// Function that is called when the program requests the terminal to change
-  /// the icon of the window. [icon] is the name of the icon.
+  /// the icon of the window.
   void Function(String icon)? onIconChange;
 
   /// Function that is called when the terminal emits data to the underlying
@@ -116,14 +116,14 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
   final _emitter = const EscapeEmitter();
 
-  late var _buffer = _mainBuffer;
-
   late final _mainBuffer = Buffer(
     this,
     maxLines: maxLines,
     isAltBuffer: false,
     wordSeparators: wordSeparators,
   );
+
+  late var _buffer = _mainBuffer;
 
   late final _altBuffer = Buffer(
     this,
@@ -845,6 +845,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void setKittyMode(bool enabled) {
     _kittyMode = enabled;
+    notifyListeners();
   }
 
   /// Handle CSI > + n u - Push (enable) Kitty flags
@@ -1567,7 +1568,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   ///
   /// The terminal sends this when it receives `ESC ] 777 ; notify ; title ; body ST`.
   /// This is used for long-running commands to notify the user when complete.
-  /// Your implementation should display a desktop notification with [title] and [body].
+  /// Your implementation should display a desktop notification with `title` and `body`.
   void Function(String title, String body)? onNotification;
 
   @override

@@ -114,18 +114,6 @@ class _AppPlatformMenuState extends State<AppPlatformMenu> {
                     if (primaryContext == null) {
                       return;
                     }
-                    print(primaryContext);
-                    try {
-                      final action = Actions.maybeFind<Intent>(
-                        primaryContext,
-                        intent: const SelectAllTextIntent(
-                          SelectionChangedCause.keyboard,
-                        ),
-                      );
-                      print('action: $action');
-                    } catch (e) {
-                      print(e);
-                    }
                     Actions.invoke<Intent>(
                       primaryContext,
                       const SelectAllTextIntent(SelectionChangedCause.keyboard),

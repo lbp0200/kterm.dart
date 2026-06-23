@@ -10,13 +10,11 @@ void main() {
 
   test('SGR 1004 enable focus tracking', () {
     terminal.write('\x1b[?1004h');
-    // Just verify no crash - focus tracking is internal state
-    expect(true, isTrue);
+    expect(terminal.reportFocusMode, isTrue);
   });
 
   test('SGR 1006 extended mouse encoding', () {
     terminal.write('\x1b[?1006h');
-    // Just verify no crash - extended encoding is internal state
-    expect(true, isTrue);
+    expect(terminal.mouseReportMode, equals(MouseReportMode.sgr));
   });
 }

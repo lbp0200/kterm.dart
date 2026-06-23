@@ -24,12 +24,12 @@ class TerminalActions extends StatelessWidget {
       actions: {
         PasteTextIntent: CallbackAction<PasteTextIntent>(
           onInvoke: (intent) async {
-            final data = await Clipboard.getData(Clipboard.kTextPlain);
-            final text = data?.text;
-            if (text != null) {
-              terminal.paste(text);
-              controller.clearSelection();
-            }
+            // macOS 上 Cmd+V 会同时触发快捷键路径和 IME 路径：
+            //   1. 快捷键路径：此处读取剪贴板并调用 terminal.paste()
+            //   2. IME 路径：系统通过 updateEditingValue → _onInsert 再次投递文本
+            // 为避免重复粘贴和 IME 高亮导致的全选问题，此处仅清空选择，
+            // 实际的粘贴操作由 _onInsert（多字符文本检测）委托给 terminal.paste() 处理。
+            controller.clearSelection();
             return null;
           },
         ),

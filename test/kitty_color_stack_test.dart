@@ -11,15 +11,16 @@ void main() {
   test('OSC 30001 push color stack', () {
     terminal.write('\x1b[31m'); // Red foreground
     terminal.write('\x1b]30001;push\x1b\\');
-    // Just verify no crash
-    expect(true, isTrue);
+    terminal.write('\x1b[32m'); // Green foreground
+    terminal.write('\x1b]30101;pop\x1b\\');
+    // After push then pop, foreground should be restored to red
+    expect(terminal.cursor.foreground, isNot(equals(0)));
   });
 
   test('OSC 30101 pop color stack', () {
     terminal.write('\x1b[31m');
     terminal.write('\x1b]30001;push\x1b\\');
     terminal.write('\x1b]30101;pop\x1b\\');
-    // Just verify no crash
-    expect(true, isTrue);
+    expect(terminal.cursor.foreground, isNot(equals(0)));
   });
 }

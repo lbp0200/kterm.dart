@@ -367,17 +367,6 @@ class EscapeParser {
     '@'.codeUnitAt(0): _csiHandleInsertBlankCharacters,
   });
 
-  /// `ESC [ Ps a` Cursor Horizontal Position Relative (HPR)
-  ///
-  /// https://terminalguide.namepad.de/seq/csi_sa/
-  // void _csiHandleCursorHorizontalRelative() {
-  //   if (_csi.params.isEmpty) {
-  //     handler.cursorHorizontal(1);
-  //   } else {
-  //     handler.cursorHorizontal(_csi.params[0]);
-  //   }
-  // }
-
   /// `ESC [ Ps b` Repeat Previous Character (REP)
   ///
   /// https://terminalguide.namepad.de/seq/csi_sb/
@@ -482,8 +471,8 @@ class EscapeParser {
       return handler.resetCursorStyle();
     }
 
-    // This is a workaround for a bug in the analyzer.
-    // ignore: dead_code
+    // Note: the analyzer used to emit false-positive dead_code
+    // on this loop; the issue has since been fixed.
     for (var i = 0; i < _csi.params.length; i++) {
       final param = params[i];
       switch (param) {

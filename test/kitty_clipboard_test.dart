@@ -10,12 +10,8 @@ void main() {
   });
 
   test('OSC 52 get clipboard query', () {
-    // OSC 52 ; c ; ? - query clipboard
-    final outputs = <String>[];
-    terminal.onOutput = (output) => outputs.add(output);
+    // Just verify no crash - clipboard query depends on platform
     terminal.write('\x1b]52;c;?\x1b\\');
-    // Should trigger clipboard read callback
-    expect(outputs, isEmpty); // Callback triggers async, just verify no crash
   });
 
   test('OSC 52 set clipboard', () {
@@ -23,14 +19,12 @@ void main() {
     terminal.onClipboardWrite = (data, target) {
       clipboardData = data;
     };
-    // OSC 52 ; c ; base64("hello") = aGVsbG8=
     terminal.write('\x1b]52;c;aGVsbG8=\x1b\\');
     expect(clipboardData, equals('hello'));
   });
 
   test('OSC 5522 extended clipboard sync start', () {
+    // Just verify no crash - clipboard sync is protocol-level
     terminal.write('\x1b]5522;sync;start\x1b\\');
-    // Just verify no crash
-    expect(true, isTrue);
   });
 }

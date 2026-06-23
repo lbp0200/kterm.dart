@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kterm/src/base/observable.dart';
 
 class TestObserver with Observable {
-  int callCount = 0;
-
   void trigger() {
     notifyListeners();
   }
@@ -20,30 +18,37 @@ void main() {
 
         observer.addListener(() => callCount++);
 
-        expect(observer.listeners.length, equals(1));
+        observer.trigger();
+        expect(callCount, equals(1));
       });
 
       test(
           'Given multiple listeners, When addListener called, Then all listeners are registered',
           () {
         final observer = TestObserver();
+        int callCount1 = 0;
+        int callCount2 = 0;
 
-        observer.addListener(() {});
-        observer.addListener(() {});
+        observer.addListener(() => callCount1++);
+        observer.addListener(() => callCount2++);
 
-        expect(observer.listeners.length, equals(2));
+        observer.trigger();
+        expect(callCount1, equals(1));
+        expect(callCount2, equals(1));
       });
 
       test(
           'Given duplicate listener, When addListener called, Then listener is only added once',
           () {
         final observer = TestObserver();
-        void listener() {}
+        int callCount = 0;
+        void listener() => callCount++;
 
         observer.addListener(listener);
         observer.addListener(listener);
 
-        expect(observer.listeners.length, equals(1));
+        observer.trigger();
+        expect(callCount, equals(1));
       });
     });
 
@@ -52,12 +57,14 @@ void main() {
           'Given registered listener, When removeListener called, Then listener is removed',
           () {
         final observer = TestObserver();
-        void listener() {}
+        int callCount = 0;
+        void listener() => callCount++;
 
         observer.addListener(listener);
         observer.removeListener(listener);
 
-        expect(observer.listeners.isEmpty, isTrue);
+        observer.trigger();
+        expect(callCount, equals(0));
       });
 
       test(
@@ -77,7 +84,7 @@ void main() {
         int callCount = 0;
 
         observer.addListener(() => callCount++);
-        observer.notifyListeners();
+        observer.trigger();
 
         expect(callCount, equals(1));
       });
@@ -91,7 +98,7 @@ void main() {
 
         observer.addListener(() => callCount1++);
         observer.addListener(() => callCount2++);
-        observer.notifyListeners();
+        observer.trigger();
 
         expect(callCount1, equals(1));
         expect(callCount2, equals(1));
@@ -100,14 +107,10 @@ void main() {
       test(
           'Given listener removed during notification, When notifyListeners called, Then does not crash',
           () {
-        // Note: This test documents that modifying the set during iteration
-        // will throw ConcurrentModificationError - this is expected behavior
         final observer = TestObserver();
         void listener2() {}
 
         observer.addListener(listener2);
-        // The Observable doesn't protect against modification during iteration
-        // This is by design - if you need that, use a copy of listeners
       });
     });
   });

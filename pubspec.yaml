@@ -2,6 +2,31 @@ name: kterm
 description: kterm is a fast and fully-featured terminal emulator for Flutter applications, with support for mobile and desktop platforms.
 version: 1.4.0
 homepage: https://github.com/lbp0200/kterm.dart
+repository: https://github.com/lbp0200/kterm.dart
+issue_tracker: https://github.com/lbp0200/kterm.dart/issues
+topics:
+  - terminal
+  - emulator
+  - flutter
+  - tty
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+screenshots:
+  - description: 'Terminal with shell prompt'
+    path: media/demo-shell.png
+  - description: 'Terminal running vim'
+    path: media/demo-vim.png
+  - description: 'Terminal running htop'
+    path: media/demo-htop.png
+  - description: 'Terminal with dialog'
+    path: media/demo-dialog.png
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -19,7 +44,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   test: ^1.25.0
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   mockito: ^5.3.1
   build_runner: ^2.1.1
 
