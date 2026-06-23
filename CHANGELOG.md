@@ -1,3 +1,9 @@
+## [1.4.1] - 2026-06-23
+
+### Bug Fixes
+- Fix paste shortcut (Cmd+V/Ctrl+V) broken on Linux/Windows — `PasteTextIntent` handler now reads clipboard directly instead of depending on macOS-only IME path
+- Fix macOS IME paste duplicate: skip IME text when shortcut already handled paste
+
 ## [1.4.0] - 2026-06-22
 
 ### Bug Fixes

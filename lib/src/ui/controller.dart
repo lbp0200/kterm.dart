@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 import 'package:kterm/src/base/disposable.dart';
@@ -159,6 +161,33 @@ class TerminalController with ChangeNotifier {
     _selectionExtent?.dispose();
     _selectionExtent = null;
     notifyListeners();
+  }
+
+  int _pendingPasteCount = 0;
+
+  /// Marks that a paste was triggered by keyboard shortcut.
+  ///
+  /// On macOS, Cmd+V triggers both the shortcut path and the IME path.
+  /// This counter allows [consumePasteFromShortcut] to detect and skip
+  /// the IME duplicate. Auto-clears after 200ms to avoid interfering
+  /// with subsequent IME input.
+  void markPasteFromShortcut() {
+    _pendingPasteCount++;
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (_pendingPasteCount > 0) {
+        _pendingPasteCount--;
+      }
+    });
+  }
+
+  /// Returns true if a paste was recently triggered by shortcut,
+  /// consuming one pending count.
+  bool consumePasteFromShortcut() {
+    if (_pendingPasteCount > 0) {
+      _pendingPasteCount--;
+      return true;
+    }
+    return false;
   }
 
   // Select which type of pointer events are send to the terminal.

@@ -473,10 +473,19 @@ class TerminalViewState extends State<TerminalView> {
       return;
     }
 
-    // 多字符文本来自 IME 粘贴操作（而非逐字按键），
+    // 多字符文本可能来自：
+    // 1. IME 粘贴（macOS 上 Cmd+V 的 IME 路径）
+    // 2. 某些没有通过快捷键路径粘贴的平台（回退路径）
+    // 3. IME 输入法确认（如中文/日文输入）
+    //
     // 使用 terminal.paste() 确保 ANSI 过滤、控制字符清理、
     // 换行符规范化以及 bracketed paste 模式正确处理。
     if (text.length > 1) {
+      // macOS 上快捷键路径已处理粘贴，跳过 IME 重复
+      if (_controller.consumePasteFromShortcut()) {
+        _scrollToBottom();
+        return;
+      }
       widget.terminal.paste(text);
       _scrollToBottom();
       return;
