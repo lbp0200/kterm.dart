@@ -1,7 +1,11 @@
-# Exclude tests, examples, media, and development files from the published package
+# Exclude tests, examples, media (except screenshots), and development files
 test/
 example/
-media/
+media/*
+!media/demo-shell.png
+!media/demo-vim.png
+!media/demo-htop.png
+!media/demo-dialog.png
 docs/
 scripts/
 .github/
