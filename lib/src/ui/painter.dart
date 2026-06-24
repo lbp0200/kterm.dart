@@ -250,8 +250,11 @@ class TerminalPainter {
     double cellWidth,
   ) {
     final text = String.fromCharCodes(chars);
-    final cacheKey =
-        text.hashCode ^ color.hashCode ^ (bold ? 1 : 0) ^ (italic ? 2 : 0);
+    final cacheKey = text.hashCode ^
+        color.hashCode ^
+        (bold ? 1 : 0) ^
+        (italic ? 2 : 0) ^
+        (underline ? 4 : 0);
 
     var paragraph = _paragraphCache.getLayoutFromCache(cacheKey);
     if (paragraph == null) {
@@ -303,13 +306,6 @@ class TerminalPainter {
     final y = cellHeight - 1; // Bottom of the cell
 
     switch (underlineStyle) {
-      case CellAttr.underlineStyleSingle:
-        canvas.drawLine(
-          Offset(offset.dx, y),
-          Offset(offset.dx + cellWidth, y),
-          paint,
-        );
-        break;
       case CellAttr.underlineStyleDouble:
         // Double underline - two lines
         canvas.drawLine(

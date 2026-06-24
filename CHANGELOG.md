@@ -1,3 +1,10 @@
+## [1.5.0] - 2026-06-24
+
+### Bug Fixes
+
+- **Fix htop-style apps showing spurious underlines on letters**: `_flushRun` paragraph cache key was missing the `underline` flag, causing cache collisions between underlined and non-underlined runs with identical text/color/weight/italic — `lib/src/ui/painter.dart`
+- **Remove dead code**: `paintCellUnderline` had an unreachable `CellAttr.underlineStyleSingle` switch case (single underline is handled by Flutter `TextStyle` via `_flushRun`) — `lib/src/ui/painter.dart`
+
 ## [1.4.2] - 2026-06-24
 
 ### Performance
