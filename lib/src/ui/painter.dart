@@ -150,8 +150,10 @@ class TerminalPainter {
     );
   }
 
-  /// Paints [line] to [canvas] at [offset]. The x offset of [offset] is usually
-  /// 0, and the y offset is the top of the line.
+  /// Paints [line] to [canvas] at [offset].
+  ///
+  /// Consecutive same-style characters are batched into a single paragraph
+  /// to minimize expensive `drawParagraph` calls.
   void paintLine(
     Canvas canvas,
     Offset offset,
@@ -159,29 +161,115 @@ class TerminalPainter {
   ) {
     final cellData = CellData.empty();
     final cellWidth = _cellSize.width;
+    final lineLength = line.length;
 
-    for (var i = 0; i < line.length; i++) {
+    // 第一遍：背景绘制（逐单元格，不能合并）
+    for (var i = 0; i < lineLength; i++) {
       line.getCellData(i, cellData);
-
       final charWidth = cellData.content >> CellContent.widthShift;
-
-      // Skip zero-width or negative-width cells (control characters)
       if (charWidth > 0) {
-        final cellOffset = offset.translate(i * cellWidth, 0);
-        paintCell(canvas, cellOffset, cellData);
+        paintCellBackground(
+            canvas, offset.translate(i * cellWidth, 0), cellData);
       }
+      if (charWidth == 2) i++;
+    }
 
-      if (charWidth == 2) {
-        i++;
+    // 第二遍：前景文字合并为段落
+    int? rStart;
+    int rHash = 0;
+    Color rColor = _theme.foreground;
+    bool rBold = false, rItalic = false, rUnderline = false;
+    final rChars = <int>[];
+
+    for (var i = 0; i < lineLength; i++) {
+      line.getCellData(i, cellData);
+      final charWidth = cellData.content >> CellContent.widthShift;
+      final charCode = cellData.content & CellContent.codepointMask;
+
+      if (charWidth > 0 && charCode != 0) {
+        paintCellUnderline(
+            canvas, offset.translate(i * cellWidth, 0), cellData);
+
+        final flags = cellData.flags;
+        var color = flags & CellFlags.inverse == 0
+            ? resolveForegroundColor(cellData.foreground)
+            : resolveBackgroundColor(cellData.background);
+        if (flags & CellFlags.faint != 0) {
+          color = color.withValues(alpha: 0.5);
+        }
+
+        final hash = cellData.getHash() ^ _textScaler.hashCode;
+        if (rStart == null) {
+          rStart = i;
+          rHash = hash;
+          rColor = color;
+          rBold = flags & CellFlags.bold != 0;
+          rItalic = flags & CellFlags.italic != 0;
+          rUnderline = flags & CellFlags.underline != 0;
+          rChars.add(charCode);
+        } else if (hash == rHash) {
+          rChars.add(charCode);
+        } else {
+          _flushRun(canvas, offset, rStart, rChars, rColor, rBold, rItalic,
+              rUnderline, cellWidth);
+          rStart = i;
+          rHash = hash;
+          rColor = color;
+          rBold = flags & CellFlags.bold != 0;
+          rItalic = flags & CellFlags.italic != 0;
+          rUnderline = flags & CellFlags.underline != 0;
+          rChars
+            ..clear()
+            ..add(charCode);
+        }
+      } else {
+        if (rStart != null) {
+          _flushRun(canvas, offset, rStart, rChars, rColor, rBold, rItalic,
+              rUnderline, cellWidth);
+          rStart = null;
+          rChars.clear();
+        }
       }
+      if (charWidth == 2) i++;
+    }
+    if (rStart != null) {
+      _flushRun(canvas, offset, rStart, rChars, rColor, rBold, rItalic,
+          rUnderline, cellWidth);
     }
   }
 
-  @pragma('vm:prefer-inline')
-  void paintCell(Canvas canvas, Offset offset, CellData cellData) {
-    paintCellBackground(canvas, offset, cellData);
-    paintCellForeground(canvas, offset, cellData);
-    paintCellUnderline(canvas, offset, cellData);
+  void _flushRun(
+    Canvas canvas,
+    Offset offset,
+    int startCol,
+    List<int> chars,
+    Color color,
+    bool bold,
+    bool italic,
+    bool underline,
+    double cellWidth,
+  ) {
+    final text = String.fromCharCodes(chars);
+    final cacheKey =
+        text.hashCode ^ color.hashCode ^ (bold ? 1 : 0) ^ (italic ? 2 : 0);
+
+    var paragraph = _paragraphCache.getLayoutFromCache(cacheKey);
+    if (paragraph == null) {
+      final style = _textStyle.toTextStyle(
+        color: color,
+        bold: bold,
+        italic: italic,
+        underline: underline,
+      );
+      paragraph = _paragraphCache.performAndCacheLayout(
+        text,
+        style,
+        _textScaler,
+        cacheKey,
+      );
+    }
+
+    canvas.drawParagraph(paragraph, offset.translate(startCol * cellWidth, 0));
   }
 
   /// Paints underlines for the cell based on the underline style.

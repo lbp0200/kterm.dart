@@ -3,14 +3,30 @@ import 'package:kterm/kterm.dart';
 
 void main() {
   group('Terminal.notifyListeners', () {
-    test('write() calls notifyListeners', () {
+    test('write() schedules notification via microtask', () async {
       final terminal = Terminal();
       var notifyCount = 0;
       terminal.addListener(() => notifyCount++);
 
       terminal.write('hello');
+      expect(notifyCount, equals(0), reason: 'write() defers notification');
 
-      expect(notifyCount, equals(1));
+      await Future.microtask(() {});
+      expect(notifyCount, equals(1), reason: 'microtask flushes notification');
+    });
+
+    test('multiple rapid write() coalesce into one notification', () async {
+      final terminal = Terminal();
+      var notifyCount = 0;
+      terminal.addListener(() => notifyCount++);
+
+      terminal.write('a');
+      terminal.write('b');
+      terminal.write('c');
+      expect(notifyCount, equals(0), reason: 'all deferred');
+
+      await Future.microtask(() {});
+      expect(notifyCount, equals(1), reason: 'coalesced into single notify');
     });
 
     test('textInput() calls notifyListeners', () {
@@ -70,18 +86,6 @@ void main() {
       expect(notifyCount, equals(1));
     });
 
-    test('rapid write + textInput sequence calls notifyListeners for each', () {
-      final terminal = Terminal();
-      var notifyCount = 0;
-      terminal.addListener(() => notifyCount++);
-
-      terminal.write('hello');
-      terminal.textInput(' world');
-
-      // Each should trigger a notification
-      expect(notifyCount, equals(2));
-    });
-
     test('multiple rapid textInput calls each notify', () {
       final terminal = Terminal();
       var notifyCount = 0;
@@ -94,14 +98,15 @@ void main() {
       expect(notifyCount, equals(3));
     });
 
-    test('write with mixed control characters calls notifyListeners', () {
+    test('write with mixed control characters defers notification', () async {
       final terminal = Terminal();
       var notifyCount = 0;
       terminal.addListener(() => notifyCount++);
 
-      // Mixed content: text + ANSI color codes + text
       terminal.write('\x1b[31mred\x1b[0m normal');
+      expect(notifyCount, equals(0), reason: 'write() defers notification');
 
+      await Future.microtask(() {});
       expect(notifyCount, equals(1));
     });
 
@@ -115,6 +120,21 @@ void main() {
 
       expect(notifyCount, equals(1),
           reason: 'textInput should notify even with control chars');
+    });
+
+    test('write then textInput: write deferred, textInput immediate', () async {
+      final terminal = Terminal();
+      var notifyCount = 0;
+      terminal.addListener(() => notifyCount++);
+
+      terminal.write('hello');
+      terminal.textInput(' world');
+
+      // textInput fires immediately, write is deferred
+      expect(notifyCount, equals(1));
+
+      await Future.microtask(() {});
+      expect(notifyCount, equals(2));
     });
   });
 }

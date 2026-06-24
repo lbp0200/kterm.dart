@@ -285,12 +285,26 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   bool reflowEnabled;
 
+  var _notifyPending = false;
+
+  /// Coalesce multiple [notifyListeners] calls into one via microtask.
+  /// During high-throughput data (e.g. tail -f), this prevents layout + paint
+  /// from being triggered on every single data chunk, reducing CPU usage.
+  void _scheduleNotify() {
+    if (_notifyPending) return;
+    _notifyPending = true;
+    Future.microtask(() {
+      _notifyPending = false;
+      notifyListeners();
+    });
+  }
+
   /// Writes the data from the underlying program to the terminal. Calling this
   /// updates the states of the terminal and emits events such as [onBell] or
   /// [onTitleChange] when the escape sequences in [data] request it.
   void write(String data) {
     _parser.write(data);
-    notifyListeners();
+    _scheduleNotify();
   }
 
   /// Sends a key event to the underlying program.

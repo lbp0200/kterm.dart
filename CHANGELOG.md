@@ -1,3 +1,12 @@
+## [1.4.2] - 2026-06-24
+
+### Performance
+
+- **Coalesce notifications**: `Terminal.write()` defers `notifyListeners()` via microtask, coalescing rapid data chunks (e.g. `tail -f`) into a single notification pass — `lib/src/terminal.dart`
+- **Coalesce layout/paint**: `RenderTerminal._onTerminalChange` uses `addPostFrameCallback` to merge multiple content changes within one frame into a single layout/paint pass — `lib/src/ui/render.dart`
+- **Batch drawParagraph calls**: `TerminalPainter.paintLine` now does two-pass rendering (background per-cell, foreground batched by style-run) so consecutive same-style characters produce one `drawParagraph` instead of one-per-cell — `lib/src/ui/painter.dart`
+- **Skip unnecessary layout**: `_onTerminalChange` calls `markNeedsPaint()` instead of `markNeedsLayout()` when not scrolled to bottom; `_onControllerUpdate` uses `markNeedsPaint()` since selection/search changes are visual-only — `lib/src/ui/render.dart`
+
 ## [1.4.1] - 2026-06-23
 
 ### Bug Fixes
