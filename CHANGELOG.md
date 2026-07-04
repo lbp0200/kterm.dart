@@ -1,3 +1,9 @@
+## [1.5.1] - 2026-07-04
+
+### Bug Fixes
+
+- **Fix input lag on key press / delete**: `RenderTerminal._onTerminalChange` deferred `markNeedsPaint()` to a post-frame callback, adding a 1-frame delay (~16ms at 60Hz) on every visual update. Now `markNeedsPaint()` / `markNeedsLayout()` is called immediately, while the post-frame callback is only used to reset the coalescing guard — `lib/src/ui/render.dart`
+
 ## [1.5.0] - 2026-06-24
 
 ### Bug Fixes
