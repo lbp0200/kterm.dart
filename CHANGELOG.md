@@ -1,3 +1,10 @@
+## [1.5.3] - 2026-07-10
+
+### Performance
+
+- **Plain-text fast path in `Terminal.write()`**: Bypass `EscapeParser` for data chunks without escape sequences (`\x1b`). Plain text throughput improved from ~5 MB/s to ~18 MB/s (3.5x), significantly reducing CPU usage during high-throughput output (e.g. `cat`, `tail -f`, log streaming). — `lib/src/terminal.dart`
+- **Add `writeString()` to `EscapeHandler`**: New interface method with default fallback to per-character `writeChar()`, enabling batch text writing for future optimizations. — `lib/src/core/escape/handler.dart`
+
 ## [1.5.2] - 2026-07-10
 
 ### Bug Fixes

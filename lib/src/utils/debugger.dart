@@ -89,6 +89,11 @@ class _TerminalDebuggerHandler implements EscapeHandler {
     onCommand('writeChar(${String.fromCharCode(char)})');
   }
 
+  @override
+  void writeString(String text) {
+    onCommand('writeString($text)');
+  }
+
   /* SBC */
 
   @override
