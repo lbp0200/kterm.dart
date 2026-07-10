@@ -303,6 +303,15 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// updates the states of the terminal and emits events such as [onBell] or
   /// [onTitleChange] when the escape sequences in [data] request it.
   void write(String data) {
+    // Fast path: if the chunk has no escape sequences (no ESC byte), write
+    // directly to the buffer, bypassing the full parser. This is the common
+    // case for plain-text output (cat, tail -f of log files, etc.) and
+    // avoids per-character dispatch through the parser state machine.
+    if (!data.contains('\x1b')) {
+      _buffer.write(data);
+      _scheduleNotify();
+      return;
+    }
     _parser.write(data);
     _scheduleNotify();
   }
@@ -492,6 +501,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   void writeChar(int char) {
     _precedingCodepoint = char;
     _buffer.writeChar(char);
+  }
+
+  @override
+  void writeString(String text) {
+    _buffer.write(text);
   }
 
   /* SBC */

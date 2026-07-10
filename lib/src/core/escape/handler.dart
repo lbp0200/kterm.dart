@@ -3,6 +3,16 @@ import 'package:kterm/src/core/mouse/mode.dart';
 abstract class EscapeHandler {
   void writeChar(int char);
 
+  /// Write a batch of consecutive plain-text characters.
+  /// Called by [EscapeParser] when it detects a run of printable characters
+  /// with no escape sequences or control characters in between.
+  /// Default implementation falls back to per-character [writeChar].
+  void writeString(String text) {
+    for (final char in text.runes) {
+      writeChar(char);
+    }
+  }
+
   /* SBC */
 
   void bell();
