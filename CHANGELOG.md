@@ -1,3 +1,16 @@
+## [1.5.2] - 2026-07-10
+
+### Bug Fixes
+
+- **Fix reflow crash from CircularBuffer null pointer**: `IndexAwareCircularBuffer.insert()` silently returned no-op when `index == 0 && _length >= _array.length`, leaving null slots that caused `Null check operator used on a null value` in `reflow()` — `lib/src/utils/circular_buffer.dart`
+- **Fix eraseDisplayAbove RangeError from negative cursorX**: `eraseLineToCursor()` and `eraseLineFromCursor()` used raw `_cursorX` without clamping, causing `Uint32List` negative-index crash when `cursorX` was negative — `lib/src/core/buffer/buffer.dart`
+- **Fix restoreCursor without bounds check**: `Buffer.restoreCursor()` assigned saved cursor values directly without clamping, allowing out-of-range cursor after terminal resize — `lib/src/core/buffer/buffer.dart`
+- **Defensive padding after reflow**: Ensure `Buffer.resize()` always produces at least `newHeight` lines after reflow — `lib/src/core/buffer/buffer.dart`
+
+### Testing
+
+- **Expand stress test coverage**: Add multi-seed random fuzz (8 seeds), data integrity checks (all lines recoverable), cursor-bounds assertion after resize, and buffer cycling correctness — `test/stress/`
+
 ## [1.5.1] - 2026-07-04
 
 ### Bug Fixes

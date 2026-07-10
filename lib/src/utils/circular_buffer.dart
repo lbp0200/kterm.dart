@@ -182,12 +182,6 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
       return push(item);
     }
 
-    if (index == 0 && _length >= _array.length) {
-      // when something is inserted at index 0 and the list is full then
-      // the new value immediately gets removed => nothing changes
-      return;
-    }
-
     for (var i = _length - 1; i >= index; i--) {
       _moveChild(i, i + 1);
     }

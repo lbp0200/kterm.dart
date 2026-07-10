@@ -207,14 +207,16 @@ class Buffer {
   /// cursor position.
   void eraseLineFromCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(_cursorX, viewWidth, CursorStyle());
+    currentLine.eraseRange(_cursorX.clamp(0, viewWidth), viewWidth,
+        CursorStyle());
   }
 
   /// Erases the line from the start of the line to the cursor, including the
   /// cursor.
   void eraseLineToCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(0, _cursorX, CursorStyle());
+    currentLine.eraseRange(
+        0, _cursorX.clamp(0, viewWidth), CursorStyle());
   }
 
   /// Erases the line at the current cursor position.
@@ -353,8 +355,8 @@ class Buffer {
 
   /// Restore cursor position, charmap and text attributes.
   void restoreCursor() {
-    _cursorX = _savedCursorX;
-    _cursorY = _savedCursorY;
+    _cursorX = _savedCursorX.clamp(0, viewWidth - 1);
+    _cursorY = _savedCursorY.clamp(0, viewHeight - 1);
     terminal.cursor.foreground = _savedCursorStyle.foreground;
     terminal.cursor.background = _savedCursorStyle.background;
     terminal.cursor.attrs = _savedCursorStyle.attrs;
@@ -495,6 +497,11 @@ class Buffer {
         }
 
         lines.replaceWith(reflowResult);
+
+        // Ensure the buffer has at least newHeight lines after reflow.
+        while (lines.length < newHeight) {
+          lines.push(_newEmptyLine(newWidth));
+        }
       } else {
         lines.forEach((item) => item.resize(newWidth));
       }
