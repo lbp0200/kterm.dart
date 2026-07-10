@@ -269,8 +269,9 @@ void main() {
       cl.insert(0, IndexedValue(100));
 
       expect(cl.length, 10);
-      expect(cl[0], 0.indexed); //the inserted 100 fell over immediately
-      expect(cl[1], 1.indexed);
+      expect(cl[0], 100.indexed); // 100 inserted at front, last element dropped
+      expect(cl[1], 0.indexed);
+      expect(cl[9], 8.indexed);
     });
 
     test("insert all works", () {

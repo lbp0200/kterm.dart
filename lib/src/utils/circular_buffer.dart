@@ -182,6 +182,16 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
       return push(item);
     }
 
+    if (index == 0 && _length >= _array.length) {
+      // When the list is full and we insert at index 0, place the item
+      // at the front and drop the last element by rotating _startIndex
+      // backward.
+      _startIndex = (_startIndex - 1 + _array.length) % _array.length;
+      _absoluteStartIndex--;
+      _adoptChild(0, item);
+      return;
+    }
+
     for (var i = _length - 1; i >= index; i--) {
       _moveChild(i, i + 1);
     }
