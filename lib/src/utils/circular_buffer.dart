@@ -258,8 +258,9 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
   }
 
   /// Replaces the element at [index] with [value] and returns the replaced
-  /// item.
+  /// item. Throws if [index] is out of bounds.
   T swap(int index, T value) {
+    RangeError.checkValueInInterval(index, 0, length - 1, 'index');
     final result = _getChild(index);
     _adoptChild(index, value);
     return result!;
