@@ -442,11 +442,18 @@ class TerminalViewState extends State<TerminalView> {
     if (_controller.selection != null) {
       _controller.clearSelection();
     } else {
-      if (!widget.hardwareKeyboardOnly) {
-        _customTextEditKey.currentState?.requestKeyboard();
-      } else {
-        _focusNode.requestFocus();
-      }
+      _requestKeyboardFocus();
+    }
+  }
+
+  /// Focuses the terminal: via the IME text field unless
+  /// [TerminalView.hardwareKeyboardOnly] is set, in which case the raw
+  /// focus node is used directly.
+  void _requestKeyboardFocus() {
+    if (!widget.hardwareKeyboardOnly) {
+      _customTextEditKey.currentState?.requestKeyboard();
+    } else {
+      _focusNode.requestFocus();
     }
   }
 

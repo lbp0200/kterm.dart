@@ -414,44 +414,15 @@ class TerminalPainter {
     double cellWidth,
     double cellHeight,
   ) {
-    if (_graphicsManager == null) return 0;
-    if (_graphicsManager!.placements.isEmpty) return 0;
-
-    int rendered = 0;
-    for (final entry in _graphicsManager!.placements.entries) {
-      final placement = entry.value;
-      // Skip above-text images
-      if (placement.overlay) continue;
-
-      // Check if placement overlaps with visible lines
-      if (placement.y + placement.height <= startLine ||
-          placement.y >= endLine) {
-        continue;
-      }
-
-      final image = _graphicsManager!.getImage(placement.imageId);
-      if (image == null) continue;
-
-      // Calculate destination rectangle in pixels
-      final destX = placement.x * cellWidth;
-      final destY = placement.y * cellHeight;
-      final destWidth = placement.width * cellWidth;
-      final destHeight = placement.height * cellHeight;
-
-      // Calculate source rectangle (full image)
-      final srcRect = Rect.fromLTWH(
-        0,
-        0,
-        image.width.toDouble(),
-        image.height.toDouble(),
-      );
-      final dstRect = Rect.fromLTWH(destX, destY, destWidth, destHeight);
-
-      canvas.drawImageRect(image, srcRect, dstRect, Paint());
-      rendered++;
-    }
-
-    return rendered;
+    return _renderImages(
+      canvas,
+      startLine,
+      endLine,
+      cellWidth,
+      cellHeight,
+      overlay: false,
+      filterQuality: FilterQuality.none,
+    );
   }
 
   /// Render all "above text" images that overlap with the given line range.
@@ -463,14 +434,36 @@ class TerminalPainter {
     double cellWidth,
     double cellHeight,
   ) {
-    if (_graphicsManager == null) return 0;
-    if (_graphicsManager!.placements.isEmpty) return 0;
+    return _renderImages(
+      canvas,
+      startLine,
+      endLine,
+      cellWidth,
+      cellHeight,
+      overlay: true,
+      filterQuality: FilterQuality.medium,
+    );
+  }
+
+  /// Renders all images with [overlay] (true = above text, false = below
+  /// text) that overlap with the given line range. Returns the number of
+  /// images rendered.
+  int _renderImages(
+    Canvas canvas,
+    int startLine,
+    int endLine,
+    double cellWidth,
+    double cellHeight, {
+    required bool overlay,
+    required FilterQuality filterQuality,
+  }) {
+    final manager = _graphicsManager;
+    if (manager == null || manager.placements.isEmpty) return 0;
 
     int rendered = 0;
-    for (final entry in _graphicsManager!.placements.entries) {
+    for (final entry in manager.placements.entries) {
       final placement = entry.value;
-      // Skip below-text images
-      if (!placement.overlay) continue;
+      if (placement.overlay != overlay) continue;
 
       // Check if placement overlaps with visible lines
       if (placement.y + placement.height <= startLine ||
@@ -478,7 +471,7 @@ class TerminalPainter {
         continue;
       }
 
-      final image = _graphicsManager!.getImage(placement.imageId);
+      final image = manager.getImage(placement.imageId);
       if (image == null) continue;
 
       // Calculate destination rectangle in pixels
@@ -496,8 +489,7 @@ class TerminalPainter {
       );
       final dstRect = Rect.fromLTWH(destX, destY, destWidth, destHeight);
 
-      // Use Paint with filter quality for better scaling
-      final paint = Paint()..filterQuality = FilterQuality.medium;
+      final paint = Paint()..filterQuality = filterQuality;
       canvas.drawImageRect(image, srcRect, dstRect, paint);
       rendered++;
     }
