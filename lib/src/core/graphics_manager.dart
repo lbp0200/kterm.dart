@@ -4,11 +4,20 @@ import 'package:image/image.dart' as img;
 
 /// Entry for LRU cache tracking
 class ImageEntry {
+  /// The decoded image ready for rendering.
   final ui.Image image;
+
+  /// Timestamp of the last access, used for LRU eviction.
   int lastAccess;
+
+  /// Estimated memory footprint of [image] in bytes.
   final int sizeBytes;
+
+  /// Whether this image has multiple frames (animated GIF).
   final bool isAnimated;
-  final List<int>? frameDelays; // Frame delays in ms, null for static images
+
+  /// Frame delays in milliseconds; null for static images.
+  final List<int>? frameDelays;
 
   ImageEntry({
     required this.image,
@@ -20,13 +29,26 @@ class ImageEntry {
 
 /// Placement of an image at a specific position
 class ImagePlacement {
+  /// Unique placement identifier.
   final int placementId;
+
+  /// Identifier of the image this placement references.
   final int imageId;
+
+  /// Top-left cell column of the placement.
   final int x;
+
+  /// Top-left cell row of the placement.
   final int y;
+
+  /// Width of the placement in cells.
   final int width;
+
+  /// Height of the placement in cells.
   final int height;
-  final bool overlay; // true = above text, false = below text
+
+  /// True when rendered above text, false when below text.
+  final bool overlay;
 
   ImagePlacement({
     required this.placementId,
@@ -52,6 +74,7 @@ class ImagePlacement {
 
 /// Manages terminal images with LRU eviction and memory limits
 class GraphicsManager {
+  /// Creates a manager with the given memory and image-count caps.
   GraphicsManager({
     this.maxMemoryBytes = 100 * 1024 * 1024,
     this.maxImageCount = 1000,

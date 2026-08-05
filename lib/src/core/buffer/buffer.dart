@@ -11,17 +11,28 @@ import 'package:kterm/src/core/state.dart';
 import 'package:kterm/src/utils/circular_buffer.dart';
 import 'package:kterm/src/utils/unicode_v11.dart';
 
+/// The frontend-independent screen buffer: holds the line history
+/// (scrollback + viewport), the cursor position and the scrolling margins.
+/// Screen-relative coordinates (rows within the viewport, such as
+/// [cursorY] or [marginTop]) start at 0; methods that take or return
+/// buffer positions use absolute line indices, and the `absolute*` getters
+/// translate between the two.
 class Buffer {
+  /// The terminal state this buffer renders.
   final TerminalState terminal;
 
+  /// Maximum number of lines kept in the scrollback buffer.
   final int maxLines;
 
+  /// Whether this is the alternate screen buffer (used by full-screen apps).
   final bool isAltBuffer;
 
   /// Characters that break selection when calling [getWordBoundary]. If null,
   /// defaults to [defaultWordSeparators].
   final Set<int>? wordSeparators;
 
+  /// Creates a buffer backed by [terminal] with room for [maxLines] lines,
+  /// pre-filled with empty lines to fill the viewport.
   Buffer(
     this.terminal, {
     required this.maxLines,
@@ -49,6 +60,7 @@ class Buffer {
 
   CursorStyle _savedCursorStyle = CursorStyle();
 
+  /// The active character set (G0–G3) mapping.
   final charset = Charset();
 
   /// Width of the viewport in columns. Also the index of the last column.
@@ -159,6 +171,8 @@ class Buffer {
     return lines[absoluteCursorY];
   }
 
+  /// Backspace: moves the cursor left one cell, handling wrapped lines and
+  /// the trailing cell of wide characters.
   void backspace() {
     if (_cursorX == 0 && currentLine.isWrapped) {
       currentLine.isWrapped = false;
@@ -207,16 +221,15 @@ class Buffer {
   /// cursor position.
   void eraseLineFromCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(_cursorX.clamp(0, viewWidth), viewWidth,
-        CursorStyle());
+    currentLine.eraseRange(
+        _cursorX.clamp(0, viewWidth), viewWidth, CursorStyle());
   }
 
   /// Erases the line from the start of the line to the cursor, including the
   /// cursor.
   void eraseLineToCursor() {
     currentLine.isWrapped = false;
-    currentLine.eraseRange(
-        0, _cursorX.clamp(0, viewWidth), CursorStyle());
+    currentLine.eraseRange(0, _cursorX.clamp(0, viewWidth), CursorStyle());
   }
 
   /// Erases the line at the current cursor position.
@@ -231,6 +244,8 @@ class Buffer {
     currentLine.eraseRange(start, start + count, CursorStyle());
   }
 
+  /// Scrolls the viewport down by [lines] rows within the scrolling margins,
+  /// filling the vacated rows with empty lines.
   void scrollDown(int lines) {
     for (var i = absoluteMarginBottom; i >= absoluteMarginTop; i--) {
       if (i >= absoluteMarginTop + lines) {
@@ -241,6 +256,8 @@ class Buffer {
     }
   }
 
+  /// Scrolls the viewport up by [lines] rows within the scrolling margins,
+  /// filling the vacated rows with empty lines.
   void scrollUp(int lines) {
     for (var i = absoluteMarginTop; i <= absoluteMarginBottom; i++) {
       if (i <= absoluteMarginBottom - lines) {
@@ -286,6 +303,8 @@ class Buffer {
     }
   }
 
+  /// Line feed: performs [index] and, in line-feed mode, returns the cursor
+  /// to column 0.
   void lineFeed() {
     index();
     if (terminal.lineFeedMode) {
@@ -306,26 +325,34 @@ class Buffer {
     }
   }
 
+  /// Moves the cursor forward one column, allowing it to rest on the column
+  /// just past the right margin (used for auto-wrap detection).
   void cursorGoForward() {
     _cursorX = min(_cursorX + 1, viewWidth);
   }
 
+  /// Sets the cursor column to [cursorX], clamped to the viewport width.
   void setCursorX(int cursorX) {
     _cursorX = cursorX.clamp(0, viewWidth - 1);
   }
 
+  /// Sets the cursor row to [cursorY], clamped to the viewport height.
   void setCursorY(int cursorY) {
     _cursorY = cursorY.clamp(0, viewHeight - 1);
   }
 
+  /// Moves the cursor [offset] columns relative to its current position.
   void moveCursorX(int offset) {
     setCursorX(_cursorX + offset);
   }
 
+  /// Moves the cursor [offset] rows relative to its current position.
   void moveCursorY(int offset) {
     setCursorY(_cursorY + offset);
   }
 
+  /// Moves the cursor to ([cursorX], [cursorY]); when origin mode is active,
+  /// [cursorY] is relative to the top margin.
   void setCursor(int cursorX, int cursorY) {
     var maxCursorY = viewHeight - 1;
 
@@ -338,6 +365,8 @@ class Buffer {
     _cursorY = cursorY.clamp(0, maxCursorY);
   }
 
+  /// Moves the cursor by ([offsetX], [offsetY]) relative to its current
+  /// position.
   void moveCursor(int offsetX, int offsetY) {
     final cursorX = _cursorX + offsetX;
     final cursorY = _cursorY + offsetY;
@@ -375,14 +404,17 @@ class Buffer {
     _marginBottom = max(_marginTop, _marginBottom);
   }
 
+  /// Whether the cursor is inside the vertical scrolling margins.
   bool get isInVerticalMargin {
     return _cursorY >= _marginTop && _cursorY <= _marginBottom;
   }
 
+  /// Resets the scrolling margins to cover the full viewport.
   void resetVerticalMargins() {
     setVerticalMargins(0, viewHeight - 1);
   }
 
+  /// Deletes [count] cells starting at the cursor (DCH).
   void deleteChars(int count) {
     final start = _cursorX.clamp(0, viewWidth);
     count = min(count, viewWidth - start);
@@ -406,10 +438,13 @@ class Buffer {
     }
   }
 
+  /// Inserts [count] blank cells at the cursor (ICH).
   void insertBlankChars(int count) {
     currentLine.insertCells(_cursorX, count, terminal.cursor);
   }
 
+  /// Inserts [count] empty lines at the cursor row (IL), shifting lines
+  /// below down within the scrolling region.
   void insertLines(int count) {
     if (!isInVerticalMargin) {
       return;
@@ -461,6 +496,10 @@ class Buffer {
     }
   }
 
+  /// Resizes the buffer from ([oldWidth], [oldHeight]) to ([newWidth],
+  /// [newHeight]). When reflow is enabled (and this is not the alternate
+  /// buffer) lines are re-wrapped to the new width; otherwise lines keep
+  /// their original wrapping and are merely resized.
   void resize(int oldWidth, int oldHeight, int newWidth, int newHeight) {
     // 1. Adjust the height.
     if (newHeight > oldHeight) {
@@ -518,6 +557,7 @@ class Buffer {
     return lines[offset.y].createAnchor(offset.x);
   }
 
+  /// Create a new [CellAnchor] at the current cursor position.
   CellAnchor createAnchorFromCursor() {
     return createAnchor(cursorX, absoluteCursorY);
   }
@@ -529,6 +569,8 @@ class Buffer {
     return line;
   }
 
+  /// Default characters that break selection when calling
+  /// [getWordBoundary].
   static final defaultWordSeparators = <int>{
     0,
     r' '.codeUnitAt(0),
@@ -542,6 +584,9 @@ class Buffer {
     r'/'.codeUnitAt(0),
   };
 
+  /// Returns the word boundary range containing [position], or null if the
+  /// position is not inside a word. Word breaks are determined by
+  /// [wordSeparators] (or [defaultWordSeparators]).
   BufferRangeLine? getWordBoundary(CellOffset position) {
     var separators = wordSeparators ?? defaultWordSeparators;
     if (position.y >= lines.length) {
