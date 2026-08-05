@@ -10,8 +10,12 @@ void main() {
   });
 
   test('OSC 52 get clipboard query', () {
-    // Just verify no crash - clipboard query depends on platform
+    String? queriedTarget;
+    terminal.onClipboardRead = (target) {
+      queriedTarget = target;
+    };
     terminal.write('\x1b]52;c;?\x1b\\');
+    expect(queriedTarget, equals('c'));
   });
 
   test('OSC 52 set clipboard', () {
@@ -24,7 +28,8 @@ void main() {
   });
 
   test('OSC 5522 extended clipboard sync start', () {
-    // Just verify no crash - clipboard sync is protocol-level
+    // Protocol-level marker with no handler in Terminal; the parser routes it
+    // to unknownOSC which is a no-op. Keep as a no-crash guard.
     terminal.write('\x1b]5522;sync;start\x1b\\');
   });
 }
