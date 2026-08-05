@@ -314,6 +314,11 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // silently lose its line breaks. The parser turns them into handler
     // callbacks (bell, tab, lineFeed, carriageReturn, ...) instead.
     if (!data.contains('\x1b') && !_hasC0Control(data)) {
+      // Keep _precedingCodepoint in sync so CSI n b (REP) still works after
+      // a fast-path write; writeChar would normally maintain it.
+      if (data.isNotEmpty) {
+        _precedingCodepoint = data.runes.last;
+      }
       _buffer.write(data);
       _scheduleNotify();
       return;

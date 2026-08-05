@@ -665,6 +665,17 @@ void main() {
       terminal.write('\x1b[5b'); // Repeat 'A' 5 times
       expect(terminal.buffer.lines[0].toString(), 'AAAAAA');
     });
+
+    test(
+        'Given preceding char written via plain-text fast path, When repeat, '
+        'Then repeats', () {
+      final terminal = Terminal();
+      // 'AB' contains no ESC or C0 control chars, so it takes the fast path
+      // in Terminal.write(); _precedingCodepoint must still be updated.
+      terminal.write('AB');
+      terminal.write('\x1b[3b'); // Repeat 'B' 3 times
+      expect(terminal.buffer.lines[0].toString(), 'ABBBB');
+    });
   });
 
   group('Terminal.sendOperatingStatus', () {
