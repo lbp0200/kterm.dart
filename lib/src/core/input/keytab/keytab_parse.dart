@@ -30,6 +30,17 @@ class KeytabParser {
   String? _name;
   final _records = <KeytabRecord>[];
 
+  /// Takes the next token, throwing [ParseError] when the token stream is
+  /// exhausted. Prevents a truncated keytab from crashing with a null-check
+  /// `TypeError` instead of a proper parse error.
+  KeytabToken _takeRequired(TokensReader reader) {
+    final token = reader.take();
+    if (token == null) {
+      throw ParseError();
+    }
+    return token;
+  }
+
   void addTokens(List<KeytabToken> tokens) {
     final reader = TokensReader(tokens);
 
@@ -53,11 +64,11 @@ class KeytabParser {
   }
 
   void _parseName(TokensReader reader) {
-    if (reader.take()!.type != KeytabTokenType.keyboard) {
+    if (_takeRequired(reader).type != KeytabTokenType.keyboard) {
       throw ParseError();
     }
 
-    final name = reader.take()!;
+    final name = _takeRequired(reader);
     if (name.type != KeytabTokenType.input) {
       throw ParseError();
     }
@@ -66,11 +77,11 @@ class KeytabParser {
   }
 
   void _parseKeyDefine(TokensReader reader) {
-    if (reader.take()!.type != KeytabTokenType.keyDefine) {
+    if (_takeRequired(reader).type != KeytabTokenType.keyDefine) {
       throw ParseError();
     }
 
-    final keyName = reader.take()!;
+    final keyName = _takeRequired(reader);
 
     if (keyName.type != KeytabTokenType.keyName) {
       throw ParseError();
@@ -93,9 +104,9 @@ class KeytabParser {
     bool? newLine;
     bool? mac;
 
-    while (reader.peek()!.type == KeytabTokenType.modeStatus) {
+    while (reader.peek()?.type == KeytabTokenType.modeStatus) {
       bool modeStatus;
-      switch (reader.take()!.value) {
+      switch (_takeRequired(reader).value) {
         case '+':
           modeStatus = true;
           break;
@@ -106,8 +117,8 @@ class KeytabParser {
           throw ParseError();
       }
 
-      final mode = reader.take();
-      if (mode!.type != KeytabTokenType.mode) {
+      final mode = _takeRequired(reader);
+      if (mode.type != KeytabTokenType.mode) {
         throw ParseError();
       }
 
@@ -150,11 +161,11 @@ class KeytabParser {
       }
     }
 
-    if (reader.take()!.type != KeytabTokenType.colon) {
+    if (_takeRequired(reader).type != KeytabTokenType.colon) {
       throw ParseError();
     }
 
-    final actionToken = reader.take()!;
+    final actionToken = _takeRequired(reader);
     KeytabAction action;
     if (actionToken.type == KeytabTokenType.input) {
       action = KeytabAction(KeytabActionType.input, actionToken.value);

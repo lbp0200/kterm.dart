@@ -1,9 +1,7 @@
 import 'package:test/test.dart';
 import 'package:kterm/src/core/input/keytab/keytab_parse.dart';
 import 'package:kterm/src/core/input/keytab/keytab_token.dart';
-import 'package:kterm/src/core/input/keytab/keytab.dart';
 import 'package:kterm/src/core/input/keytab/keytab_record.dart';
-import 'package:kterm/src/core/input/keys.dart';
 
 void main() {
   group('ParseError', () {
@@ -157,6 +155,72 @@ void main() {
         expect(
             result.records[0].action.type, equals(KeytabActionType.shortcut));
         expect(result.records[0].action.unescapedValue(), equals('copy'));
+      });
+
+      test(
+          'Given keyboard token as last token, When parsed, Then throws ParseError',
+          () {
+        final parser = KeytabParser();
+        expect(
+          () => parser.addTokens([
+            KeytabToken(KeytabTokenType.keyboard, ''),
+          ]),
+          throwsA(isA<ParseError>()),
+        );
+      });
+
+      test(
+          'Given keyDefine token as last token, When parsed, Then throws ParseError',
+          () {
+        final parser = KeytabParser();
+        expect(
+          () => parser.addTokens([
+            KeytabToken(KeytabTokenType.keyDefine, ''),
+          ]),
+          throwsA(isA<ParseError>()),
+        );
+      });
+
+      test(
+          'Given keyDefine without keyName, When parsed, Then throws ParseError',
+          () {
+        final parser = KeytabParser();
+        expect(
+          () => parser.addTokens([
+            KeytabToken(KeytabTokenType.keyDefine, ''),
+            KeytabToken(KeytabTokenType.colon, ':'),
+          ]),
+          throwsA(isA<ParseError>()),
+        );
+      });
+
+      test(
+          'Given keyDefine whose modeStatus loop is not terminated by colon, '
+          'When parsed, Then throws ParseError', () {
+        final parser = KeytabParser();
+        expect(
+          () => parser.addTokens([
+            KeytabToken(KeytabTokenType.keyDefine, ''),
+            KeytabToken(KeytabTokenType.keyName, 'Home'),
+            KeytabToken(KeytabTokenType.modeStatus, '+'),
+            KeytabToken(KeytabTokenType.mode, 'Control'),
+          ]),
+          throwsA(isA<ParseError>()),
+        );
+      });
+
+      test(
+          'Given keyDefine missing action after colon, When parsed, '
+          'Then throws ParseError', () {
+        final parser = KeytabParser();
+        expect(
+          () => parser.addTokens([
+            KeytabToken(KeytabTokenType.keyDefine, ''),
+            KeytabToken(KeytabTokenType.keyName, 'Home'),
+            KeytabToken(KeytabTokenType.colon, ':'),
+          ]),
+          throwsA(isA<ParseError>()),
+        );
       });
     });
 
