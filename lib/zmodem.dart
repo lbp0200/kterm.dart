@@ -146,7 +146,11 @@ class ZModemMux {
 
   Future<void> _handleZModem(Uint8List chunk) async {
     try {
-      for (final event in _session!.receive(chunk)) {
+      final session = _session;
+      if (session == null) {
+        return;
+      }
+      for (final event in session.receive(chunk)) {
         /// remote is sz
         if (event is ZFileOfferedEvent) {
           _handleZFileOfferedEvent(event);
@@ -187,9 +191,13 @@ class ZModemMux {
 
   void _handleZFileOfferedEvent(ZFileOfferedEvent event) {
     final onFileOffer = this.onFileOffer;
+    final session = _session;
+    if (session == null) {
+      return;
+    }
 
     if (onFileOffer == null) {
-      _session!.skipFile();
+      session.skipFile();
       return;
     }
 
@@ -220,6 +228,10 @@ class ZModemMux {
   }
 
   Future<void> _handleFileAcceptedEvent(ZFileAcceptedEvent event) async {
+    final session = _session;
+    if (session == null) {
+      return;
+    }
     final data = _fileOffers!.current.accept(event.offset);
     var bytesSent = 0;
 
@@ -227,15 +239,24 @@ class ZModemMux {
       data.transform(
         StreamTransformer<Uint8List, Uint8List>.fromHandlers(
           handleData: (chunk, sink) {
+            // The session may have been reset (e.g. timeout) while the
+            // stream was being pumped; ignore late chunks instead of
+            // null-checking a stale session.
+            if (!identical(_session, session)) {
+              return;
+            }
             bytesSent += chunk.length;
-            _session!.sendFileData(chunk);
-            sink.add(_session!.dataToSend());
+            session.sendFileData(chunk);
+            sink.add(session.dataToSend());
           },
         ),
       ),
     );
 
-    _session!.finishSending(event.offset + bytesSent);
+    if (!identical(_session, session)) {
+      return;
+    }
+    session.finishSending(event.offset + bytesSent);
   }
 
   void _handleFileSkippedEvent(ZFileSkippedEvent event) {
@@ -245,6 +266,11 @@ class ZModemMux {
 
   /// Sends next file offer if available, or closes the session if not.
   void _moveToNextOffer() {
+    final session = _session;
+    if (session == null) {
+      return;
+    }
+
     if (_fileOffers == null) {
       _closeSession();
       return;
@@ -255,7 +281,7 @@ class ZModemMux {
       return;
     }
 
-    _session!.offerFile(_fileOffers!.current.info);
+    session.offerFile(_fileOffers!.current.info);
   }
 
   /// Creates a [ZModemOffer] ƒrom the info from remote peer that can be used
@@ -264,14 +290,22 @@ class ZModemMux {
     return ZModemCallbackOffer(
       fileInfo,
       onAccept: (offset) {
-        _session!.acceptFile(offset);
+        final session = _session;
+        if (session == null) {
+          return _receiveSink?.stream ?? const Stream<Uint8List>.empty();
+        }
+        session.acceptFile(offset);
         _flush();
 
         _createReceiveSink();
         return _receiveSink!.stream;
       },
       onSkip: () {
-        _session!.skipFile();
+        final session = _session;
+        if (session == null) {
+          return;
+        }
+        session.skipFile();
         _flush();
       },
     );
@@ -292,7 +326,11 @@ class ZModemMux {
 
   /// Requests remote to close the session.
   void _closeSession() {
-    _session!.finishSession();
+    final session = _session;
+    if (session == null) {
+      return;
+    }
+    session.finishSession();
   }
 
   /// Clears all ZModem state.

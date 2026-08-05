@@ -29,7 +29,12 @@ typedef SearchCallback = String Function();
 /// Callback type for creating a cell anchor from a position.
 typedef CreateAnchorCallback = CellAnchor Function(CellOffset offset);
 
+/// State controller for [TerminalView]: owns search, selection, highlights
+/// and pointer-input configuration. Extends [ChangeNotifier] so widgets
+/// rebuild when any of these change.
 class TerminalController with ChangeNotifier {
+  /// Creates a controller with the given selection mode, pointer inputs and
+  /// pointer suspension state.
   TerminalController({
     SelectionMode selectionMode = SelectionMode.line,
     PointerInputs pointerInputs = const PointerInputs({PointerInput.tap}),
@@ -47,6 +52,7 @@ class TerminalController with ChangeNotifier {
   CellAnchor? _selectionBase;
   CellAnchor? _selectionExtent;
 
+  /// The current selection mode (line or block).
   SelectionMode get selectionMode => _selectionMode;
   SelectionMode _selectionMode;
 
@@ -58,6 +64,7 @@ class TerminalController with ChangeNotifier {
   bool get suspendedPointerInputs => _suspendPointerInputs;
   bool _suspendPointerInputs;
 
+  /// All active highlights, as an unmodifiable list.
   List<TerminalHighlight> get highlights => List.unmodifiable(_highlights);
   final _highlights = <TerminalHighlight>[];
 
@@ -99,6 +106,8 @@ class TerminalController with ChangeNotifier {
   /// Whether there are any search results.
   bool get hasSearchResults => _searchResults.isNotEmpty;
 
+  /// The current selection as a range, or null when there is no selection or
+  /// the selection anchors are detached.
   BufferRange? get selection {
     final base = _selectionBase;
     final extent = _selectionExtent;
@@ -190,19 +199,20 @@ class TerminalController with ChangeNotifier {
     return false;
   }
 
-  // Select which type of pointer events are send to the terminal.
+  /// Selects which types of pointer events are sent to the terminal.
   void setPointerInputs(PointerInputs pointerInput) {
     _pointerInputs = pointerInput;
     notifyListeners();
   }
 
-  // Toggle sending pointer events to the terminal.
+  /// Toggles whether pointer events are sent to the terminal.
   void setSuspendPointerInput(bool suspend) {
     _suspendPointerInputs = suspend;
     notifyListeners();
   }
 
-  // Returns true if this type of PointerInput should be send to the Terminal.
+  /// Returns true if this type of [PointerInput] should be sent to the
+  /// terminal.
   @internal
   bool shouldSendPointerInput(PointerInput pointerInput) {
     // Always return false if pointer input is suspended.
@@ -312,8 +322,10 @@ class TerminalController with ChangeNotifier {
     final isRegex = _searchOptions.contains(SearchOption.regex);
     final isWholeWord = _searchOptions.contains(SearchOption.wholeWord);
 
+    // Only regex compilation is expected to fail (invalid pattern); the
+    // matching loop below must not swallow real bugs.
+    late RegExp regex;
     try {
-      late RegExp regex;
       if (isRegex) {
         regex = RegExp(pattern, caseSensitive: isCaseSensitive);
       } else {
@@ -322,21 +334,22 @@ class TerminalController with ChangeNotifier {
         final patternStr = isWholeWord ? '\\b$escaped\\b' : escaped;
         regex = RegExp(patternStr, caseSensitive: isCaseSensitive);
       }
-
-      for (final match in regex.allMatches(text)) {
-        final start = match.start;
-        final end = match.end;
-
-        // Convert text offset to cell offset
-        final startOffset = _textOffsetToCellOffset(text, start);
-        final endOffset = _textOffsetToCellOffset(text, end);
-
-        if (startOffset != null && endOffset != null) {
-          results.add(BufferRangeLine(startOffset, endOffset));
-        }
-      }
     } catch (e) {
       // Invalid regex, ignore
+      return results;
+    }
+
+    for (final match in regex.allMatches(text)) {
+      final start = match.start;
+      final end = match.end;
+
+      // Convert text offset to cell offset
+      final startOffset = _textOffsetToCellOffset(text, start);
+      final endOffset = _textOffsetToCellOffset(text, end);
+
+      if (startOffset != null && endOffset != null) {
+        results.add(BufferRangeLine(startOffset, endOffset));
+      }
     }
 
     return results;
@@ -405,13 +418,19 @@ class TerminalController with ChangeNotifier {
   }
 }
 
+/// A visual highlight on a range of terminal cells. Dispose the returned
+/// object to remove the highlight.
 class TerminalHighlight with Disposable {
+  /// The controller this highlight belongs to.
   final TerminalController owner;
 
+  /// Anchor at the start of the highlighted range.
   final CellAnchor p1;
 
+  /// Anchor at the end of the highlighted range.
   final CellAnchor p2;
 
+  /// The color used to draw the highlight.
   final Color color;
 
   TerminalHighlight(
