@@ -303,17 +303,35 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   /// updates the states of the terminal and emits events such as [onBell] or
   /// [onTitleChange] when the escape sequences in [data] request it.
   void write(String data) {
-    // Fast path: if the chunk has no escape sequences (no ESC byte), write
-    // directly to the buffer, bypassing the full parser. This is the common
-    // case for plain-text output (cat, tail -f of log files, etc.) and
-    // avoids per-character dispatch through the parser state machine.
-    if (!data.contains('\x1b')) {
+    // Fast path: if the chunk has no escape byte and no C0 control
+    // characters, write directly to the buffer, bypassing the full parser.
+    // This is the common case for plain-text output (cat, tail -f of log
+    // files, etc.) and avoids per-character dispatch through the parser
+    // state machine.
+    //
+    // Control characters must NOT take this path: Buffer.writeChar filters
+    // them out (BEL, BS, HT, LF, CR, ...), so a chunk like "a\r\nb" would
+    // silently lose its line breaks. The parser turns them into handler
+    // callbacks (bell, tab, lineFeed, carriageReturn, ...) instead.
+    if (!data.contains('\x1b') && !_hasC0Control(data)) {
       _buffer.write(data);
       _scheduleNotify();
       return;
     }
     _parser.write(data);
     _scheduleNotify();
+  }
+
+  /// Whether [data] contains any C0 control character (U+0000–U+001F or
+  /// U+007F), which the fast path in [write] must not bypass.
+  static bool _hasC0Control(String data) {
+    for (var i = 0; i < data.length; i++) {
+      final c = data.codeUnitAt(i);
+      if (c < 0x20 || c == 0x7f) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Sends a key event to the underlying program.

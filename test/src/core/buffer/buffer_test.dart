@@ -244,4 +244,32 @@ void main() {
       expect(terminal.buffer.lines[2].toString(), '');
     });
   });
+
+  group('Buffer.write() fast path', () {
+    test(
+        'preserves CRLF line breaks (regression: control chars bypassed '
+        'the plain-text fast path)', () {
+      final terminal = Terminal();
+      terminal.write('line1\r\nline2\r\nline3');
+
+      expect(terminal.buffer.lines[0].toString(), 'line1');
+      expect(terminal.buffer.lines[1].toString(), 'line2');
+      expect(terminal.buffer.lines[2].toString(), 'line3');
+    });
+
+    test('preserves tab characters', () {
+      final terminal = Terminal();
+      terminal.write('a\tb');
+
+      // Tab moves the cursor to the next tab stop instead of being dropped.
+      expect(terminal.buffer.cursorX, greaterThan(2));
+    });
+
+    test('still takes the fast path for pure plain text', () {
+      final terminal = Terminal();
+      terminal.write('Hello World');
+
+      expect(terminal.buffer.lines[0].toString(), 'Hello World');
+    });
+  });
 }
