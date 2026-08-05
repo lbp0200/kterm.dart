@@ -7,7 +7,7 @@
 
 - [x] **P1 · example 未打包导致丢 10 分** — `example/` 在仓库存在，但被 `.pubignore` 排除，pub.dev 判定"无 example"。
   修复：`.pubignore` 保留 `example/lib` + `example/pubspec.yaml`，排除 `example/build`（635M）、平台目录、assets/fonts、pubspec.lock。
-- [ ] **P2 · 公共 API 文档覆盖率仅 25.8%**（丢 10 分，要求 ≥20% 得满分 10 分但当前 25.8% 只得了 10/20——因为 example 缺失扣的是另 10 分，文档部分本身 10/10 已满足。核对：pub score 显示 Documentation 10/20 = dartdoc 10/10 + example 0/10。**因此文档达标，example 是唯一文档分缺口**）
+- [x] **P2 · 公共 API 文档覆盖率仅 25.8%**（丢 10 分，要求 ≥20% 得满分 10 分但当前 25.8% 只得了 10/20——因为 example 缺失扣的是另 10 分，文档部分本身 10/10 已满足。核对：pub score 显示 Documentation 10/20 = dartdoc 10/10 + example 0/10。**因此文档达标，example 是唯一文档分缺口**）
   ⚠️ 更正：按 pana 明细，dartdoc 覆盖率 25.8% 已满足 20% 阈值（10/10）。文档缺口不影响评分，但影响开发者体验，仍值得补：
   - [x] `lib/src/core/escape/handler.dart` — `EscapeHandler` 130+ 接口方法零 dartdoc（最痛）
   - [x] `lib/src/core/graphics_manager.dart` — 30+ 公开方法无 doc（已补字段/构造器 doc）
