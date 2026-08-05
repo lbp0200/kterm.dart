@@ -105,12 +105,51 @@ void main() {
       });
 
       test(
-          'Given listener removed during notification, When notifyListeners called, Then does not crash',
+          'Given listener added during notification, When notifyListeners called, '
+          'Then new listener is not invoked until the next notification', () {
+        final observer = TestObserver();
+        var firstCalls = 0;
+        var addedCalls = 0;
+        void added() => addedCalls++;
+
+        observer.addListener(() {
+          firstCalls++;
+          observer.addListener(added);
+        });
+
+        observer.trigger();
+        expect(firstCalls, equals(1));
+        expect(addedCalls, equals(0));
+
+        observer.trigger();
+        expect(addedCalls, equals(1));
+      });
+
+      test(
+          'Given listener removed during notification, When notifyListeners called, '
+          'Then does not crash and removed listener is still invoked for this pass',
           () {
         final observer = TestObserver();
-        void listener2() {}
+        var removedCalls = 0;
+        var keptCalls = 0;
+        void removed() => removedCalls++;
+        void kept() => keptCalls++;
 
-        observer.addListener(listener2);
+        observer.addListener(removed);
+        observer.addListener(() {
+          observer.removeListener(removed);
+          observer.addListener(kept);
+        });
+
+        observer.trigger();
+        // Snapshot semantics: removed listener still invoked for this pass,
+        // listener added mid-notification is deferred to the next pass.
+        expect(removedCalls, equals(1));
+        expect(keptCalls, equals(0));
+
+        observer.trigger();
+        expect(removedCalls, equals(1));
+        expect(keptCalls, equals(1));
       });
     });
   });
