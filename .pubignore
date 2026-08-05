@@ -1,6 +1,17 @@
-# Exclude tests, examples, media (except screenshots), and development files
+# Exclude tests, examples (keep example/lib + pubspec so pub.dev sees an example),
+# media (except screenshots), and development files
 test/
-example/
+example/build/
+example/android/
+example/ios/
+example/macos/
+example/windows/
+example/linux/
+example/web/
+example/assets/
+example/fonts/
+example/pubspec.lock
+example/test/
 media/*
 !media/demo-shell.png
 !media/demo-vim.png

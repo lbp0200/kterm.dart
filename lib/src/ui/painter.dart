@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/painting.dart';
 
 import 'package:kterm/core.dart';
-import 'package:kterm/src/core/graphics_manager.dart';
 import 'package:kterm/src/ui/cursor_type.dart';
 import 'package:kterm/src/ui/palette_builder.dart';
 import 'package:kterm/src/ui/paragraph_cache.dart';
