@@ -43,3 +43,10 @@
   实际仅 2 处（282 build 树分支保留，445 提取为 `_requestKeyboardFocus`）。
 - [x] **P5 · `painter.dart:418-482` 反复 `_graphicsManager!`** — 字段无法 promote，用局部变量消除。
   处理：`renderBelowImages`/`renderAboveImages` 合并为 `_renderImages`（overlay + filterQuality 参数），消除全部 `_graphicsManager!` 与约 60 行重复。
+
+## 六、已知风险与经验教训（v1.5.4 发布复盘）
+
+- [ ] **P3 · `Terminal.write()` plain-text fast path 的副作用盲区** — `ac78686`（2026-07-10）引入的 fast path 直接调 `_buffer.write(data)`，绕过 `writeChar`，连踩两个回归（v1.5.4 发布时才发现，CI 自 7-10 起一直红着）：
+  1. C0 控制字符（`\r\n`/`\t` 等）被 `Buffer.writeChar` 过滤 → 换行丢失，破坏 line wrap / insertLines / deleteLines（已修复：fast path 增加 `_hasC0Control` 检查）
+  2. `_precedingCodepoint` 不更新 → CSI `n b`（REP）失效（已修复：fast path 用 `data.runes.last` 同步）
+  **经验：再做批量写优化前，先审计 `writeChar` 的全部副作用**（除 `_precedingCodepoint` 外，还有 `_buffer.writeChar` 内部的宽字符边界处理、`charset.translate` 等），并给 fast path 补"绕过路径语义等价"的专项测试。
