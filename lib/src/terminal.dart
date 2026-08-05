@@ -461,8 +461,9 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   }
 
   /// Resize the terminal screen. [newWidth] and [newHeight] should be greater
-  /// than 0. Text reflow is currently not implemented and will be avaliable in
-  /// the future.
+  /// than 0. When `reflowEnabled` is set, existing lines are re-wrapped to
+  /// the new width and scrollback is preserved (the alternate buffer is not
+  /// reflowed); otherwise lines keep their original wrapping.
   @override
   void resize(
     int newWidth,
