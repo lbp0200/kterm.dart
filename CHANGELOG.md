@@ -1,3 +1,38 @@
+## [1.5.4] - 2026-08-05
+
+### Bug Fixes
+
+- **Keytab parser no longer crashes on truncated input**: A keytab ending mid-record previously null-checked with `!` and threw `TypeError`; it now throws `ParseError` consistently. — `lib/src/core/input/keytab/keytab_parse.dart`
+- **`Observable.notifyListeners` iterates a snapshot**: Adding/removing listeners from inside a notification callback no longer throws `ConcurrentModificationError` (mirrors `ChangeNotifier` semantics). — `lib/src/base/observable.dart`
+- **`CellAnchor` detached access throws `StateError`**: The guards were `assert`s that vanish in release builds, leaving a raw null-check crash. — `lib/src/core/buffer/line.dart`
+- **`IndexAwareCircularBuffer.swap` bounds-checked**: Out-of-range index now throws `RangeError` like `operator []`. — `lib/src/utils/circular_buffer.dart`
+- **ZModem session race hardened**: `_session!` dereferences could crash when a timeout or user callback reset the session while an async chain was mid-flight; all paths now null-check or verify session identity. — `lib/zmodem.dart`
+- **`TerminalController.search` no longer swallows real errors**: The catch now wraps only `RegExp` compilation; an invalid pattern still returns no results, but bugs in offset conversion surface instead of being silently ignored. — `lib/src/ui/controller.dart`
+
+### API
+
+- **Export `GraphicsManager` from `core.dart`**: `Terminal.graphicsManager`'s type was previously unnameable outside the package (dark API). — `lib/core.dart`
+
+### Docs
+
+- **Full dartdoc for `EscapeHandler`**: All 130+ interface methods now documented; stale `Terminal.resize` doc corrected (reflow has shipped). — `lib/src/core/escape/handler.dart`, `lib/src/terminal.dart`
+- **dartdoc for `GraphicsManager` fields, `TerminalController` and `Buffer`**: Completes the public API documentation pass; `Buffer` class doc now clarifies screen-relative vs absolute coordinates. — `lib/src/core/graphics_manager.dart`, `lib/src/ui/controller.dart`, `lib/src/core/buffer/buffer.dart`
+
+### Refactor
+
+- **Merge `renderBelowImages`/`renderAboveImages`**: ~60 duplicated lines collapsed into one `_renderImages` with `overlay` + `filterQuality` parameters (behavior unchanged; below-text keeps `FilterQuality.none`, above-text keeps `medium`). — `lib/src/ui/painter.dart`
+- **Extract `_requestKeyboardFocus`** in `TerminalView` to remove the duplicated `hardwareKeyboardOnly` branch in tap handling. — `lib/src/terminal_view.dart`
+
+### Testing
+
+- New direct tests for `Keytab.defaultKeytab` (the ~700-line default table previously had zero coverage) and 5 truncated-input parse cases. — `test/src/core/input/keytab/`
+- New image-rendering tests for the merged painter path (overlay filtering, out-of-range placements, no-manager case). — `test/src/ui/painter_test.dart`
+- Merged the duplicate `cell_flags` test files, keeping both files' unique assertions. — `test/src/core/buffer/cell_flags_test.dart`
+
+### Publishing
+
+- **`.pubignore` keeps `example/`** (lib + pubspec) so pub.dev scores the example, while excluding `build/` and platform directories to keep the package slim. — `.pubignore`
+
 ## [1.5.3] - 2026-07-10
 
 ### Performance
