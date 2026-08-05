@@ -5,8 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:ui' as _i4;
 
-import 'package:flutter/cupertino.dart' as _i3;
 import 'package:flutter/gestures.dart' as _i17;
+import 'package:flutter/material.dart' as _i3;
 import 'package:flutter/rendering.dart' as _i6;
 import 'package:kterm/src/core/buffer/cell_offset.dart' as _i7;
 import 'package:kterm/src/core/buffer/line.dart' as _i20;
@@ -1907,6 +1907,24 @@ class MockTerminalController extends _i1.Mock
         ),
         returnValueForMissingStub: null,
       );
+
+  @override
+  void markPasteFromShortcut() => super.noSuchMethod(
+        Invocation.method(
+          #markPasteFromShortcut,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  bool consumePasteFromShortcut() => (super.noSuchMethod(
+        Invocation.method(
+          #consumePasteFromShortcut,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
 
   @override
   void setPointerInputs(_i8.PointerInputs? pointerInput) => super.noSuchMethod(

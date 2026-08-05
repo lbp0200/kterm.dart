@@ -8,10 +8,11 @@ import 'package:kterm/src/ui/terminal_theme.dart';
 import 'package:kterm/src/ui/terminal_text_style.dart';
 import 'package:kterm/src/ui/themes.dart';
 import 'package:kterm/src/core/cell.dart';
+import 'package:kterm/src/core/graphics_manager.dart';
 
 import 'painter_test.mocks.dart';
 
-@GenerateMocks([ui.Canvas])
+@GenerateMocks([ui.Canvas, ui.Image])
 void main() {
   group('TerminalPainter', () {
     late TerminalPainter painter;
@@ -206,6 +207,88 @@ void main() {
         final size = painter.cellSize;
         // Monospace font should give consistent width
         expect(size.width, equals(size.width));
+      });
+    });
+
+    group('image rendering', () {
+      late GraphicsManager manager;
+      late TerminalPainter imagePainter;
+      late MockImage mockImage;
+
+      setUp(() {
+        manager = GraphicsManager();
+        imagePainter = TerminalPainter(
+          theme: theme,
+          textStyle: textStyle,
+          textScaler: TextScaler.linear(1.0),
+          graphicsManager: manager,
+        );
+        mockImage = MockImage();
+        when(mockImage.width).thenReturn(10);
+        when(mockImage.height).thenReturn(10);
+      });
+
+      test('renderBelowImages renders only non-overlay placements', () {
+        final imageId = manager.storeImage(mockImage);
+        manager.createPlacement(
+          imageId: imageId,
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+        );
+        // Overlay placement must be skipped.
+        manager.createPlacement(
+          imageId: imageId,
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+          overlay: true,
+        );
+        // Placement outside the visible line range must be skipped.
+        manager.createPlacement(
+          imageId: imageId,
+          x: 0,
+          y: 100,
+          width: 1,
+          height: 1,
+        );
+
+        final count =
+            imagePainter.renderBelowImages(mockCanvas, 0, 5, 10.0, 20.0);
+        expect(count, equals(1));
+        verify(mockCanvas.drawImageRect(any, any, any, any)).called(1);
+      });
+
+      test('renderAboveImages renders only overlay placements', () {
+        final imageId = manager.storeImage(mockImage);
+        manager.createPlacement(
+          imageId: imageId,
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+        );
+        manager.createPlacement(
+          imageId: imageId,
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+          overlay: true,
+        );
+
+        final count =
+            imagePainter.renderAboveImages(mockCanvas, 0, 5, 10.0, 20.0);
+        expect(count, equals(1));
+        verify(mockCanvas.drawImageRect(any, any, any, any)).called(1);
+      });
+
+      test('returns 0 when no graphics manager is attached', () {
+        final count = painter.renderBelowImages(mockCanvas, 0, 5, 10.0, 20.0);
+        expect(count, equals(0));
+        verifyNever(mockCanvas.drawImageRect(any, any, any, any));
       });
     });
   });

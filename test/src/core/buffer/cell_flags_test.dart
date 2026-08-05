@@ -45,5 +45,27 @@ void main() {
       final boldItalic = CellFlags.bold | CellFlags.italic;
       expect(boldItalic, equals((1 << 0) | (1 << 2)));
     });
+
+    test('Given all CellFlags, When combined, Then produce 0x7F mask', () {
+      // Assert - all seven flags together fill bits 0..6
+      final combined = CellFlags.bold |
+          CellFlags.faint |
+          CellFlags.italic |
+          CellFlags.underline |
+          CellFlags.blink |
+          CellFlags.inverse |
+          CellFlags.invisible;
+
+      expect(combined, equals(0x7F));
+    });
+
+    test('Given mixed flags, When masked, Then only present flags are set', () {
+      // Assert
+      final flags = CellFlags.bold | CellFlags.italic;
+
+      expect(flags & CellFlags.bold, isNonZero);
+      expect(flags & CellFlags.faint, equals(0));
+      expect(flags & CellFlags.italic, isNonZero);
+    });
   });
 }

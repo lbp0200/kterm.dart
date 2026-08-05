@@ -569,12 +569,6 @@ class MockTerminal extends _i1.Mock implements _i16.Terminal {
       );
 
   @override
-  Set<void Function()> get listeners => (super.noSuchMethod(
-        Invocation.getter(#listeners),
-        returnValue: <void Function()>{},
-      ) as Set<void Function()>);
-
-  @override
   void write(String? data) => super.noSuchMethod(
         Invocation.method(
           #write,
@@ -682,6 +676,15 @@ class MockTerminal extends _i1.Mock implements _i16.Terminal {
         Invocation.method(
           #writeChar,
           [char],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void writeString(String? text) => super.noSuchMethod(
+        Invocation.method(
+          #writeString,
+          [text],
         ),
         returnValueForMissingStub: null,
       );
@@ -829,9 +832,9 @@ class MockTerminal extends _i1.Mock implements _i16.Terminal {
       );
 
   @override
-  void unkownEscape(int? char) => super.noSuchMethod(
+  void unknownEscape(int? char) => super.noSuchMethod(
         Invocation.method(
-          #unkownEscape,
+          #unknownEscape,
           [char],
         ),
         returnValueForMissingStub: null,
@@ -1980,6 +1983,24 @@ class MockTerminalController extends _i1.Mock
         ),
         returnValueForMissingStub: null,
       );
+
+  @override
+  void markPasteFromShortcut() => super.noSuchMethod(
+        Invocation.method(
+          #markPasteFromShortcut,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  bool consumePasteFromShortcut() => (super.noSuchMethod(
+        Invocation.method(
+          #consumePasteFromShortcut,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
 
   @override
   void setPointerInputs(_i7.PointerInputs? pointerInput) => super.noSuchMethod(

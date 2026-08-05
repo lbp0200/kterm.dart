@@ -3,6 +3,7 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'dart:async' as _i4;
 import 'dart:typed_data' as _i3;
 import 'dart:ui' as _i2;
 
@@ -25,6 +26,16 @@ import 'package:mockito/mockito.dart' as _i1;
 
 class _FakeRect_0 extends _i1.SmartFake implements _i2.Rect {
   _FakeRect_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
+class _FakeImage_1 extends _i1.SmartFake implements _i2.Image {
+  _FakeImage_1(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -647,4 +658,82 @@ class MockCanvas extends _i1.Mock implements _i2.Canvas {
         ),
         returnValueForMissingStub: null,
       );
+}
+
+/// A class which mocks [Image].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockImage extends _i1.Mock implements _i2.Image {
+  MockImage() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  int get width => (super.noSuchMethod(
+        Invocation.getter(#width),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  int get height => (super.noSuchMethod(
+        Invocation.getter(#height),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  bool get debugDisposed => (super.noSuchMethod(
+        Invocation.getter(#debugDisposed),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i2.ColorSpace get colorSpace => (super.noSuchMethod(
+        Invocation.getter(#colorSpace),
+        returnValue: _i2.ColorSpace.sRGB,
+      ) as _i2.ColorSpace);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i4.Future<_i3.ByteData?> toByteData(
+          {_i2.ImageByteFormat? format = _i2.ImageByteFormat.rawRgba}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #toByteData,
+          [],
+          {#format: format},
+        ),
+        returnValue: _i4.Future<_i3.ByteData?>.value(),
+      ) as _i4.Future<_i3.ByteData?>);
+
+  @override
+  _i2.Image clone() => (super.noSuchMethod(
+        Invocation.method(
+          #clone,
+          [],
+        ),
+        returnValue: _FakeImage_1(
+          this,
+          Invocation.method(
+            #clone,
+            [],
+          ),
+        ),
+      ) as _i2.Image);
+
+  @override
+  bool isCloneOf(_i2.Image? other) => (super.noSuchMethod(
+        Invocation.method(
+          #isCloneOf,
+          [other],
+        ),
+        returnValue: false,
+      ) as bool);
 }

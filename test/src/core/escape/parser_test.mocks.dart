@@ -36,6 +36,15 @@ class MockEscapeHandler extends _i1.Mock implements _i2.EscapeHandler {
       );
 
   @override
+  void writeString(String? text) => super.noSuchMethod(
+        Invocation.method(
+          #writeString,
+          [text],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   void bell() => super.noSuchMethod(
         Invocation.method(
           #bell,
@@ -178,9 +187,9 @@ class MockEscapeHandler extends _i1.Mock implements _i2.EscapeHandler {
       );
 
   @override
-  void unkownEscape(int? char) => super.noSuchMethod(
+  void unknownEscape(int? char) => super.noSuchMethod(
         Invocation.method(
-          #unkownEscape,
+          #unknownEscape,
           [char],
         ),
         returnValueForMissingStub: null,
