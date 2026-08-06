@@ -20,6 +20,10 @@ abstract class TerminalState {
 
   bool get cursorKeysMode;
 
+  /// Whether the terminal is in ANSI mode (DECANM, DECSET/DECRST 2).
+  /// When false, the terminal is in VT52 mode. true by default.
+  bool get ansiMode;
+
   bool get reverseDisplayMode;
 
   bool get originMode;

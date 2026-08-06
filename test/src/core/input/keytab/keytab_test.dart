@@ -12,5 +12,31 @@ void main() {
       final record1 = keytab.find(TerminalKey.home);
       expect(record1, isNull);
     });
+
+    test('matches Ansi records by default, VT52 records only when ansi=false',
+        () {
+      final keytab = Keytab.parse(r'''
+key Home -Ansi : "VT52"
+key Home +Ansi : "ANSI"
+''');
+
+      // Default find() is ANSI mode: the -Ansi (VT52) record is skipped.
+      expect(keytab.find(TerminalKey.home)!.action.unescapedValue(), 'ANSI');
+      expect(keytab.find(TerminalKey.home, ansi: true)!.action.unescapedValue(),
+          'ANSI');
+
+      // VT52 mode picks the -Ansi record.
+      expect(
+          keytab.find(TerminalKey.home, ansi: false)!.action.unescapedValue(),
+          'VT52');
+    });
+
+    test('records without an ansi flag match in both modes', () {
+      final keytab = Keytab.parse(r'key Home : "PLAIN"');
+      expect(keytab.find(TerminalKey.home)!.action.unescapedValue(), 'PLAIN');
+      expect(
+          keytab.find(TerminalKey.home, ansi: false)!.action.unescapedValue(),
+          'PLAIN');
+    });
   });
 }

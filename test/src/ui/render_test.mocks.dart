@@ -309,6 +309,12 @@ class MockTerminal extends _i1.Mock implements _i16.Terminal {
       ) as bool);
 
   @override
+  bool get ansiMode => (super.noSuchMethod(
+        Invocation.getter(#ansiMode),
+        returnValue: false,
+      ) as bool);
+
+  @override
   bool get reverseDisplayMode => (super.noSuchMethod(
         Invocation.getter(#reverseDisplayMode),
         returnValue: false,
@@ -1180,6 +1186,15 @@ class MockTerminal extends _i1.Mock implements _i16.Terminal {
   void setCursorKeysMode(bool? enabled) => super.noSuchMethod(
         Invocation.method(
           #setCursorKeysMode,
+          [enabled],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void setAnsiMode(bool? enabled) => super.noSuchMethod(
+        Invocation.method(
+          #setAnsiMode,
           [enabled],
         ),
         returnValueForMissingStub: null,

@@ -31,5 +31,62 @@ void main() {
       final ctrlBackspace = keytab.find(TerminalKey.backspace, ctrl: true);
       expect(ctrlBackspace!.action.unescapedValue(), '\b');
     });
+
+    test('uses VT52 arrow-key sequences when ansi=false', () {
+      final keytab = Keytab.defaultKeytab;
+
+      // VT52 mode arrow keys send ESC A-D, not the ANSI CSI sequences.
+      expect(
+          keytab
+              .find(TerminalKey.arrowUp, ansi: false)!
+              .action
+              .unescapedValue(),
+          '\x1bA');
+      expect(
+          keytab
+              .find(TerminalKey.arrowDown, ansi: false)!
+              .action
+              .unescapedValue(),
+          '\x1bB');
+      expect(
+          keytab
+              .find(TerminalKey.arrowRight, ansi: false)!
+              .action
+              .unescapedValue(),
+          '\x1bC');
+      expect(
+          keytab
+              .find(TerminalKey.arrowLeft, ansi: false)!
+              .action
+              .unescapedValue(),
+          '\x1bD');
+
+      // In ANSI mode the same keys use the CSI cursor sequences.
+      expect(
+          keytab.find(TerminalKey.arrowUp)!.action.unescapedValue(), '\x1b[A');
+      expect(keytab.find(TerminalKey.arrowDown)!.action.unescapedValue(),
+          '\x1b[B');
+      expect(keytab.find(TerminalKey.arrowRight)!.action.unescapedValue(),
+          '\x1b[C');
+      expect(keytab.find(TerminalKey.arrowLeft)!.action.unescapedValue(),
+          '\x1b[D');
+    });
+
+    test('Shift+Tab falls back to plain tab in VT52 mode', () {
+      final keytab = Keytab.defaultKeytab;
+
+      expect(
+          keytab
+              .find(TerminalKey.tab, shift: true, ansi: false)!
+              .action
+              .unescapedValue(),
+          '\t');
+      expect(
+          keytab
+              .find(TerminalKey.tab, shift: true, ansi: true)!
+              .action
+              .unescapedValue(),
+          '\x1b[Z');
+    });
   });
 }

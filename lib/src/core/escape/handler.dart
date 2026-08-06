@@ -190,6 +190,10 @@ abstract class EscapeHandler {
   /// Enable or disable application cursor keys (DECSET/DECRST 1, DECCKM).
   void setCursorKeysMode(bool enabled);
 
+  /// Enable or disable ANSI mode (DECSET/DECRST 2, DECANM). When disabled the
+  /// terminal operates in VT52 mode.
+  void setAnsiMode(bool enabled);
+
   /// Enable or disable reverse display (DECSET/DECRST 5, DECSCNM).
   void setReverseDisplayMode(bool enabled);
 

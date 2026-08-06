@@ -26,6 +26,9 @@ class MockTerminalState implements TerminalState {
   bool get cursorKeysMode => false;
 
   @override
+  bool get ansiMode => true;
+
+  @override
   bool get reverseDisplayMode => false;
 
   @override

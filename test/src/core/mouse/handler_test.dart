@@ -24,6 +24,8 @@ class FakeTerminalState implements TerminalState {
   @override
   bool cursorKeysMode = false;
   @override
+  bool ansiMode = true;
+  @override
   bool reverseDisplayMode = false;
   @override
   bool originMode = false;
