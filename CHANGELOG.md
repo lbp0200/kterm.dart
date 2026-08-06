@@ -1,4 +1,18 @@
-## [1.5.4] - 2026-08-05
+## [1.5.5] - 2026-08-06
+
+### Features
+
+- **VT52 mode support**: DECANM (`CSI ? 2 h/l`) now switches the terminal between ANSI and VT52 modes, exposed as `TerminalState.ansiMode`. `Keytab.find()` accepts an `ansi` flag and matches `-Ansi` (VT52) records: VT52 arrow keys emit `ESC A`-`ESC D`, Shift+Tab falls back to plain tab — matching xterm behavior. ANSI mode remains the default, so existing keytab lookups are unchanged. — `lib/src/core/input/keytab/keytab.dart`, `lib/src/core/state.dart`, `lib/src/core/escape/parser.dart`, `lib/src/terminal.dart`
+
+### Tests
+
+- **Plain-text fast path semantic equivalence tests**: 8 cases verify `Terminal.write()`'s fast path matches the parser path for ASCII, CJK wide chars, surrogate pairs, zero-width chars, last-column wrapping, charset translation, and REP consistency after wide/astral chars. — `test/src/terminal_test.dart`
+- **Example app widget smoke tests**: Two end-to-end tests pump the `mock.dart` app (pure-Dart MockRepl) verifying the welcome banner renders and Enter echoes back through the full input chain. — `example/test/widget_test.dart`
+- **Kitty OSC query tests strengthened** from no-crash guards to value assertions. — `test/kitty_*_test.dart`
+
+### Docs
+
+- **`terminal.dart` refactor re-evaluation recorded**: Four minimal experiments confirm Dart classes cannot be split across `part` files, but show mixin-chained splitting is technically feasible; refactor remains deferred (zero functional gain, high regression risk). — `TODO-quality.md`
 
 ### Bug Fixes
 
