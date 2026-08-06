@@ -38,7 +38,7 @@
 
 ## 五、代码结构（长期，风险高）
 
-- [ ] **P5 · `terminal.dart` 1730 行超长** — ⚠️ 2026-08 验证：**Dart 语言限制，类无法跨 `part` 文件分片**（part 文件中的方法会变成顶层函数，无法访问类私有成员，analyzer 报 Undefined name）。唯一可行路径是把 EscapeHandler 实现改为 mixin 并提升 ~20 个私有字段——结构性大重构，风险远超收益，本轮放弃。保留单文件，待大规模重构专项处理。
+- [ ] **P5 · `terminal.dart` 1762 行超长** — ⚠️ 2026-08 复评（4 个最小实验）：**Dart 语言限制，类无法跨 `part` 文件分片**（part 文件中的方法会变成顶层函数，无法访问类私有成员，analyzer 报 Undefined name）。Mixin 化拆分**技术上可行**（实验验证：`mixin` 之间用 `on` 链式约束 + part 文件共享 library 作用域可访问私有字段），但依赖 `this` 的字段（`_parser`/`_mainBuffer`/`_altBuffer`/`graphicsManager` = `EscapeParser(this)`/`Buffer(this,...)`）不能移入 mixin，需保留在主类并用抽象成员访问；140 个 `@override` 分散到 6 个 mixin，跨 mixin 共享 `_buffer`/`_precedingCodepoint`/`_kittyFlagsStack` 等状态。纯结构重构零功能收益、回归风险高，本轮放弃。保留单文件，待大规模重构专项处理。
 - [x] **P5 · `terminal_view.dart` 重复分支** — `!widget.hardwareKeyboardOnly` 分支重复 4 次（282/308/445/577），提取辅助方法。
   实际仅 2 处（282 build 树分支保留，445 提取为 `_requestKeyboardFocus`）。
 - [x] **P5 · `painter.dart:418-482` 反复 `_graphicsManager!`** — 字段无法 promote，用局部变量消除。
