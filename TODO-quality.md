@@ -46,7 +46,8 @@
 
 ## 六、已知风险与经验教训（v1.5.4 发布复盘）
 
-- [ ] **P3 · `Terminal.write()` plain-text fast path 的副作用盲区** — `ac78686`（2026-07-10）引入的 fast path 直接调 `_buffer.write(data)`，绕过 `writeChar`，连踩两个回归（v1.5.4 发布时才发现，CI 自 7-10 起一直红着）：
+- [x] **P3 · `Terminal.write()` plain-text fast path 的副作用盲区** — `ac78686`（2026-07-10）引入的 fast path 直接调 `_buffer.write(data)`，绕过 `writeChar`，连踩两个回归（v1.5.4 发布时才发现，CI 自 7-10 起一直红着）：
   1. C0 控制字符（`\r\n`/`\t` 等）被 `Buffer.writeChar` 过滤 → 换行丢失，破坏 line wrap / insertLines / deleteLines（已修复：fast path 增加 `_hasC0Control` 检查）
   2. `_precedingCodepoint` 不更新 → CSI `n b`（REP）失效（已修复：fast path 用 `data.runes.last` 同步）
   **经验：再做批量写优化前，先审计 `writeChar` 的全部副作用**（除 `_precedingCodepoint` 外，还有 `_buffer.writeChar` 内部的宽字符边界处理、`charset.translate` 等），并给 fast path 补"绕过路径语义等价"的专项测试。
+  处理（2026-08-06）：审计确认 fast path 仍逐 rune 走 `Buffer.writeChar`，宽字符边界 / `charset.translate` / 零宽过滤均保留，与 parser 路径语义等价；`_precedingCodepoint` 为唯一手工同步点（原始 rune，与 `Terminal.writeChar` 在翻译前记录一致）。已在 `test/src/terminal_test.dart` 新增 `Terminal.write() plain-text fast path` 组：8 个用例覆盖 ASCII / CJK / 代理对 + 零宽字符 / 末列宽字符换行 / charset 翻译 / 末尾零宽字符的 REP 一致性 / REP 后宽字符与代理对。

@@ -678,6 +678,130 @@ void main() {
     });
   });
 
+  group('Terminal.write() plain-text fast path', () {
+    // The EscapeParser turns plain text (no ESC byte, no C0 control char)
+    // into one writeChar call per rune (see EscapeParser._processChar).
+    // Driving writeChar directly therefore reproduces the parser path for
+    // such input, letting us assert the fast path in Terminal.write() is
+    // semantically equivalent to it.
+    void writeViaParserPath(Terminal terminal, String data) {
+      for (final rune in data.runes) {
+        terminal.writeChar(rune);
+      }
+    }
+
+    String bufferSnapshot(Terminal terminal) {
+      final sb = StringBuffer();
+      terminal.buffer.lines.forEach((line) => sb.writeln(line.toString()));
+      sb.write('${terminal.buffer.cursorX},${terminal.buffer.cursorY}');
+      return sb.toString();
+    }
+
+    test('ASCII text: fast path matches parser path', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+      const data = 'The quick brown fox jumps over the lazy dog.';
+
+      fast.write(data); // takes the fast path
+      writeViaParserPath(parsed, data);
+
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+    });
+
+    test('wide (CJK) characters: fast path matches parser path', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+      const data = '你好，世界！测试宽字符。';
+
+      fast.write(data);
+      writeViaParserPath(parsed, data);
+
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+    });
+
+    test(
+        'surrogate pairs and zero-width chars: fast path matches parser '
+        'path', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+      // Contains U+1F4A9 (surrogate pair) and U+200B/U+200D (zero-width,
+      // filtered out by Buffer.writeChar on both paths).
+      const data = 'a💩b\u200Bc\u200Dd';
+
+      fast.write(data);
+      writeViaParserPath(parsed, data);
+
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+    });
+
+    test('wide char at last column wraps identically on both paths', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+
+      // Move both cursors to the last column of row 1, then write a wide
+      // char: Buffer.writeChar wraps it to the next line.
+      fast.write('\x1b[1;80H');
+      parsed.write('\x1b[1;80H');
+
+      fast.write('中'); // fast path
+      writeViaParserPath(parsed, '中');
+
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+    });
+
+    test('charset translation applies identically on both paths', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+
+      // DEC Special Graphics: 'a' (0x61) maps to MEDIUM SHADE (U+2592),
+      // 'b' (0x62) maps to SYMBOL FOR HORIZONTAL TABULATION (U+2409).
+      fast.write('\x1b(0');
+      parsed.write('\x1b(0');
+
+      const data = 'ab';
+      fast.write(data); // fast path: no ESC/C0, but charset still applies
+      writeViaParserPath(parsed, data);
+
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+      expect(fast.buffer.lines[0].toString(), '\u2592\u2409');
+    });
+
+    test('trailing zero-width char keeps REP behavior identical', () {
+      final fast = Terminal();
+      final parsed = Terminal();
+      // Ends with U+200B, which Buffer.writeChar filters out. On the parser
+      // path _precedingCodepoint is set before the filter; the fast path must
+      // record the same raw last rune.
+      const data = 'ab\u200B';
+
+      fast.write(data);
+      writeViaParserPath(parsed, data);
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+
+      // REP x3 repeats the zero-width char in both cases: Buffer.writeChar
+      // filters it, so no visible output — but behavior must not diverge.
+      fast.write('\x1b[3b');
+      parsed.write('\x1b[3b');
+      expect(bufferSnapshot(fast), bufferSnapshot(parsed));
+    });
+
+    test('_precedingCodepoint stays in sync for REP after wide char', () {
+      final terminal = Terminal();
+      terminal.write('中'); // fast path, wide char
+      terminal.write('\x1b[2b'); // REP x2
+
+      expect(terminal.buffer.lines[0].toString(), '中中中');
+    });
+
+    test('_precedingCodepoint stays in sync for REP after surrogate pair', () {
+      final terminal = Terminal();
+      terminal.write('💩'); // fast path, surrogate pair
+      terminal.write('\x1b[2b'); // REP x2
+
+      expect(terminal.buffer.lines[0].toString(), '💩💩💩');
+    });
+  });
+
   group('Terminal.sendOperatingStatus', () {
     test('Given onOutput set, When DSR 5, Then emits', () {
       final output = <String>[];
