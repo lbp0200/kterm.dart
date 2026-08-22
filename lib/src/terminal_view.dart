@@ -547,11 +547,14 @@ class TerminalViewState extends State<TerminalView> {
 
     final isSpecialKey = _isSpecialKey(event.logicalKey);
 
-    // Handle KeyUp events - only encode if reportAllKeysAsEscape or modifiers pressed
+    // Handle KeyUp events - only encode if reportAllKeysAsEscape is enabled.
+    // Encoding KeyUp when only modifiers are pressed (e.g. Cmd+V release)
+    // sends unexpected Kitty sequences to the remote shell, causing cursor
+    // jumping. Only encode when the application explicitly requested full
+    // key reporting via reportAllKeysAsEscape.
     if (event is KeyUpEvent) {
       final shouldEncodeKeyUp =
-          widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape ||
-              hasModifiers;
+          widget.terminal.kittyEncoder.flags.reportAllKeysAsEscape;
       if (shouldEncodeKeyUp) {
         final seq = _encodeWithKitty(event);
         if (seq != null && seq.isNotEmpty) {

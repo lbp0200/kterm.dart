@@ -140,6 +140,17 @@ Kitty Keyboard Protocol provides:
 - **Progressive Enhancement**: Supports CSI > n u stack (push/pop) for nested terminal modes.
 - **Zero Ambiguity**: No more Tab vs Ctrl+I confusion in Neovim/Helix — modifier keys are always distinguishable.
 
+#### Modes
+
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| Basic | `CSI > 1 u` | Modifier+special keys encoded, bare keys standard |
+| Flags | `CSI > + n u` | Full control via flag bits |
+
+When `reportAllKeysAsEscape` is enabled (flag bit 2), ALL key events including KeyUp are encoded as Kitty sequences.
+
+For detailed documentation, see [doc/kitty_keyboard_protocol.md](doc/kitty_keyboard_protocol.md).
+
 ### Search Functionality
 
 kterm includes built-in search functionality with support for:

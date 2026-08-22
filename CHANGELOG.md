@@ -1,3 +1,19 @@
+## [1.5.6] - 2026-08-12
+
+### Bug Fixes
+
+- **Kitty KeyUp encoding only when `reportAllKeysAsEscape` is enabled**: Previously, pressing a modifier (e.g. Cmd+V) and releasing it sent a Kitty KeyUp sequence even without `reportAllKeysAsEscape`, causing cursor jumping in the remote shell. The view layer now only encodes KeyUp when the application explicitly requested full key reporting. — `lib/src/terminal_view.dart`
+
+### Tests
+
+- **Kitty KeyUp encoding behavior tests**: Two cases verify that KeyUp with modifiers is NOT encoded in basic mode but IS encoded when `reportAllKeysAsEscape` is true. — `test/kitty_flags_test.dart`
+
+### Docs
+
+- **Kitty keyboard protocol modes documentation**: README now includes a table summarizing Basic vs Flags modes and their trigger sequences. Detailed protocol reference added at `doc/kitty_keyboard_protocol.md`. — `README.md`, `doc/kitty_keyboard_protocol.md`
+
+---
+
 ## [1.5.5] - 2026-08-06
 
 ### Features
