@@ -1,3 +1,18 @@
+## [1.5.7] - 2026-08-24
+
+### Bug Fixes
+
+- **Search bar focus no longer crashes**: `TerminalSearchBar` used the same `FocusNode` for both its outer `KeyboardListener` and inner `TextField`, triggering `Tried to make a child into a parent of itself` when shown inside `TerminalView`'s `Focus/CallbackShortcuts` tree. It now uses a dedicated `FocusScopeNode` to isolate the search bar focus tree and separate `FocusNode`s for the listener vs the text field. `KeyboardVisibility.didChangeMetrics` and `RenderTerminal._onTerminalChange` also guard against detached/`View.maybeOf` lookup during `resetPhysicalSize` in tests. — `lib/src/ui/search_bar.dart`, `lib/src/ui/keyboard_visibility.dart`, `lib/src/ui/render.dart`
+- **Kitty encoder keeps Enter fix across `withFlags`**: `_KittyKeyboardEncoderWrapper.withFlags` previously returned a bare `KittyKeyboardEncoder`, bypassing the `Enter 8/28 → 13` HID fix; now it stays wrapped. `_updateKittyKeyboardEncoder` also syncs `_kittyEncoder` to avoid stale flags on subsequent push/pop. — `lib/src/terminal.dart`
+- **Dart format for stress tests**: Two test files had stale formatting. — `test/stress/*`
+
+### Chores
+
+- **Dependencies**: `image 4.9.1 → 4.9.2` (patch), drops `petitparser/xml` transitives. — `pubspec.lock`
+- **Package hygiene**: `reasonix.toml`, `plans/`, `script/`, `tool/`, `run_test.sh` excluded from pub.dev package via `.pubignore` (previously leaked, inflating compressed size). `AGENTS.md` kitty_protocol version/doc typo fixes. — `.pubignore`, `AGENTS.md`
+
+---
+
 ## [1.5.6] - 2026-08-12
 
 ### Bug Fixes

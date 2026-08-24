@@ -22,3 +22,8 @@ scripts/
 .github/
 pubspec.lock
 coverage/
+plans/
+reasonix.toml
+run_test.sh
+script/
+tool/
