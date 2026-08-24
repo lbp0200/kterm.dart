@@ -928,7 +928,8 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
   void _updateKittyKeyboardEncoder() {
     _kittyEncoder ??= KittyKeyboardEncoder();
-    // Apply flags from stack - use the last flags pushed
+    // Apply flags from stack - per Kitty progressive enhancement spec,
+    // pushed values stack and the top of stack is the effective value.
     final flags = _kittyFlagsStack.isNotEmpty ? _kittyFlagsStack.last : 0;
     // Update encoder flags based on Kitty protocol flags
     // bit 0 (1): reportEvent
@@ -939,7 +940,9 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
       reportAlternateKeys: (flags & 2) != 0,
       reportAllKeysAsEscape: (flags & 4) != 0,
     ));
-    // Recreate wrapper with updated inner encoder
+    // Keep _kittyEncoder in sync so future withFlags calls are not stale,
+    // and recreate the wrapper so the Enter(13) fix stays applied.
+    _kittyEncoder = updatedInner;
     _kittyEncoderWrapper =
         _KittyKeyboardEncoderWrapper(updatedInner, updatedInner.flags);
   }
@@ -1757,6 +1760,7 @@ class _KittyKeyboardEncoderWrapper extends KittyKeyboardEncoder {
 
   @override
   KittyKeyboardEncoder withFlags(KittyKeyboardEncoderFlags flags) {
-    return _inner.withFlags(flags);
+    final updated = _inner.withFlags(flags);
+    return _KittyKeyboardEncoderWrapper(updated, updated.flags);
   }
 }

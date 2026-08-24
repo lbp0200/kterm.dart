@@ -63,7 +63,7 @@ dart test test/src/utils/lookup_table_test.dart      # pure-Dart smoke
 ## Package dependencies
 
 - `zmodem_lbp: ^0.0.10` — forked git dep (bugfixes: ZFIN frame handling + wrong LF byte). Import as `package:zmodem_lbp/`.
-- `kitty_protocol: ^1.3.0` — upstream Kitty keyboard/graphics protocol; report bugs there
+- `kitty_protocol: ^1.3.1` — upstream Kitty keyboard/graphics protocol; report bugs there
 - `image: ^4.9.0` — image decoding for Kitty Graphics Protocol
 
 ## Conventions
@@ -85,11 +85,11 @@ dart test test/src/utils/lookup_table_test.dart      # pure-Dart smoke
 
 ### Kitty Keyboard Protocol
 
-The Kitty keyboard protocol (`kitty_protocol: ^1.3.0`) is implemented across three layers:
+The Kitty keyboard protocol (`kitty_protocol: ^1.3.1`) is implemented across three layers:
 
 - **`lib/src/core/escape/parser.dart`** — Parses `CSI > n u` (enable/disable), `CSI > + n u` (push flags), and `CSI > - u` (pop flags) from the application → terminal direction. Intermediate bytes (`+`/`-`) are stored in `_Csi.intermediates` and dispatched in `_handleKittyMode()`.
 
-- **`lib/src/terminal.dart`** — `Terminal` owns the `_kittyFlagsStack` (list of pushed flag ints), `_kittyEncoder` (lazy-created `KittyKeyboardEncoder`), and `_kittyEncoderWrapper` (which delegates `encode()` and `flags` to the inner encoder, while fixing USB HID → Kitty keycode mapping for Enter).
+- **`lib/src/terminal.dart`** — `Terminal` owns the `_kittyFlagsStack` (stack of pushed flag ints; top is effective), `_kittyEncoder` (lazy-created `KittyKeyboardEncoder`), and `_kittyEncoderWrapper` (which delegates `encode()` via `_inner` and `flags`, while fixing USB HID → Kitty keycode mapping for Enter; `withFlags()` stays wrapped).
 
 - **`lib/src/terminal_view.dart`** — `TerminalViewState._handleKeyEvent()` intercepts key events when `terminal.kittyMode` is true. Key behavior:
   - `Ctrl+letter` (A-Z, pure Ctrl, no Shift/Alt): sent as raw ASCII control characters (`0x01`–`0x1A`) for shell backward compatibility.
@@ -110,6 +110,6 @@ flutter test test/kitty_flags_test.dart                  # Encoder flag behavior
 
 ### Known limitations
 
-- `Ctrl+Space` in Kitty mode sends Kitty escape sequence `\x1b[0;5u` instead of raw NUL (`0x00`). This is per Kitty protocol spec — applications that enable Kittly protocol are expected to handle CSI u sequences.
+- `Ctrl+Space` in Kitty mode sends Kitty escape sequence `\x1b[0;5u` instead of raw NUL (`0x00`). This is per Kitty protocol spec — applications that enable Kitty protocol are expected to handle CSI u sequences.
 - The `_onInsert` / IME path is Kitty-mode-agnostic (IME text always passes through directly). This is correct: Kitty protocol is a hardware keyboard protocol.
 - `Alt+letter` on macOS returns null from `AltInputHandler` (macOS uses Alt for special character composition).
