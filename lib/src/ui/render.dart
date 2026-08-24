@@ -178,6 +178,7 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _repaintScheduled = false;
+      if (!attached) return;
       _notifyEditableRect();
     });
   }

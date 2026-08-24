@@ -377,7 +377,7 @@ class TerminalViewState extends State<TerminalView> {
       );
     }
 
-    // Wrap with keyboard shortcuts handler for search
+    // Wrap with keyboard shortcuts handler for search.
     if (_showSearchBar) {
       child = CallbackShortcuts(
         bindings: <ShortcutActivator, VoidCallback>{

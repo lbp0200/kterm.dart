@@ -31,23 +31,27 @@ class TerminalSearchBar extends StatefulWidget {
 
 class _TerminalSearchBarState extends State<TerminalSearchBar> {
   late final TextEditingController _textController;
-  late final FocusNode _focusNode;
+  late final FocusNode _searchFocusNode;
+  final _searchScopeNode = FocusScopeNode(debugLabel: 'TerminalSearchBarScope');
+  final _keyboardListenerFocusNode =
+      FocusNode(debugLabel: 'TerminalSearchBarKeyboardListener');
 
   @override
   void initState() {
     super.initState();
     _textController =
         TextEditingController(text: widget.controller.searchPattern ?? '');
-    _focusNode = FocusNode();
+    _searchFocusNode = FocusNode(debugLabel: 'TerminalSearchBar');
 
     _textController.addListener(_onTextChanged);
 
     widget.controller.addListener(_onControllerChanged);
 
-    // Auto focus after build
+    // Auto focus after build - guard against being disposed/unmounted.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.autoFocus) {
-        _focusNode.requestFocus();
+      if (!mounted) return;
+      if (widget.autoFocus && _searchFocusNode.canRequestFocus) {
+        _searchFocusNode.requestFocus();
       }
     });
   }
@@ -56,7 +60,9 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
   void dispose() {
     _textController.removeListener(_onTextChanged);
     _textController.dispose();
-    _focusNode.dispose();
+    _searchFocusNode.dispose();
+    _keyboardListenerFocusNode.dispose();
+    _searchScopeNode.dispose();
     widget.controller.removeListener(_onControllerChanged);
     super.dispose();
   }
@@ -104,187 +110,197 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
     final inputTextColor = isDark ? Colors.white : Colors.black;
     final iconColor = isDark ? Colors.white70 : Colors.black54;
 
-    return KeyboardListener(
-      focusNode: _focusNode,
-      onKeyEvent: _handleKeyEvent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: Border(
-            bottom: BorderSide(color: borderColor),
+    // Isolate search bar focus from TerminalView's focus tree and avoid
+    // reusing the same FocusNode for both KeyboardListener and TextField,
+    // which would trigger "child == parent" reparent assertion.
+    return FocusScope(
+      node: _searchScopeNode,
+      child: KeyboardListener(
+        focusNode: _keyboardListenerFocusNode,
+        onKeyEvent: _handleKeyEvent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border(
+              bottom: BorderSide(color: borderColor),
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            // Search input
-            Expanded(
-              child: SizedBox(
-                height: 36,
-                child: TextField(
-                  controller: _textController,
-                  focusNode: _focusNode,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: inputTextColor,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    hintStyle: TextStyle(
+          child: Row(
+            children: [
+              // Search input
+              Expanded(
+                child: SizedBox(
+                  height: 36,
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _searchFocusNode,
+                    style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.grey : Colors.grey.shade600,
+                      color: inputTextColor,
                     ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(color: borderColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(
-                        color: theme.colorScheme.primary,
-                        width: 2,
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.grey : Colors.grey.shade600,
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.primary,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            // Result count
-            ListenableBuilder(
-              listenable: widget.controller,
-              builder: (context, _) {
-                final hasResults = widget.controller.hasSearchResults;
-                final current = widget.controller.currentSearchIndex;
-                final total = widget.controller.searchResultCount;
+              // Result count
+              ListenableBuilder(
+                listenable: widget.controller,
+                builder: (context, _) {
+                  final hasResults = widget.controller.hasSearchResults;
+                  final current = widget.controller.currentSearchIndex;
+                  final total = widget.controller.searchResultCount;
 
-                if (!widget.controller.isSearching ||
-                    _textController.text.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+                  if (!widget.controller.isSearching ||
+                      _textController.text.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                return SizedBox(
-                  width: 70,
-                  child: Text(
-                    hasResults ? '${current + 1}/$total' : 'No results',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: hasResults
-                          ? inputTextColor
-                          : (isDark ? Colors.orange : Colors.orange.shade700),
+                  return SizedBox(
+                    width: 70,
+                    child: Text(
+                      hasResults ? '${current + 1}/$total' : 'No results',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: hasResults
+                            ? inputTextColor
+                            : (isDark ? Colors.orange : Colors.orange.shade700),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(width: 8),
-
-            // Previous button - min 44x44 for touch targets
-            Semantics(
-              label: 'Previous search result',
-              button: true,
-              child: IconButton(
-                icon: Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 20,
-                  color: iconColor,
-                ),
-                onPressed: widget.controller.searchPrevious,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                tooltip: 'Previous match (Shift+F3)',
-              ),
-            ),
-
-            // Next button - min 44x44 for touch targets
-            Semantics(
-              label: 'Next search result',
-              button: true,
-              child: IconButton(
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: iconColor,
-                ),
-                onPressed: widget.controller.searchNext,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                tooltip: 'Next match (F3)',
-              ),
-            ),
-
-            const SizedBox(width: 4),
-
-            // Options menu
-            Semantics(
-              label: 'Search options',
-              button: true,
-              child: PopupMenuButton<SearchOption>(
-                icon: Icon(
-                  Icons.tune,
-                  size: 20,
-                  color: iconColor,
-                ),
-                tooltip: 'Search options',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                onSelected: (option) {
-                  widget.controller.toggleSearchOption(option);
+                  );
                 },
-                itemBuilder: (context) => [
-                  _buildOptionMenuItem(
-                    SearchOption.caseSensitive,
-                    'Match Case',
-                    'Aa',
-                    widget.controller,
-                  ),
-                  _buildOptionMenuItem(
-                    SearchOption.regex,
-                    'Use Regular Expression',
-                    '.*',
-                    widget.controller,
-                  ),
-                  _buildOptionMenuItem(
-                    SearchOption.wholeWord,
-                    'Match Whole Word',
-                    'word',
-                    widget.controller,
-                  ),
-                ],
               ),
-            ),
 
-            // Close button - min 44x44 for touch targets
-            Semantics(
-              label: 'Close search',
-              button: true,
-              child: IconButton(
-                icon: Icon(
-                  Icons.close,
-                  size: 20,
-                  color: iconColor,
+              const SizedBox(width: 8),
+
+              // Previous button - min 44x44 for touch targets
+              Semantics(
+                label: 'Previous search result',
+                button: true,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.keyboard_arrow_up,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                  onPressed: widget.controller.searchPrevious,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  tooltip: 'Previous match (Shift+F3)',
                 ),
-                onPressed: widget.onClose,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                tooltip: 'Close search (Escape)',
               ),
-            ),
-          ],
+
+              // Next button - min 44x44 for touch targets
+              Semantics(
+                label: 'Next search result',
+                button: true,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                  onPressed: widget.controller.searchNext,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  tooltip: 'Next match (F3)',
+                ),
+              ),
+
+              const SizedBox(width: 4),
+
+              // Options menu
+              Semantics(
+                label: 'Search options',
+                button: true,
+                child: PopupMenuButton<SearchOption>(
+                  icon: Icon(
+                    Icons.tune,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                  tooltip: 'Search options',
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  onSelected: (option) {
+                    widget.controller.toggleSearchOption(option);
+                  },
+                  itemBuilder: (context) => [
+                    _buildOptionMenuItem(
+                      SearchOption.caseSensitive,
+                      'Match Case',
+                      'Aa',
+                      widget.controller,
+                    ),
+                    _buildOptionMenuItem(
+                      SearchOption.regex,
+                      'Use Regular Expression',
+                      '.*',
+                      widget.controller,
+                    ),
+                    _buildOptionMenuItem(
+                      SearchOption.wholeWord,
+                      'Match Whole Word',
+                      'word',
+                      widget.controller,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Close button - min 44x44 for touch targets
+              Semantics(
+                label: 'Close search',
+                button: true,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                  onPressed: widget.onClose,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  tooltip: 'Close search (Escape)',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
