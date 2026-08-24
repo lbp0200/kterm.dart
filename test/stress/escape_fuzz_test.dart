@@ -276,8 +276,7 @@ void main() {
       final terminal = Terminal();
       for (int i = 0; i < 5000; i++) {
         terminal.write('normal text\n');
-        terminal.write(
-            '\x1b[1m\x1b[31mbold red\x1b[0m \x1b[32mgreen\x1b[0m\n');
+        terminal.write('\x1b[1m\x1b[31mbold red\x1b[0m \x1b[32mgreen\x1b[0m\n');
         terminal.write('\x1b[${i % 10 + 1}J');
       }
       expect(terminal.buffer.lines.length, greaterThan(0));
@@ -355,14 +354,11 @@ void main() {
         final rows = rng.nextInt(30) + 5;
         terminal.resize(cols, rows);
 
-        expect(terminal.buffer.cursorX,
-            inInclusiveRange(0, cols - 1),
+        expect(terminal.buffer.cursorX, inInclusiveRange(0, cols - 1),
             reason: 'cursorX out of bounds after resize($cols,$rows)');
-        expect(terminal.buffer.cursorY,
-            inInclusiveRange(0, rows - 1),
+        expect(terminal.buffer.cursorY, inInclusiveRange(0, rows - 1),
             reason: 'cursorY out of bounds after resize($cols,$rows)');
-        expect(terminal.buffer.lines.length,
-            greaterThanOrEqualTo(rows),
+        expect(terminal.buffer.lines.length, greaterThanOrEqualTo(rows),
             reason: 'lines.length < rows after resize($cols,$rows)');
       }
     });

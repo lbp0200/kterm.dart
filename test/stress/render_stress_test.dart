@@ -293,8 +293,7 @@ void main() {
   });
 
   group('reflow stress (widget)', () {
-    testWidgets('reflow enabled: rapid resize with content',
-        (tester) async {
+    testWidgets('reflow enabled: rapid resize with content', (tester) async {
       final terminal = Terminal(reflowEnabled: true);
       terminal.resize(80, 24);
       final controller = TerminalController();
