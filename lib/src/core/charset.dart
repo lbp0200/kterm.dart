@@ -35,6 +35,15 @@ class Charset {
     _updateCache();
   }
 
+  /// Resets all charset designations to ASCII and selects G0.
+  ///
+  /// Used by RIS (`ESC c`) and DECSTR (`CSI ! p`).
+  void reset() {
+    _charsetMap.clear();
+    _currentIndex = 0;
+    _updateCache();
+  }
+
   void save() {
     _savedCharsetMap = Map.from(_charsetMap);
     _savedIndex = _currentIndex;

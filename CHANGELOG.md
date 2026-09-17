@@ -1,3 +1,14 @@
+## [1.5.8] - 2026-09-17
+
+### Bug Fixes
+
+- **`reset(1)` now actually resets the terminal**: `ESC c` (RIS) and `CSI ! p` (DECSTR) were silently swallowed, so running `reset` left the screen, modes and tab stops untouched and could leave the display in a broken state. The parser now decodes both into new `EscapeHandler.fullReset()` / `softReset()` hooks; `Terminal` implements them per xterm semantics (RIS = clear screen + home cursor + reset rendition/charset/tabs/margins/modes; DECSTR = same minus screen/cursor/tabs). — `lib/src/core/escape/parser.dart`, `lib/src/core/escape/handler.dart`, `lib/src/terminal.dart`, `lib/src/core/charset.dart`, `lib/src/utils/debugger.dart`
+- **HTS (`ESC H`) was a no-op**: `setTapStop()` called the `TabStops.isSetAt()` query instead of `setAt()`, so after `reset`'s `TBC` cleared all stops, no stop was ever re-installed and Tab behaved erratically. Now it really sets the stop; `setAt`/`clearAt`/`isSetAt` are also bounds-safe so a stray HTS on ultra-wide (>1024 col) terminals can't crash. — `lib/src/terminal.dart`, `lib/src/core/tabs.dart`
+- **Split escape sequences no longer leak as text**: `Terminal.write` fast-pathed any chunk without an ESC byte straight into the buffer, even while the parser held an incomplete sequence from the previous chunk (pty output splits at arbitrary boundaries). The continuation (`;5;244m`, `c[!p…`, `H`, …) printed as literal text and desynced the shell's cursor model, wrecking prompt redraws. The fast path is now skipped while `EscapeParser.hasPending` is true. — `lib/src/terminal.dart`, `lib/src/core/escape/parser.dart`
+- **Tests**: new `test/src/core/escape/reset_test.dart` (9 cases, incl. a byte-exact capture of macOS `/usr/bin/reset` output for xterm-256color) and `test/src/terminal_write_split_test.dart` (7 cases: SGR/RIS/HTS/OSC/CSI split across chunks).
+
+---
+
 ## [1.5.7] - 2026-08-24
 
 ### Bug Fixes

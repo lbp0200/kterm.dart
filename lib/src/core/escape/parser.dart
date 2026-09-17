@@ -33,6 +33,15 @@ class EscapeParser {
     _process();
   }
 
+  /// Whether the parser holds an incomplete sequence waiting for more input.
+  ///
+  /// PTY output is split at arbitrary byte boundaries, so a chunk may end
+  /// mid-sequence (e.g. `ESC[48` with `;5;244m` arriving in the next chunk).
+  /// Callers that bypass the parser for plain-text fast paths must check
+  /// this first: routing the continuation chunk around the parser would
+  /// print the sequence tail as literal text.
+  bool get hasPending => _queue.isNotEmpty;
+
   void _process() {
     while (_queue.isNotEmpty) {
       tokenBegin = _queue.totalConsumed;
@@ -103,7 +112,7 @@ class EscapeParser {
     'H'.charCode: _escHandleTabSet,
     'M'.charCode: _escHandleReverseIndex,
     // 'P'.charCode: _unsupportedHandler, // Sixel
-    // 'c'.charCode: _unsupportedHandler,
+    'c'.charCode: _escHandleFullReset, // RIS (Reset to Initial State)
     // '#'.charCode: _unsupportedHandler,
     'P'.charCode: _escHandleDCS, // DCS (Device Control String) - Remote Control
     '_'.charCode:
@@ -161,6 +170,14 @@ class EscapeParser {
   /// https://terminalguide.namepad.de/seq/a_esc_cm/
   bool _escHandleReverseIndex() {
     handler.reverseIndex();
+    return true;
+  }
+
+  /// `ESC c` Reset to Initial State (RIS)
+  ///
+  /// https://terminalguide.namepad.de/seq/a_esc_cc/
+  bool _escHandleFullReset() {
+    handler.fullReset();
     return true;
   }
 
@@ -362,6 +379,7 @@ class EscapeParser {
     'M'.codeUnitAt(0): _csiHandleDeleteLines,
     'P'.codeUnitAt(0): _csiHandleDelete,
     'S'.codeUnitAt(0): _csiHandleScrollUp,
+    'p'.codeUnitAt(0): _csiHandleSoftReset,
     'T'.codeUnitAt(0): _csiHandleScrollDown,
     'X'.codeUnitAt(0): _csiHandleEraseCharacters,
     '@'.codeUnitAt(0): _csiHandleInsertBlankCharacters,
@@ -995,6 +1013,17 @@ class EscapeParser {
     }
 
     handler.deleteChars(amount);
+  }
+
+  /// `ESC [ ! p` Soft Terminal Reset (DECSTR)
+  ///
+  /// https://terminalguide.namepad.de/seq/csi_sp__p/
+  void _csiHandleSoftReset() {
+    if (_csi.intermediates.contains('!'.codeUnitAt(0))) {
+      handler.softReset();
+    } else {
+      handler.unknownCSI(_csi.finalByte);
+    }
   }
 
   /// `ESC [ Ps S` Scroll Up (SU)

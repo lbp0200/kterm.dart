@@ -318,7 +318,15 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
     // them out (BEL, BS, HT, LF, CR, ...), so a chunk like "a\r\nb" would
     // silently lose its line breaks. The parser turns them into handler
     // callbacks (bell, tab, lineFeed, carriageReturn, ...) instead.
-    if (!data.contains('\x1b') && !_hasC0Control(data)) {
+    //
+    // The parser must also NOT be bypassed while it holds an incomplete
+    // sequence from a previous chunk (pty output is split at arbitrary
+    // byte boundaries, e.g. `ESC[48` + `;5;244m`): the continuation chunk
+    // usually contains no ESC byte, and fast-pathing it would print the
+    // sequence tail as literal text while the head stays stuck in the
+    // parser. See https://github.com/lbp0200/kterm.dart issues with
+    // `reset(1)` leaking `c[!p[?3;4l[4l>%` and SGR leaking `;5;244m`.
+    if (!_parser.hasPending && !data.contains('\x1b') && !_hasC0Control(data)) {
       // Keep _precedingCodepoint in sync so CSI n b (REP) still works after
       // a fast-path write; writeChar would normally maintain it.
       if (data.isNotEmpty) {
@@ -611,7 +619,7 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
 
   @override
   void setTapStop() {
-    _tabStops.isSetAt(_buffer.cursorX);
+    _tabStops.setAt(_buffer.cursorX);
   }
 
   @override
@@ -622,6 +630,43 @@ class Terminal with Observable implements TerminalState, EscapeHandler {
   @override
   void designateCharset(int charset, int name) {
     _buffer.charset.designate(charset, name);
+  }
+
+  @override
+  void fullReset() {
+    softReset();
+    _tabStops.reset();
+    eraseDisplay();
+    setCursor(0, 0);
+    notifyListeners();
+  }
+
+  @override
+  void softReset() {
+    resetCursorStyle();
+    _mainBuffer.charset.reset();
+    _altBuffer.charset.reset();
+    _mainBuffer.resetVerticalMargins();
+    _altBuffer.resetVerticalMargins();
+    _insertMode = false;
+    _lineFeedMode = false;
+    _cursorKeysMode = false;
+    _ansiMode = true;
+    _reverseDisplayMode = false;
+    _originMode = false;
+    _autoWrapMode = true;
+    _mouseMode = MouseMode.none;
+    _mouseReportMode = MouseReportMode.normal;
+    _cursorBlinkMode = false;
+    _cursorVisibleMode = true;
+    _appKeypadMode = false;
+    _reportFocusMode = false;
+    _altBufferMouseScrollMode = false;
+    _bracketedPasteMode = false;
+    _kittyMode = false;
+    _kittyFlagsStack.clear();
+    _updateKittyKeyboardEncoder();
+    notifyListeners();
   }
 
   @override

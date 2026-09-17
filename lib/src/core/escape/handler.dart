@@ -73,6 +73,20 @@ abstract class EscapeHandler {
   /// Designate a character set for G0–G3 (ESC ( / ESC ) / ESC * / ESC +).
   void designateCharset(int charset, int name);
 
+  /// Reset to Initial State (RIS, `ESC c`).
+  ///
+  /// Restores power-up defaults: clears the visible screen, homes the
+  /// cursor and resets graphic rendition, character sets, tab stops,
+  /// scroll margins and all ANSI/DEC modes. The scrollback buffer and the
+  /// active screen buffer are preserved.
+  void fullReset();
+
+  /// Soft Terminal Reset (DECSTR, `CSI ! p`).
+  ///
+  /// Like [fullReset] but preserves the screen contents, the cursor
+  /// position and the tab stops.
+  void softReset();
+
   /// An unrecognized ESC sequence with final byte [char] was received.
   void unknownEscape(int char);
 
